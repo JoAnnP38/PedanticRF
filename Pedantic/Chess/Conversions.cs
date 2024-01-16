@@ -1,7 +1,4 @@
-﻿using System;
-using System.Text;
-
-namespace Pedantic.Chess
+﻿namespace Pedantic.Chess
 {
     public static class Conversions
     {

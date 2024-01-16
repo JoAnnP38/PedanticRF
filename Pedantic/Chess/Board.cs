@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Text;
 using Pedantic.Collections;
 using Pedantic.Utilities;

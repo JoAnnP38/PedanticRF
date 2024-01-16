@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace Pedantic.Chess
+﻿namespace Pedantic.Chess
 {
     public interface IHistory
     {

@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text;
-using Pedantic.Collections;
+﻿using Pedantic.Collections;
 using Pedantic.Utilities;
 
 using static Pedantic.Chess.Constants;

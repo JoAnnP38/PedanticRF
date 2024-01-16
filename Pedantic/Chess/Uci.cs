@@ -1,7 +1,4 @@
-﻿using System.Text;
-using Pedantic.Utilities;
-
-namespace Pedantic.Chess
+﻿namespace Pedantic.Chess
 {
     public class Uci
     {

@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
-using static Pedantic.Chess.Board;
 using static Pedantic.Chess.Constants;
 
 namespace Pedantic.Chess
