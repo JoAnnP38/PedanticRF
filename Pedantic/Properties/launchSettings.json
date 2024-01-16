@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Pedantic": {
+      "commandName": "Project"
+    },
+    "Perft(6)": {
+      "commandName": "Project",
+      "commandLineArgs": "< \"e:\\repos.2\\Pedantic\\perft6test.txt\""
+    }
+  }
+}

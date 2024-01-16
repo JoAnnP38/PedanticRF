@@ -1,0 +1,4 @@
+uci
+position startpos
+perft depth 7 divide
+quit
