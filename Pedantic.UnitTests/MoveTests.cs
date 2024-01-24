@@ -44,5 +44,15 @@ namespace Pedantic.UnitTests
             Assert.IsFalse(move1 != move2);
         }
 
+        [TestMethod]
+        public void ToStringTest()
+        {
+            Move move1 = new Move(Color.Black, Piece.Knight, SquareIndex.C3, SquareIndex.B5, capture: Piece.Bishop);
+            Move move2 = new Move(Color.Black, Piece.Pawn, SquareIndex.B2, SquareIndex.B1, type: MoveType.Promote, promote: Piece.Bishop);
+
+            Assert.AreEqual("c3b5", move1.ToString());
+            Assert.AreEqual("b2b1b", move2.ToString());
+        }
+
     }
 }

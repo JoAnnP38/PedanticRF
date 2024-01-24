@@ -41,12 +41,6 @@ namespace Pedantic.Chess
             }
         }
 
-        [InlineArray(MAX_COLORS)]
-        public struct Buffer2<T>
-        {
-            private T _element0;
-        }
-
         public struct BoardState
         {
             public Color SideToMove;
@@ -54,10 +48,13 @@ namespace Pedantic.Chess
             public SquareIndex EnPassant;
             public SquareIndex EnPassantValidated;
             public byte HalfMoveClock;
+            public byte Phase;
+            public KingBuckets KingBuckets;
             public ushort FullMoveCounter;
             public ulong Hash;
             public BitboardArray Bitboards;
             public SquareArray PieceBoard;
+            public ByColor<SquareIndex> KingIndex;
 
             public BoardState(Board board)
             {
@@ -70,6 +67,8 @@ namespace Pedantic.Chess
                 Hash = board.hash;
                 Bitboards = board.bitboards;
                 PieceBoard = board.board;
+                KingIndex = board.kingIndex;
+                board.eval.SaveState(ref this);
             }
 
             public void Restore(Board board)
@@ -83,6 +82,8 @@ namespace Pedantic.Chess
                 board.hash = Hash;
                 board.bitboards = Bitboards;
                 board.board = PieceBoard;
+                board.kingIndex = KingIndex;
+                board.eval.RestoreState(ref this);
             }
         }
 
@@ -275,9 +276,11 @@ namespace Pedantic.Chess
         private byte halfMoveClock;
         private ushort fullMoveCounter;
         private ulong hash;
-        private Buffer2<GenMoveHelper> helpers;
+        private ByColor<SquareIndex> kingIndex;
+        private ByColor<GenMoveHelper> helpers;
 
-        ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
+        private EvalUpdates eval = new();
+        private ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
 
         #endregion
 
@@ -300,8 +303,8 @@ namespace Pedantic.Chess
         public Board()
         {
             Clear();
-            helpers[0] = new WhiteGenMoveHelper(this);
-            helpers[1] = new BlackGenMoveHelper(this);
+            helpers[Color.White] = new WhiteGenMoveHelper(this);
+            helpers[Color.Black] = new BlackGenMoveHelper(this);
         }
 
         public Board(string fen) : this()
@@ -320,6 +323,7 @@ namespace Pedantic.Chess
             halfMoveClock = other.halfMoveClock;
             fullMoveCounter = other.fullMoveCounter;
             hash = other.hash;
+            kingIndex = other.kingIndex;
         }
 
         #endregion
@@ -426,6 +430,8 @@ namespace Pedantic.Chess
             return board[(int)sq];
         }
 
+        public ref ByColor<SquareIndex> KingIndex => ref kingIndex;
+
         #endregion
 
         #region State management
@@ -441,6 +447,7 @@ namespace Pedantic.Chess
             enPassant = SquareIndex.None;
             enPassantValidated = SquareIndex.None;
             hash = 0;
+            kingIndex.Fill(SquareIndex.None);
         }
 
         public void AddPiece(Color color, Piece piece, SquareIndex sq)
@@ -456,6 +463,10 @@ namespace Pedantic.Chess
             Units(color) |= pcMask;
             Pieces(piece) |= pcMask;
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
+            if (piece == Piece.King)
+            {
+                kingIndex[color] = sq;
+            }
         }
 
         public void RemovePiece(Color color, Piece piece, SquareIndex sq)
@@ -489,7 +500,7 @@ namespace Pedantic.Chess
         public void GenerateEvasions(MoveList list)
         {
             SquareIndex kingIndex = (SquareIndex)Pieces(sideToMove, Piece.King).TzCount;
-            GenMoveHelper helper = helpers[(int)sideToMove];
+            GenMoveHelper helper = helpers[sideToMove];
             EvasionInfo info = GetEvasionInfo(kingIndex, helper);
 
             GenerateKingCaptures(kingIndex, list, ref info);
@@ -509,7 +520,7 @@ namespace Pedantic.Chess
 
         public void GenerateCaptures(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
         {
-            GenMoveHelper helper = helpers[(int)sideToMove];
+            GenMoveHelper helper = helpers[sideToMove];
             GeneratePawnCaptures(list, ref info, helper);
             GeneratePieceCaptures(list, ref info);
             GenerateKingCaptures(kingIndex, list, ref info);
@@ -517,7 +528,7 @@ namespace Pedantic.Chess
 
         public void GeneratePromotions(MoveList list, ref EvasionInfo info)
         {
-            GenMoveHelper helper = helpers[(int)sideToMove];
+            GenMoveHelper helper = helpers[sideToMove];
             foreach (SquareIndex from in helper.PawnsPromoting(ref info))
             {
                 SquareIndex to = PawnPlus(sideToMove, from);
@@ -530,7 +541,7 @@ namespace Pedantic.Chess
 
         public void GenerateQuiets(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
         {
-            GenMoveHelper helper = helpers[(int)sideToMove];
+            GenMoveHelper helper = helpers[sideToMove];
             GeneratePawnQuiets(list, ref info, helper);
             GeneratePieceQuiets(list, ref info);
             helper.GenerateCastles(list);
@@ -806,28 +817,8 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsChecked(Color byColor)
         {
-            SquareIndex sq = (SquareIndex)Pieces(byColor.Flip(), Piece.King).TzCount;
-            if ((PawnDefends(byColor, sq) & Pieces(byColor, Piece.Pawn)) != 0)
-            {
-                return true;
-            }
-
-            if ((KnightMoves(sq) & Pieces(byColor, Piece.Knight)) != 0)
-            {
-                return true;
-            }
-
-            if ((GetBishopMoves(sq, All) & DiagonalSliders(byColor)) != 0)
-            {
-                return true;
-            }
-
-            if ((GetRookMoves(sq, All) & OrthogonalSliders(byColor)) != 0)
-            {
-                return true;
-            }
-
-            return false;
+            SquareIndex kingSquare = (SquareIndex)Pieces(byColor.Flip(), Piece.King).TzCount;
+            return IsSquareAttackedByColor(kingSquare, byColor);
         }
 
         public bool IsSquareAttackedByColor(SquareIndex sq, Color color)

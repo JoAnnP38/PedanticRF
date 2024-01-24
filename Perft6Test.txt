@@ -1,4 +1,4 @@
 uci
 position startpos
-perft depth 7 divide
+perft depth 6
 quit
