@@ -10,6 +10,7 @@
         public const int MAX_PLY = 96;
         public const int MAX_GAME_LENGTH = 768 + MAX_PLY;
         public const int MAX_PHASE = 64;
+        public const int MAX_KING_BUCKETS = 16;
         public const int CHECKMATE_SCORE = 20000;
         public const int TABLEBASE_WIN = 19500;
         public const int TABLEBASE_LOSS = -19500;

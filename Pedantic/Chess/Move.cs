@@ -142,10 +142,17 @@ namespace Pedantic.Chess
 
         public override string ToString()
         {
-            string promote = IsPromote ? char.ToLower(Promote.ToChar()).ToString() : string.Empty;
-            string fromString = From.ToString().ToLower();
-            string toString = To.ToString().ToLower();
-            return $"{fromString}{toString}{promote}";
+            Span<char> chars = stackalloc char[5];
+            chars[0] = From.File().ToUciChar();
+            chars[1] = From.Rank().ToUciChar();
+            chars[2] = To.File().ToUciChar();
+            chars[3] = To.Rank().ToUciChar();
+            if (IsPromote)
+            {
+                chars[4] = Promote.ToUciChar();
+                return chars.ToString();
+            }
+            return chars.Slice(0, 4).ToString();
         }
 
         public readonly string ToLongString()

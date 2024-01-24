@@ -24,13 +24,7 @@ namespace Pedantic
 
         static void InitializeStaticData()
         {
-            var classesWithStaticData = Assembly.GetExecutingAssembly().GetTypes()
-                .Where(t => t.GetInterfaces().Contains(typeof(IInitialize)));
-
-            foreach(var initClass in classesWithStaticData)
-            {
-                initClass.GetMethod("Initialize")?.Invoke(null, null);
-            }
+            Board.Initialize();
         }
 
         private static async Task RunUci()

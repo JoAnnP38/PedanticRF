@@ -62,6 +62,11 @@ namespace Pedantic.Chess
             return pcChar;
         }
 
+        public static char ToUciChar(this Piece piece)
+        {
+            return char.ToLower(pieceChar[(int)piece + 1]);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToString(this Piece piece)
         {
@@ -121,6 +126,24 @@ namespace Pedantic.Chess
         ];
     }
 
+    public static class RankExtensions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static char ToUciChar(this Rank rank)
+        {
+            return (char)('1' + (int)rank);
+        }
+    }
+
+    public static class FileExtensions
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static char ToUciChar(this File file)
+        {
+            return (char)('a' + (int)file);
+        }
+    }
+
     public static class SquareIndexExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,6 +156,12 @@ namespace Pedantic.Chess
         public static Rank Rank(this SquareIndex sq)
         {
             return (Rank)((int)sq / 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Bucket(this SquareIndex sq)
+        {
+            return sq == SquareIndex.None ? (sbyte)-1 : (sbyte)((sbyte)sq.Rank() * 2 + (sbyte)sq.File());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
