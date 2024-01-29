@@ -1,4 +1,6 @@
-﻿namespace Pedantic.Chess
+﻿using System.Runtime.CompilerServices;
+
+namespace Pedantic.Chess
 {
     public readonly struct KingBuckets
     {
@@ -19,12 +21,14 @@
             Enemy = enemySq.Normalize(friendlyColor.Flip()).Bucket();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KingBuckets(sbyte friendly, sbyte enemy)
         {
             Friendly = friendly;
             Enemy = enemy;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KingBuckets Flip()
         {
             return new(Enemy, Friendly);

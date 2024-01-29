@@ -22,7 +22,13 @@ namespace Pedantic.Chess
             Util.Assert(IsValidSquare(from));
             Util.Assert(IsValidSquare(to));
             move = Pack(stm, piece, (SquareIndex)from, (SquareIndex)to, type, capture, promote);
-        }           
+        } 
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Move(uint mvValue)
+        {
+            move = mvValue;
+        }
 
         public readonly Color Stm
         {
@@ -214,6 +220,12 @@ namespace Pedantic.Chess
 
             return false;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator uint (Move move) => move.move;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static explicit operator Move (uint mv) => new Move(mv);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator==(Move lhs, Move rhs)

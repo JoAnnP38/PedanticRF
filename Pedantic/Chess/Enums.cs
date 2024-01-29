@@ -30,8 +30,6 @@
         Null = 15
     }
 
-    public enum Bound : sbyte { None = -1, Exact, Upper, Lower }
-
     public enum GamePhase : byte { Opening, MidGame, EndGame, EndGameMopup }
 
     public enum File : sbyte { None = -1, FileA, FileB, FileC, FileD, FileE, FileF, FileG, FileH }
@@ -63,4 +61,8 @@
         BadCapture,
         Quiet,
     }
+
+    public enum UciOptionType : byte { Button, Check, Combo, Spin, String }
+
+    public enum Bound : byte { None, Exact, Lower, Upper }
 }

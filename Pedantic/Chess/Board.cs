@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using Pedantic.Collections;
 using Pedantic.Utilities;
@@ -17,12 +18,22 @@ namespace Pedantic.Chess
             public const int CAPACITY = MAX_SQUARES;
             private Square _element0;
 
-            public static void Clear(ref SquareArray array)
+            public Square this[SquareIndex index]
             {
-                for (int n = 0; n < CAPACITY; n++)
-                {
-                    array[n] = Square.Empty;
-                }
+                get => this[(int)index];
+                set => this[(int)index] = value;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Span<Square> AsSpan()
+            {
+                return MemoryMarshal.CreateSpan(ref _element0, CAPACITY);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Clear()
+            {
+                AsSpan().Clear();
             }
         }
 
@@ -32,12 +43,16 @@ namespace Pedantic.Chess
             public const int CAPACITY = 9;
             private Bitboard _element0;
 
-            public static void Clear(ref BitboardArray array)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Span<Bitboard> AsSpan()
             {
-                for (int n = 0; n < CAPACITY; n++)
-                {
-                    array[n] = (Bitboard)0ul;
-                }
+                return MemoryMarshal.CreateSpan(ref _element0, CAPACITY);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Clear()
+            {
+                AsSpan().Clear();
             }
         }
 
@@ -246,6 +261,7 @@ namespace Pedantic.Chess
             // valid squares to move to when in check
             public readonly Bitboard PushMask;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public EvasionInfo()
             {
                 CheckerCount = 0;
@@ -254,6 +270,7 @@ namespace Pedantic.Chess
                 PushMask = bbAll;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public EvasionInfo(int checkerCount, Bitboard kingDanger, Bitboard captureMask, Bitboard pushMask)
             {
                 CheckerCount = checkerCount;
@@ -438,8 +455,8 @@ namespace Pedantic.Chess
 
         public void Clear()
         {
-            SquareArray.Clear(ref board);
-            BitboardArray.Clear(ref bitboards);
+            board.Clear();
+            bitboards.Clear();
             halfMoveClock = 0;
             fullMoveCounter = 0;
             sideToMove = Color.None;
@@ -490,7 +507,7 @@ namespace Pedantic.Chess
 
         public void GenerateMoves(MoveList list)
         {
-            SquareIndex kingIndex = (SquareIndex)Pieces(sideToMove, Piece.King).TzCount;
+            SquareIndex kingIndex = KingIndex[sideToMove];
             EvasionInfo info = new();
             GenerateCaptures(kingIndex, list, ref info);
             GeneratePromotions(list, ref info);
@@ -499,7 +516,7 @@ namespace Pedantic.Chess
 
         public void GenerateEvasions(MoveList list)
         {
-            SquareIndex kingIndex = (SquareIndex)Pieces(sideToMove, Piece.King).TzCount;
+            SquareIndex kingIndex = KingIndex[sideToMove];
             GenMoveHelper helper = helpers[sideToMove];
             EvasionInfo info = GetEvasionInfo(kingIndex, helper);
 
@@ -817,38 +834,17 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsChecked(Color byColor)
         {
-            SquareIndex kingSquare = (SquareIndex)Pieces(byColor.Flip(), Piece.King).TzCount;
+            SquareIndex kingSquare = KingIndex[byColor.Flip()];
             return IsSquareAttackedByColor(kingSquare, byColor);
         }
 
         public bool IsSquareAttackedByColor(SquareIndex sq, Color color)
         {
-            if ((PawnDefends(color, sq) & Pieces(color, Piece.Pawn)) != 0)
-            {
-                return true;
-            }
-
-            if ((KnightMoves(sq) & Pieces(color, Piece.Knight)) != 0)
-            {
-                return true;
-            }
-
-            if ((KingMoves(sq) & Pieces(color, Piece.King)) != 0)
-            {
-                return true;
-            }
-
-            if ((GetBishopMoves(sq, All) & DiagonalSliders(color)) != 0)
-            {
-                return true;
-            }
-
-            if ((GetRookMoves(sq, All) & OrthogonalSliders(color)) != 0)
-            {
-                return true;
-            }
-
-            return false;
+            return  ((PawnDefends(color, sq) & Pieces(color, Piece.Pawn)) != 0) ||
+                    ((KnightMoves(sq) & Pieces(color, Piece.Knight)) != 0) ||
+                    ((KingMoves(sq) & Pieces(color, Piece.King)) != 0) ||
+                    ((GetBishopMoves(sq, All) & DiagonalSliders(color)) != 0) ||
+                    ((GetRookMoves(sq, All) & OrthogonalSliders(color)) != 0);
         }
 
         private EvasionInfo GetEvasionInfo(SquareIndex kingIndex, GenMoveHelper helper)
@@ -877,7 +873,7 @@ namespace Pedantic.Chess
                 kingDanger |= knightAttacks;
             }
 
-            kingDanger |= KingMoves((SquareIndex)Pieces(opponent, Piece.King).TzCount);
+            kingDanger |= KingMoves(KingIndex[opponent]);
 
             // remove king from blockers so line attacks can continue through king square
             Bitboard blockers = All ^ kingMask;
@@ -930,6 +926,7 @@ namespace Pedantic.Chess
             };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Bitboard GetQueenMoves(SquareIndex from, Bitboard blockers)
         {
             // The usage of IsPextSupported (a static readonly) will be treated as a constant
@@ -943,6 +940,7 @@ namespace Pedantic.Chess
             return GetQueenAttacksFancy(from, blockers);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Bitboard GetBishopMoves(SquareIndex from, Bitboard blockers)
         {
             if (IsPextSupported)
@@ -952,6 +950,7 @@ namespace Pedantic.Chess
             return GetBishopAttacksFancy(from, blockers);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Bitboard GetRookMoves(SquareIndex from, Bitboard blockers)
         {
             if (IsPextSupported)

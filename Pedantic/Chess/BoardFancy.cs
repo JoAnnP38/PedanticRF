@@ -15,6 +15,7 @@ namespace Pedantic.Chess
             public readonly ulong Mask;
             public readonly ulong Hash;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public FancyHash(int offset, ulong mask, ulong hash)
             {
                 Offset = offset;

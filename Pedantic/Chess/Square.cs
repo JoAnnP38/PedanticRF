@@ -1,14 +1,18 @@
-﻿namespace Pedantic.Chess
+﻿using System.Runtime.CompilerServices;
+
+namespace Pedantic.Chess
 {
     public readonly struct Square
     {
         private readonly byte bits;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Square()
         {
             bits = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Square(Color color, Piece piece)
         {
             if (color == Color.None || piece == Piece.None)

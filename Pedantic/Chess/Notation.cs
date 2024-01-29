@@ -19,6 +19,7 @@ namespace Pedantic.Chess
             return fenRegex.IsMatch(fen);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToFenPiece(Color color, Piece piece)
         {
             return piece.ToChar(color).ToString();

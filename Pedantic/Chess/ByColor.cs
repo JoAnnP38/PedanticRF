@@ -18,16 +18,19 @@ namespace Pedantic.Chess
             set => this[(int)color] = value;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan()
         {
             return MemoryMarshal.CreateSpan(ref _element0, LENGTH);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             AsSpan().Clear();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Fill(T value)
         {
             this[0] = value;

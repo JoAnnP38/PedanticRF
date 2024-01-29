@@ -31,11 +31,13 @@ namespace Pedantic.Chess
 
         #endregion
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MoveList()
         {
             history = new FakeHistory();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MoveList(IHistory history)
         {
             this.history = history;
@@ -52,6 +54,7 @@ namespace Pedantic.Chess
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetScore(int index)
         {
 
@@ -79,6 +82,7 @@ namespace Pedantic.Chess
             array[insertIndex++] = new ScoredMove { Move = move, Score = score };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(IEnumerable<Move> moves)
         {
             foreach (Move move in moves)
@@ -87,6 +91,7 @@ namespace Pedantic.Chess
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddQuiet(Color stm, Piece piece, SquareIndex from, SquareIndex to, MoveType type = MoveType.Normal)
         {
             Util.Assert(insertIndex < CAPACITY);
@@ -94,6 +99,7 @@ namespace Pedantic.Chess
             array[insertIndex++] = new ScoredMove { Move = move, Score = history[move] };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddPromote(Color stm, SquareIndex from, SquareIndex to, Piece promote)
         {
             Util.Assert(insertIndex < CAPACITY);
@@ -101,6 +107,7 @@ namespace Pedantic.Chess
             array[insertIndex++] = new ScoredMove { Move = move, Score = PromoteScore(promote) };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddCapture(Color stm, Piece piece, SquareIndex from, SquareIndex to, MoveType type, Piece capture, Piece promote = Piece.None)
         {
             Util.Assert(insertIndex < CAPACITY);
@@ -108,6 +115,7 @@ namespace Pedantic.Chess
             array[insertIndex++] = new ScoredMove { Move = move, Score = CaptureScore(capture, piece, promote) };
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             insertIndex = 0;

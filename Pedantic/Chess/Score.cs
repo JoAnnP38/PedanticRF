@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Pedantic.Chess
 {
@@ -6,11 +7,13 @@ namespace Pedantic.Chess
     {
         private readonly int score;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Score(short mgScore, short egScore)
         {
             score = (int)(((uint)egScore << 16) + mgScore);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Score(int scoreValue)
         {
             score = scoreValue;
@@ -57,15 +60,31 @@ namespace Pedantic.Chess
             return score.GetHashCode();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator int(Score s) => s.score;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static explicit operator Score(int score) => new(score);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Score lhs, Score rhs) => lhs.score == rhs.score;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(Score lhs, Score rhs) => lhs.score != rhs.score;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Score operator +(Score lhs, Score rhs) => (Score)(lhs.score + rhs.score);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Score operator -(Score lhs, Score rhs) => (Score)(lhs.score - rhs.score);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Score operator -(Score s) => s * -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Score operator *(int lhs, Score rhs) => (Score)(lhs * rhs.score);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Score operator *(Score lhs, int rhs) => (Score)(lhs.score * rhs);
 
         public readonly static Score Zero = new Score(0);
