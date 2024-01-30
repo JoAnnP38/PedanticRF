@@ -11,27 +11,27 @@ namespace Pedantic.Benchmarks
     public unsafe class RandomAccessMemoryBenchmarks
     {
         public const int MB_SIZE = 1024 * 1024;
-        public const int ITERATIONS = 10000;
+        public const int ITERATIONS = 1000000;
         public const int CACHE_MB = 256;
         public const int MEM_ALIGN = 64;
 
         public struct Item
         {
-            public ulong key;
+            public ulong slot;
             public ulong data;
         }
 
         [GlobalSetup]
         public void GlobalSetup()
         {
+            capacity = (CACHE_MB * MB_SIZE) / sizeof(Item);
+
             for (int n = 0; n < ITERATIONS; n++)
             {
-                data[n].key = (ulong)Random.Shared.NextInt64(long.MinValue, long.MaxValue);
+                data[n].slot = (ulong)Random.Shared.NextInt64(capacity);
                 data[n].data = (ulong)Random.Shared.NextInt64();
             }
 
-            capacity = (CACHE_MB * MB_SIZE) / sizeof(Item);
-            mask = (ulong)(capacity - 1);
             array = new Item[capacity];
             fixedArray = GC.AllocateArray<Item>(capacity, true);
             pNativeArray = (Item*)NativeMemory.Alloc((nuint)capacity, (nuint)sizeof(Item));
@@ -50,8 +50,8 @@ namespace Pedantic.Benchmarks
         {
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                array[slot] = data[n];
+                int slot = (int)data[n].slot;
+                array[slot] = data[n]; // write
             }
         }
 
@@ -62,8 +62,8 @@ namespace Pedantic.Benchmarks
             {
                 for (int n = 0; n < ITERATIONS; n++)
                 {
-                    int slot = (int)(data[n].key & mask);
-                    pinned[slot] = data[n];
+                    int slot = (int)data[n].slot;
+                    pinned[slot] = data[n]; // write
                 }
             }
         }
@@ -73,8 +73,8 @@ namespace Pedantic.Benchmarks
         {
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                fixedArray[slot] = data[n];
+                int slot = (int)data[n].slot;
+                fixedArray[slot] = data[n]; // write
             }
         }
 
@@ -85,8 +85,8 @@ namespace Pedantic.Benchmarks
             {
                 for (int n = 0; n < ITERATIONS; n++)
                 {
-                    int slot = (int)(data[n].key & mask);
-                    pinned[slot] = data[n];
+                    int slot = (int)data[n].slot;
+                    pinned[slot] = data[n]; // write
                 }
             }
         }
@@ -96,8 +96,8 @@ namespace Pedantic.Benchmarks
         {
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                pNativeArray[slot] = data[n];
+                int slot = (int)data[n].slot;
+                pNativeArray[slot] = data[n]; // write
             }
         }
 
@@ -106,8 +106,8 @@ namespace Pedantic.Benchmarks
         {
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                pAlignedArray[slot] = data[n];
+                int slot = (int)data[n].slot;
+                pAlignedArray[slot] = data[n]; // write
             }
         }
 
@@ -117,8 +117,9 @@ namespace Pedantic.Benchmarks
             ulong sum = 0;
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                sum += array[slot].data & 0x0ff;
+                int slot = (int)data[n].slot;
+                Item item = array[slot]; // read
+                sum += item.data;
             }
             return sum;
         }
@@ -132,8 +133,9 @@ namespace Pedantic.Benchmarks
             {
                 for (int n = 0; n < ITERATIONS; n++)
                 {
-                    int slot = (int)(data[n].key & mask);
-                    sum += pinned[slot].data & 0x0ff;
+                    int slot = (int)data[n].slot;
+                    Item item = pinned[slot]; // read
+                    sum += item.data;
                 }
             }
             return sum;
@@ -145,8 +147,9 @@ namespace Pedantic.Benchmarks
             ulong sum = 0;
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                sum += fixedArray[slot].data & 0x0ff;
+                int slot = (int)data[n].slot;
+                Item item = fixedArray[slot]; // read
+                sum += item.data;
             }
             return sum;
         }
@@ -160,8 +163,9 @@ namespace Pedantic.Benchmarks
             {
                 for (int n = 0; n < ITERATIONS; n++)
                 {
-                    int slot = (int)(data[n].key & mask);
-                    sum += pinned[slot].data & 0x0ff;
+                    int slot = (int)data[n].slot;
+                    Item item = pinned[slot]; // read
+                    sum += item.data;
                 }
             }
             return sum;
@@ -173,8 +177,9 @@ namespace Pedantic.Benchmarks
             ulong sum = 0;
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                sum += pNativeArray[slot].data & 0x0ff;
+                int slot = (int)data[n].slot;
+                Item item = pNativeArray[slot]; // read
+                sum += item.data;
             }
             return sum;
         }
@@ -186,8 +191,9 @@ namespace Pedantic.Benchmarks
             ulong sum = 0;
             for (int n = 0; n < ITERATIONS; n++)
             {
-                int slot = (int)(data[n].key & mask);
-                sum += pAlignedArray[slot].data & 0x0ff;
+                int slot = (int)data[n].slot;
+                Item item = pAlignedArray[slot]; // read
+                sum += item.data;
             }
             return sum;
         }
@@ -199,6 +205,5 @@ namespace Pedantic.Benchmarks
 
         Item[] data = new Item[ITERATIONS];
         int capacity;
-        ulong mask;
     }
 }
