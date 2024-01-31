@@ -23,14 +23,45 @@ namespace Pedantic.Chess
             remaining = other.remaining;
         }
 
-        public bool Infinite { get; set; }
-        public static long Now => Stopwatch.GetTimestamp();
-        public int Elapsed => Milliseconds(Now - t0);
-        public int ElapsedInterval => Milliseconds(Now - tN);
-        public int TimeLimit => timeLimit;
+        public bool Infinite 
+        { 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get; 
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set; 
+        }
+
+        public static long Now
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Stopwatch.GetTimestamp();
+        }
+
+        public int Elapsed
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Milliseconds(Now - t0);
+        }
+
+        public int ElapsedInterval
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Milliseconds(Now - tN);
+        }
+
+        public int TimeLimit
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => timeLimit;
+        }
+
         public Uci Uci
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => uci;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => uci = value;
         }
 

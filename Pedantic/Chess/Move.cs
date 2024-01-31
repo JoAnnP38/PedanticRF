@@ -32,6 +32,7 @@ namespace Pedantic.Chess
 
         public readonly Color Stm
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int c = BitOps.BitFieldExtract(move, 0, 2);
@@ -41,6 +42,7 @@ namespace Pedantic.Chess
 
         public readonly Piece Piece
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int pc = BitOps.BitFieldExtract(move, 2, 3);
@@ -50,6 +52,7 @@ namespace Pedantic.Chess
 
         public readonly SquareIndex From
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int from = BitOps.BitFieldExtract(move, 5, 7);
@@ -59,6 +62,7 @@ namespace Pedantic.Chess
 
         public readonly SquareIndex To
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int to = BitOps.BitFieldExtract(move, 12, 7);
@@ -68,6 +72,7 @@ namespace Pedantic.Chess
 
         public readonly MoveType Type
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return (MoveType)BitOps.BitFieldExtract(move, 19, 4);
@@ -76,6 +81,7 @@ namespace Pedantic.Chess
 
         public readonly Piece Capture
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int pc = BitOps.BitFieldExtract(move, 23, 3);
@@ -85,6 +91,7 @@ namespace Pedantic.Chess
 
         public readonly Piece Promote
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 int pc = BitOps.BitFieldExtract(move, 26, 3);
@@ -94,6 +101,7 @@ namespace Pedantic.Chess
 
         public readonly bool IsCapture
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return Capture != Piece.None;
@@ -102,6 +110,7 @@ namespace Pedantic.Chess
 
         public readonly bool IsPromote
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return Promote != Piece.None;
@@ -110,6 +119,7 @@ namespace Pedantic.Chess
 
         public readonly bool IsPawnMove
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return Piece == Piece.Pawn;
@@ -118,6 +128,7 @@ namespace Pedantic.Chess
 
         public readonly bool IsNoisy
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return IsCapture || IsPromote;
@@ -126,6 +137,7 @@ namespace Pedantic.Chess
 
         public readonly bool IsQuiet
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 return !IsNoisy;

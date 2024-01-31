@@ -2,8 +2,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-using static Pedantic.Chess.Constants;
-
 namespace Pedantic.Chess
 {
     [InlineArray(MAX_COLORS)]

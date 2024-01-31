@@ -86,9 +86,23 @@ namespace Pedantic.Chess
             bb = RANK_1_MASK << ((int)rank * 8);
         }
 
-        public int TzCount => BitOps.TzCount(bb);
-        public int LzCount => BitOps.LzCount(bb);
-        public int PopCount => BitOps.PopCount(bb);
+        public int TzCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BitOps.TzCount(bb);
+        }
+
+        public int LzCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BitOps.LzCount(bb);
+        }
+
+        public int PopCount
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BitOps.PopCount(bb);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Bitboard ResetLsb() => (Bitboard)BitOps.ResetLsb(bb);
@@ -111,7 +125,11 @@ namespace Pedantic.Chess
             return bb == other.bb;
         }
 
-        public int this[SquareIndex sq] => BitOps.GetBit(bb, (int)sq);
+        public int this[SquareIndex sq]
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => BitOps.GetBit(bb, (int)sq);
+        }
 
         public override bool Equals([NotNullWhen(true)] object? obj)
         {

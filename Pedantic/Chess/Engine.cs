@@ -1,8 +1,6 @@
 ﻿using Pedantic.Collections;
 using Pedantic.Utilities;
 
-using static Pedantic.Chess.Constants;
-
 namespace Pedantic.Chess
 {
     public static class Engine

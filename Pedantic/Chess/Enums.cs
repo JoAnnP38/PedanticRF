@@ -51,8 +51,9 @@
 
     public enum Direction : sbyte { None = -1, North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest }
 
-    public enum MoveGenPhase : byte
+    public enum MoveGenPhase : sbyte
     {
+        Invalid = -1,
         HashMove,
         GoodCapture,
         Promotion,

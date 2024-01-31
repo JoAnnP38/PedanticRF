@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using static Pedantic.Chess.Constants;
 
 namespace Pedantic.Chess
 {

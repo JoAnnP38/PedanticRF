@@ -47,9 +47,11 @@ namespace Pedantic.Chess
         public UciOptionCheck(string name, bool defaultValue) : base(name, UciOptionType.Check)
         {
             DefaultValue = defaultValue;
+            CurrentValue = DefaultValue;
         }
 
-        public bool DefaultValue { get; set; }
+        public bool DefaultValue { get; init; }
+        public bool CurrentValue { get; set; }
 
         public override string ToString()
         {
@@ -67,12 +69,13 @@ namespace Pedantic.Chess
 
     public class UciOptionString : UciOptionBase
     {
-        public UciOptionString(string name, string? defaultValue) : base(name, UciOptionType.String)
+        public UciOptionString(string name, string defaultValue) : base(name, UciOptionType.String)
         {
             DefaultValue = defaultValue;
+            CurrentValue = DefaultValue;
         }
 
-        public string? DefaultValue 
+        public string DefaultValue 
         { 
             get
             {
@@ -82,11 +85,11 @@ namespace Pedantic.Chess
                 }
                 return defaultValue;
             }
-            set
+            init
             {
                 if (string.IsNullOrWhiteSpace(value) || string.Compare(value, "<empty>", true) == 0)
                 {
-                    defaultValue = null;
+                    defaultValue = string.Empty;
                 }
                 else
                 {
@@ -95,21 +98,24 @@ namespace Pedantic.Chess
             }
         }
 
+        public string CurrentValue { get; set; }
+
         public override string ToString()
         {
             return $"{base.ToString()} default {DefaultValue}";
         }
 
-        private string? defaultValue;
+        private string defaultValue = string.Empty;
     }
 
     public class UciOptionSpin : UciOptionBase
     {
         public UciOptionSpin(string name, int defaultValue, int minValue, int maxValue) : base(name, UciOptionType.Spin)
         {
-            DefaultValue = defaultValue;
             MinValue = minValue;
             MaxValue = maxValue;
+            DefaultValue = defaultValue;
+            CurrentValue = DefaultValue;
         }
 
         public int DefaultValue 
@@ -119,12 +125,25 @@ namespace Pedantic.Chess
                 return defaultValue;
             }
 
-            set
+            init
             {
                 Util.Assert(value >= MinValue && value <= MaxValue);
                 if (value >= MinValue && value <= MaxValue)
                 {
                     defaultValue = value;
+                }
+            }
+        }
+
+        public int CurrentValue
+        {
+            get => currentValue;
+            set
+            {
+                Util.Assert(value >= MinValue && value <= MaxValue);
+                if (value >= MinValue && value <= MaxValue)
+                {
+                    currentValue = value;
                 }
             }
         }
@@ -138,6 +157,7 @@ namespace Pedantic.Chess
         }
 
         private int defaultValue;
+        private int currentValue;
     }
 
     public class UciOptionCombo : UciOptionBase
@@ -156,7 +176,7 @@ namespace Pedantic.Chess
                 return defaultValue;
             }
 
-            set
+            init
             {
                 if (Array.Exists(options, (s) => s.Equals(value)))
                 {
@@ -174,6 +194,7 @@ namespace Pedantic.Chess
         public override string ToString()
         {
             StringBuilder sb = new(base.ToString());
+            sb.Append($" default {DefaultValue}");
             foreach (string option in options)
             {
                 sb.Append($" var {option}");

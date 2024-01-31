@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 using Pedantic.Utilities;
 
-using static Pedantic.Chess.Constants;
-
 namespace Pedantic.Chess
 {
     public sealed class Perft

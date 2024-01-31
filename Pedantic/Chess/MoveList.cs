@@ -11,8 +11,20 @@ namespace Pedantic.Chess
 
         public readonly struct ScoredMove
         {
-            public Move Move { get; init; }
-            public int Score { get; init; }
+            public Move Move 
+            { 
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get; 
+
+                init; 
+            }
+            public int Score 
+            { 
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get; 
+
+                init; 
+            }
         }
 
         public const int CAPACITY = 218;
@@ -47,6 +59,7 @@ namespace Pedantic.Chess
 
         public Move this[int index]
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
                 Util.Assert(index >= 0 && index < insertIndex);

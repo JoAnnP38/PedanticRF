@@ -4,8 +4,6 @@ using System.Runtime.InteropServices;
 
 using Pedantic.Utilities;
 
-using static Pedantic.Chess.Constants;
-
 namespace Pedantic.Chess
 {
     public unsafe sealed class TtCache : IDisposable

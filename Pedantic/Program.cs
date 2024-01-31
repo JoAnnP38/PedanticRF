@@ -1,6 +1,4 @@
-﻿using System.Reflection;
-using Pedantic.Chess;
-using static Pedantic.Chess.Constants;
+﻿using Pedantic.Chess;
 
 namespace Pedantic
 {
@@ -90,6 +88,7 @@ namespace Pedantic
                 case "uci":
                     Console.WriteLine($"id name {APP_NAME_VER}");
                     Console.WriteLine($"id author {APP_AUTHOR}");
+                    UciOptions.WriteLine();
                     Console.WriteLine("uciok");
                     break;
 

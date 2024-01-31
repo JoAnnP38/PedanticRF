@@ -1,10 +1,9 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Pedantic.Collections;
 using Pedantic.Utilities;
-
-using static Pedantic.Chess.Constants;
 
 namespace Pedantic.Chess
 {
@@ -20,7 +19,10 @@ namespace Pedantic.Chess
 
             public Square this[SquareIndex index]
             {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get => this[(int)index];
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set => this[(int)index] = value;
             }
 
@@ -280,6 +282,77 @@ namespace Pedantic.Chess
             }
         }
 
+        public readonly struct GenMove
+        {
+            public GenMove(Move move, MoveGenPhase phase)
+            {
+                Move = move;
+                MovePhase = phase;
+            }
+
+            public Move Move
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get; 
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                init;
+            }
+
+            public MoveGenPhase MovePhase
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get;
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                init;
+            }
+        }
+
+        public struct MoveEnumerator : IEnumerable<GenMove>, IEnumerator<GenMove>, IEnumerator, IDisposable
+        {
+            public MoveEnumerator(Board board, MoveList list, Move ttMove)
+            {
+
+            }
+
+            public GenMove Current => throw new NotImplementedException();
+
+            object IEnumerator.Current => throw new NotImplementedException();
+
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public MoveEnumerator GetEnumerator()
+            {
+                return this;
+            }
+
+            IEnumerator<GenMove> IEnumerable<GenMove>.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public bool MoveNext()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Reset()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            private GenMove current = new(Move.NullMove, MoveGenPhase.Invalid);
+        }
+
         #endregion
 
         #region Member data
@@ -349,64 +422,120 @@ namespace Pedantic.Chess
 
         public Bitboard All
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[0];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[0] = value;
         }
 
         public Bitboard WhitePieces
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Color.White + 1];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Color.White + 1] = value;
         }
 
         public Bitboard BlackPieces
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Color.Black + 1];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Color.Black + 1] = value;
         }
 
         public Bitboard Pawns
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.Pawn + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.Pawn + 3] = value;
         }
 
         public Bitboard Knights
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.Knight + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.Knight + 3] = value;
         }
 
         public Bitboard Bishops
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.Bishop + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.Bishop + 3] = value;
         }
 
         public Bitboard Rooks
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.Rook + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.Rook + 3] = value;
         }
 
         public Bitboard Queens
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.Queen + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.Queen + 3] = value;
         }
 
         public Bitboard Kings
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => bitboards[(int)Piece.King + 3];
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => bitboards[(int)Piece.King + 3] = value;
         }
 
-        public Color SideToMove => sideToMove;
-        public Color Opponent => sideToMove.Flip();
-        public CastlingRights Castling => castling;
-        public SquareIndex EnPassant => enPassant;
-        public SquareIndex EnPassantValidated => enPassantValidated;
-        public ulong Hash => hash;
+        public Color SideToMove
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => sideToMove;
+        }
+
+        public Color Opponent
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => sideToMove.Flip();
+        }
+
+        public CastlingRights Castling
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => castling;
+        }
+
+        public SquareIndex EnPassant 
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => enPassant;
+        }
+
+        public SquareIndex EnPassantValidated
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => enPassantValidated;
+        }
+
+        public ulong Hash
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => hash;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref Bitboard Units(Color color)
@@ -447,7 +576,11 @@ namespace Pedantic.Chess
             return board[(int)sq];
         }
 
-        public ref ByColor<SquareIndex> KingIndex => ref kingIndex;
+        public ref ByColor<SquareIndex> KingIndex
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref kingIndex;
+        }
 
         #endregion
 
@@ -688,6 +821,8 @@ namespace Pedantic.Chess
                 }
             }
         }
+
+
 
         #endregion
 
@@ -1168,6 +1303,7 @@ namespace Pedantic.Chess
 
         #region Miscellaneous / Interfaces
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Board Clone()
         {
             return new Board(this);
