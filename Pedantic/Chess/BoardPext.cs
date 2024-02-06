@@ -72,8 +72,6 @@ namespace Pedantic.Chess
             }
 
             Stopwatch sw = new ();
-            sw.Start();
-            sw.Stop();
             long fancyElapsed = 0;
             long pextElapsed = 0;
             for (int n = 0; n < 5; n++)
@@ -83,11 +81,11 @@ namespace Pedantic.Chess
                 {
                     foreach ((int sq, ulong blockers) in pextTests)
                     {
-                        GetQueenAttacksFancy((SquareIndex)sq, (Bitboard)blockers);
+                        ulong attacks = GetQueenAttacksFancy((SquareIndex)sq, (Bitboard)blockers);
                     }
                 }
-
                 sw.Stop();
+
                 if (n > 0)
                 {
                     fancyElapsed += sw.ElapsedTicks;
@@ -98,12 +96,11 @@ namespace Pedantic.Chess
                 {
                     foreach ((int sq, ulong blockers) in pextTests)
                     {
-                        GetQueenAttacksPext((SquareIndex)sq, (Bitboard)blockers);
+                        ulong attacks = GetQueenAttacksPext((SquareIndex)sq, (Bitboard)blockers);
                     }
                 }
-
                 sw.Stop();
-
+ 
                 if (n > 0)
                 {
                     pextElapsed += sw.ElapsedTicks;

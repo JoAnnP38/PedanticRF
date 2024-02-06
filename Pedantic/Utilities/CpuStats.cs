@@ -2,7 +2,7 @@
 
 namespace Pedantic.Utilities
 {
-    public class CpuStats
+    public struct CpuStats
     {
         public CpuStats()
         {

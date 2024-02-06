@@ -26,6 +26,10 @@ namespace Pedantic.Chess
         internal const string OPT_TM_ABSOLUTE_LIMIT = "UCI_T_TM_AbsoluteLimit";
         internal const string OPT_TM_DIFFICULTY_MIN = "UCI_T_TM_DifficultyMin";
         internal const string OPT_TM_DIFFICULTY_MAX = "UCI_T_TM_DifficultyMax";
+        internal const string OPT_ASP_MIN_DEPTH = "UCI_T_ASP_MinDepth";
+        internal const string OPT_ONE_MOVE_MAX_DEPTH = "UCI_T_OneMoveMaxDepth";
+        internal const string OPT_QS_RECAPTURE_DEPTH = "UCI_T_QS_RecaptureDepth";
+        internal const string OPT_QS_PROMOTION_DEPTH = "UCI_T_QS_PromotionDepth";
 
         static UciOptions()
         {
@@ -53,6 +57,13 @@ namespace Pedantic.Chess
             {
                 UciOptionSpin opt = (UciOptionSpin)options[OPT_HASH_TABLE_SIZE];
                 return opt.CurrentValue;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_HASH_TABLE_SIZE];
+                opt.CurrentValue = value;
             }
         }
 
@@ -215,6 +226,46 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int AspMinDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_ASP_MIN_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int OneMoveMaxDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_ONE_MOVE_MAX_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int RecaptureDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_QS_RECAPTURE_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int PromotionDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_QS_PROMOTION_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var opt in Options)
@@ -250,7 +301,11 @@ namespace Pedantic.Chess
             new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH, 40, 20, 40),
             new UciOptionSpin(OPT_TM_ABSOLUTE_LIMIT, 5, 2, 8),
             new UciOptionSpin(OPT_TM_DIFFICULTY_MIN, 60, 0, 60),
-            new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300)
+            new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300),
+            new UciOptionSpin(OPT_ASP_MIN_DEPTH, 6, 1, 10),
+            new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 10, 1, 20),
+            new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8),
+            new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8)
         ];
     }
 }

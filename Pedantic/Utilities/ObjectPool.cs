@@ -1,16 +1,19 @@
 ﻿using Pedantic.Collections;
+using System.Collections.Concurrent;
 
 namespace Pedantic.Utilities
 {
-    public class ObjectPool<T> where T : class, IPooledObject<T>, new()
+    public class ObjectPool<T> where T : class, new()
     {
         private readonly Bag<T> objects;
         private readonly Func<T> create;
+        private readonly Action<T> reset;
 
-        public ObjectPool(Func<T> create, int capacity, int preallocate = 0)
+        public ObjectPool(Func<T> create, Action<T> reset, int capacity, int preallocate = 0)
         {
             objects = new Bag<T>(capacity);
             this.create = create;
+            this.reset = reset;
 
             for (int i = 0; i < preallocate; ++i)
             {
@@ -19,7 +22,7 @@ namespace Pedantic.Utilities
         }
 
         public ObjectPool(int capacity, int preallocate = 0)
-            : this(() => new(), capacity, preallocate)
+            : this(() => new(), (o) => { }, capacity, preallocate)
         { }
 
         public T Rent()
@@ -34,7 +37,7 @@ namespace Pedantic.Utilities
 
         public void Return(T item)
         {
-            item.Clear();
+            reset(item);
             objects.Add(item);
         }
     }

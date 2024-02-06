@@ -57,10 +57,11 @@
         HashMove,
         GoodCapture,
         Promotion,
-        Killer,
+        Killers,
         Counter,
         BadCapture,
         Quiet,
+        End
     }
 
     public enum UciOptionType : byte { Button, Check, Combo, Spin, String }

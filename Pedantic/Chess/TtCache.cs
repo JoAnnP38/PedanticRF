@@ -75,6 +75,7 @@ namespace Pedantic.Chess
             if (!BitOps.IsPow2(sizeMb))
             {
                 sizeMb = BitOps.GreatestPowerOfTwoLessThan(sizeMb);
+                UciOptions.HashTableSize = sizeMb;
             }
 
             capacity = sizeMb * CAPACITY_MULTIPLIER;

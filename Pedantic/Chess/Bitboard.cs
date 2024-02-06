@@ -211,5 +211,8 @@ namespace Pedantic.Chess
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator!= (Bitboard lhs, Bitboard rhs) => !lhs.Equals(rhs);
+
+        public static readonly Bitboard All = new Bitboard(BB_ALL);
+        public static readonly Bitboard None = new Bitboard(BB_NONE);
     }
 }

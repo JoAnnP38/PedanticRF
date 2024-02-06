@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Pedantic.Collections;
 using Pedantic.Utilities;
 
@@ -72,6 +73,7 @@ namespace Pedantic.Chess
             public BitboardArray Bitboards;
             public SquareArray PieceBoard;
             public ByColor<SquareIndex> KingIndex;
+            public Move Move;
 
             public BoardState(Board board)
             {
@@ -104,7 +106,7 @@ namespace Pedantic.Chess
             }
         }
 
-        abstract class GenMoveHelper
+        public abstract class GenMoveHelper
         {
             public GenMoveHelper(Board board)
             {
@@ -113,9 +115,9 @@ namespace Pedantic.Chess
 
             public Rank PromoteRank { get; protected set; }
 
-            public abstract Bitboard PawnsPromoting(ref EvasionInfo info);
-            public abstract (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(ref EvasionInfo info);
-            public abstract (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(ref EvasionInfo info);
+            public abstract Bitboard PawnsPromoting(in EvasionInfo info);
+            public abstract (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(in EvasionInfo info);
+            public abstract (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(in EvasionInfo info);
             public abstract void GenerateCastles(MoveList list);
             public abstract Bitboard EnemyPawnAttacks();
 
@@ -142,7 +144,7 @@ namespace Pedantic.Chess
                 }
             }
 
-            public override (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(ref EvasionInfo info)
+            public override (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.White, Piece.Pawn);
                 Bitboard enemies = board.Units(Color.Black) & info.CaptureMask;
@@ -151,7 +153,7 @@ namespace Pedantic.Chess
                 return (bb1, bb2);
             }
 
-            public override (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(ref EvasionInfo info)
+            public override (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.White, Piece.Pawn);
                 Bitboard validMoveTo = info.PushMask.AndNot(board.All);
@@ -161,7 +163,7 @@ namespace Pedantic.Chess
                 return (bb1, bb2);
             }
 
-            public override Bitboard PawnsPromoting(ref EvasionInfo info)
+            public override Bitboard PawnsPromoting(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.White, Piece.Pawn);
                 Bitboard validMoveTo = info.PushMask.AndNot(board.All);
@@ -195,7 +197,7 @@ namespace Pedantic.Chess
                 }
             }
 
-            public override (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(ref EvasionInfo info)
+            public override (Bitboard CaptureLeft, Bitboard CaptureRight) PawnsCapturing(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.Black, Piece.Pawn);
                 Bitboard enemies = board.Units(Color.White) & info.CaptureMask;
@@ -204,7 +206,7 @@ namespace Pedantic.Chess
                 return (bb1, bb2);
             }
 
-            public override (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(ref EvasionInfo info)
+            public override (Bitboard SingleSquare, Bitboard DoubleSquare) PawnsMoving(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.Black, Piece.Pawn);
                 Bitboard validMoveTo = info.PushMask.AndNot(board.All);
@@ -214,7 +216,7 @@ namespace Pedantic.Chess
                 return (bb1, bb2);
             }
 
-            public override Bitboard PawnsPromoting(ref EvasionInfo info)
+            public override Bitboard PawnsPromoting(in EvasionInfo info)
             {
                 Bitboard pawns = board.Pieces(Color.Black, Piece.Pawn);
                 Bitboard validMoveTo = info.PushMask.AndNot(board.All);
@@ -236,9 +238,10 @@ namespace Pedantic.Chess
             public readonly SquareIndex RookFrom;
             public readonly SquareIndex RookTo;
             public readonly CastlingRights CastlingMask;
+            public readonly Bitboard ClearMask;
 
             public CastlingRookMove(SquareIndex kingFrom, SquareIndex kingTo, SquareIndex kingMoveThrough, 
-                SquareIndex rookFrom, SquareIndex rookTo, CastlingRights mask)
+                SquareIndex rookFrom, SquareIndex rookTo, CastlingRights mask, Bitboard clearMask)
             {
                 KingFrom = kingFrom;
                 KingTo = kingTo;
@@ -246,6 +249,7 @@ namespace Pedantic.Chess
                 RookFrom = rookFrom;
                 RookTo = rookTo;
                 CastlingMask = mask;
+                ClearMask = clearMask;
             }
         }
 
@@ -282,77 +286,6 @@ namespace Pedantic.Chess
             }
         }
 
-        public readonly struct GenMove
-        {
-            public GenMove(Move move, MoveGenPhase phase)
-            {
-                Move = move;
-                MovePhase = phase;
-            }
-
-            public Move Move
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get; 
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                init;
-            }
-
-            public MoveGenPhase MovePhase
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get;
-
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                init;
-            }
-        }
-
-        public struct MoveEnumerator : IEnumerable<GenMove>, IEnumerator<GenMove>, IEnumerator, IDisposable
-        {
-            public MoveEnumerator(Board board, MoveList list, Move ttMove)
-            {
-
-            }
-
-            public GenMove Current => throw new NotImplementedException();
-
-            object IEnumerator.Current => throw new NotImplementedException();
-
-            public void Dispose()
-            {
-                throw new NotImplementedException();
-            }
-
-            public MoveEnumerator GetEnumerator()
-            {
-                return this;
-            }
-
-            IEnumerator<GenMove> IEnumerable<GenMove>.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            public bool MoveNext()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Reset()
-            {
-                throw new NotImplementedException();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
-
-            private GenMove current = new(Move.NullMove, MoveGenPhase.Invalid);
-        }
-
         #endregion
 
         #region Member data
@@ -370,6 +303,7 @@ namespace Pedantic.Chess
         private ByColor<GenMoveHelper> helpers;
 
         private EvalUpdates eval = new();
+        private MoveList moveList = new();
         private ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
 
         #endregion
@@ -582,6 +516,32 @@ namespace Pedantic.Chess
             get => ref kingIndex;
         }
 
+        public Move LastMove
+        {
+            get
+            {
+                if (gameStack.Count > 0)
+                {
+                    return gameStack.AsSpan()[^1].Move;
+                }
+
+                return Move.NullMove;
+            }
+        }
+
+        public Move PrevLastMove
+        {
+            get
+            {
+                if (gameStack.Count > 1)
+                {
+                    return gameStack.AsSpan()[^2].Move;
+                }
+
+                return Move.NullMove;
+            }
+        }
+
         #endregion
 
         #region State management
@@ -642,9 +602,9 @@ namespace Pedantic.Chess
         {
             SquareIndex kingIndex = KingIndex[sideToMove];
             EvasionInfo info = new();
-            GenerateCaptures(kingIndex, list, ref info);
-            GeneratePromotions(list, ref info);
-            GenerateQuiets(kingIndex, list, ref info);
+            GenerateCaptures(kingIndex, list, in info);
+            GeneratePromotions(list, in info);
+            GenerateQuiets(kingIndex, list, in info);
         }
 
         public void GenerateEvasions(MoveList list)
@@ -653,33 +613,33 @@ namespace Pedantic.Chess
             GenMoveHelper helper = helpers[sideToMove];
             EvasionInfo info = GetEvasionInfo(kingIndex, helper);
 
-            GenerateKingCaptures(kingIndex, list, ref info);
-            GenerateKingQuiets(kingIndex, list, ref info);
+            GenerateKingCaptures(kingIndex, list, in info);
+            GenerateKingQuiets(kingIndex, list, in info);
 
             if (info.CheckerCount > 1)
             {
                 return;
             }
 
-            GeneratePawnCaptures(list, ref info, helper);
-            GeneratePieceCaptures(list, ref info);
-            GeneratePromotions(list, ref info);
-            GeneratePawnQuiets(list, ref info, helper);
-            GeneratePieceQuiets(list, ref info);
+            GeneratePawnCaptures(list, in info, helper);
+            GeneratePieceCaptures(list, in info);
+            GeneratePromotions(list, in info);
+            GeneratePawnQuiets(list, in info, helper);
+            GeneratePieceQuiets(list, in info);
         }
 
-        public void GenerateCaptures(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
+        public void GenerateCaptures(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
             GenMoveHelper helper = helpers[sideToMove];
-            GeneratePawnCaptures(list, ref info, helper);
-            GeneratePieceCaptures(list, ref info);
-            GenerateKingCaptures(kingIndex, list, ref info);
+            GeneratePawnCaptures(list, in info, helper);
+            GeneratePieceCaptures(list, in info);
+            GenerateKingCaptures(kingIndex, list, in info);
         }
 
-        public void GeneratePromotions(MoveList list, ref EvasionInfo info)
+        public void GeneratePromotions(MoveList list, in EvasionInfo info)
         {
             GenMoveHelper helper = helpers[sideToMove];
-            foreach (SquareIndex from in helper.PawnsPromoting(ref info))
+            foreach (SquareIndex from in helper.PawnsPromoting(in info))
             {
                 SquareIndex to = PawnPlus(sideToMove, from);
                 list.AddPromote(sideToMove, from, to, Piece.Queen);
@@ -689,18 +649,18 @@ namespace Pedantic.Chess
             }
         }
 
-        public void GenerateQuiets(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
+        public void GenerateQuiets(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
             GenMoveHelper helper = helpers[sideToMove];
-            GeneratePawnQuiets(list, ref info, helper);
-            GeneratePieceQuiets(list, ref info);
+            GeneratePawnQuiets(list, in info, helper);
+            GeneratePieceQuiets(list, in info);
             helper.GenerateCastles(list);
-            GenerateKingQuiets(kingIndex, list, ref info);
+            GenerateKingQuiets(kingIndex, list, in info);
         }
 
-        private void GeneratePawnQuiets(MoveList list, ref EvasionInfo info, GenMoveHelper helper)
+        public void GeneratePawnQuiets(MoveList list, in EvasionInfo info, GenMoveHelper helper)
         {
-            var pawnsMoving = helper.PawnsMoving(ref info);
+            var pawnsMoving = helper.PawnsMoving(in info);
 
             foreach (SquareIndex from in pawnsMoving.SingleSquare)
             {
@@ -715,26 +675,29 @@ namespace Pedantic.Chess
             }
         }
 
-        private void GeneratePawnCaptures(MoveList list, ref EvasionInfo info, GenMoveHelper helper)
-        {
-            Bitboard pawns = Pieces(sideToMove, Piece.Pawn);
-
-            if (enPassantValidated != SquareIndex.None /*&& info.PushMask.TestBit(enPassantValidated)*/)
+        private void GenerateEnPassant(MoveList list, in EvasionInfo info)
+        { 
+            if (enPassantValidated != SquareIndex.None)
             {
                 Bitboard epMask = new(enPassantValidated);
                 Bitboard captMask = new((SquareIndex)((int)enPassantValidated + EpOffset(sideToMove)));
-                
+
                 if ((epMask & info.PushMask) != 0 || (captMask & info.CaptureMask) != 0)
                 {
-                    Bitboard bb = pawns & PawnDefends(sideToMove, enPassantValidated);
+                    Bitboard bb = Pieces(sideToMove, Piece.Pawn) & PawnDefends(sideToMove, enPassantValidated);
                     foreach (SquareIndex from in bb)
                     {
                         list.AddCapture(sideToMove, Piece.Pawn, from, enPassantValidated, MoveType.EnPassant, Piece.Pawn);
                     }
                 }
             }
+        }
 
-            var pawnsCapturing = helper.PawnsCapturing(ref info);
+        public void GeneratePawnCaptures(MoveList list, in EvasionInfo info, GenMoveHelper helper)
+        {
+            GenerateEnPassant(list, in info);
+
+            var pawnsCapturing = helper.PawnsCapturing(in info);
 
             foreach (SquareIndex from in pawnsCapturing.CaptureLeft)
             {
@@ -771,7 +734,7 @@ namespace Pedantic.Chess
             }
         }
 
-        private void GenerateKingQuiets(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
+        public void GenerateKingQuiets(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
             Bitboard attacks = GetPieceMoves(Piece.King, kingIndex, All).AndNot(All | info.KingDanger);
             foreach (SquareIndex to in attacks)
@@ -780,7 +743,7 @@ namespace Pedantic.Chess
             }
         }
 
-        private void GeneratePieceQuiets(MoveList list, ref EvasionInfo info)
+        public void GeneratePieceQuiets(MoveList list, in EvasionInfo info)
         {
             for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
             {
@@ -796,7 +759,7 @@ namespace Pedantic.Chess
             }
         }
 
-        private void GenerateKingCaptures(SquareIndex kingIndex, MoveList list, ref EvasionInfo info)
+        public void GenerateKingCaptures(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
             Bitboard attacks = GetPieceMoves(Piece.King, kingIndex, All) & Units(Opponent);
             attacks = attacks.AndNot(info.KingDanger);
@@ -806,7 +769,7 @@ namespace Pedantic.Chess
             }
         }
 
-        private void GeneratePieceCaptures(MoveList list, ref EvasionInfo info)
+        public void GeneratePieceCaptures(MoveList list, in EvasionInfo info)
         {
             for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
             {
@@ -822,13 +785,287 @@ namespace Pedantic.Chess
             }
         }
 
+        public bool OneLegalMove(MoveList list, out Move move)
+        {
+            int legalCount = 0;
+            move = Move.NullMove;
+            GenerateMoves(list);
 
+            for (int n = 0; n < list.Count && legalCount <= 1; n++)
+            {
+                if (MakeMove(list[n]))
+                {
+                    if (legalCount == 0)
+                    {
+                        move = list[n];
+                    }
+                    UnmakeMove();
+                    ++legalCount;
+                }
+            }
+
+            return legalCount == 1;
+        }
+
+        public bool IsLegalMove(Move move)
+        {
+            bool isLegal = false;
+            EvasionInfo info = new();
+            GenMoveHelper helper = helpers[sideToMove];
+            SquareIndex kingIndex = KingIndex[sideToMove];
+            moveList.Clear();
+
+            if (move.Stm == SideToMove)
+            { 
+                switch ((move.Piece, move.Type))
+                {
+                    case (Piece.Pawn, MoveType.PawnMove):
+                    case (Piece.Pawn, MoveType.DblPawnMove):
+                        GeneratePawnQuiets(moveList, in info, helper);
+                        break;
+
+                    case (Piece.Pawn, MoveType.EnPassant):
+                    case (Piece.Pawn, MoveType.Capture):
+                    case (Piece.Pawn, MoveType.PromoteCapture):
+                        GeneratePawnCaptures(moveList, in info, helper);
+                        break;
+
+                    case (Piece.Pawn, MoveType.Promote):
+                        GeneratePromotions(moveList, in info);
+                        break;
+
+                    case (Piece.King, MoveType.Castle):
+                        helper.GenerateCastles(moveList);
+                        break;
+
+                    case (Piece.King, MoveType.Capture):
+                        GenerateKingCaptures(kingIndex, moveList, in info);
+                        break;
+
+                    case (Piece.King, MoveType.Normal):
+                        GenerateKingQuiets(kingIndex, moveList, in info);
+                        break;
+
+                    case (>= Piece.Knight and <= Piece.Queen, MoveType.Capture):
+                        GeneratePieceCaptures(moveList, in info);
+                        break;
+
+                    case (>= Piece.Knight and <= Piece.Queen, MoveType.Normal):
+                        GeneratePieceQuiets(moveList, in info);
+                        break;
+
+                    default:
+                        // no moves
+                        break;
+                }
+
+                for (int n = 0; n < moveList.Count; n++)
+                {
+                    if (moveList[n] == move)
+                    {
+                        if (MakeMove(move))
+                        {
+                            UnmakeMove();
+                            isLegal = true;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            return isLegal;
+        }
+
+        public bool IsPseudoLegal(Move move)
+        {
+            if (move.Stm == sideToMove)
+            {
+                if (move.Type == MoveType.EnPassant)
+                {
+                    return board[move.From].Piece == Piece.Pawn && enPassantValidated == move.To && 
+                           board[move.To].IsEmpty && board[(int)move.To + EpOffset(move.Stm)].Piece == Piece.Pawn;
+                }
+                else if (move.Type == MoveType.Castle)
+                {
+                    CastlingRookMove rookMove = LookupRookMoves(move.To);
+                    return board[move.From].Piece == Piece.King && board[rookMove.RookFrom].Piece == Piece.Rook &&
+                           (All & rookMove.ClearMask) == 0ul && (castling & rookMove.CastlingMask) == rookMove.CastlingMask;
+                }
+                Square captureSquare = Square.Empty;
+                if (move.IsCapture)
+                {
+                    captureSquare = new Square(move.Stm.Flip(), move.Capture);
+                }
+                return board[move.From].Piece == move.Piece && board[move.From].Color == move.Stm && 
+                       board[move.To] == captureSquare;            
+            }
+            return false;
+        }
+
+        public IEnumerable<GenMove> Moves(int ply, SearchStack ss, MoveList list, Move ttMove)
+        {
+            if (ttMove != Move.NullMove)
+            {
+                yield return new GenMove(ttMove, MoveGenPhase.HashMove);
+            }
+
+            list.Clear();
+            SquareIndex kingIndex = KingIndex[sideToMove];
+            EvasionInfo info = new();
+            GenerateCaptures(kingIndex, list, in info);
+            list.Remove(ttMove);
+
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+            }
+
+            list.Clear();
+            GeneratePromotions(list, in info);
+            list.Remove(ttMove);
+
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.Promotion);
+            }
+
+            list.Clear();
+            GenerateQuiets(kingIndex, list, in info);
+            list.Remove(ttMove);
+
+            Move killer = ss[ply].Killers.Move1;
+            if (list.Remove(killer))
+            {
+                yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            killer = ss[ply].Killers.Move2;
+            if (list.Remove(killer))
+            {
+                yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.Quiet);
+            }
+        }
+
+        public IEnumerable<GenMove> QMoves(int ply, int qsPly, SearchStack ss, MoveList list, Move ttMove)
+        {
+            if (ttMove != Move.NullMove)
+            {
+                yield return new GenMove(ttMove, MoveGenPhase.HashMove);
+            }
+
+            list.Clear();
+            SquareIndex kingIndex = KingIndex[sideToMove];
+            EvasionInfo info = new();
+
+            if (qsPly >= UciOptions.RecaptureDepth)
+            {
+                info = new EvasionInfo(0, Bitboard.None, new Bitboard(ss[ply - 1].Move.To), Bitboard.None);
+            }
+            GenerateCaptures(kingIndex, list, in info);
+            list.Remove(ttMove);
+
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+            }
+
+            if (qsPly < UciOptions.PromotionDepth)
+            {
+                list.Clear();
+                info = new();
+                GeneratePromotions(list, in info);
+                list.Remove(ttMove);
+
+                for (int n = 0; n < list.Count; n++)
+                {
+                    yield return new GenMove(list.Sort(n), MoveGenPhase.Promotion);
+                }
+            }
+        }
+
+        public IEnumerable<GenMove> EvasionMoves(int ply, SearchStack ss, MoveList list, Move ttMove)
+        {
+            if (ttMove != Move.NullMove)
+            {
+                yield return new GenMove(ttMove, MoveGenPhase.HashMove);
+            }
+
+            SquareIndex kingIndex = KingIndex[sideToMove];
+            GetEvasionInfo(kingIndex, out EvasionInfo info, out GenMoveHelper helper);
+            list.Clear();
+            GenerateKingCaptures(kingIndex, list, in info);
+            if (info.CheckerCount <= 1)
+            {
+                GeneratePawnCaptures(list, in info, helper);
+                GeneratePieceCaptures(list, in info);
+            }
+
+            list.Remove(ttMove);
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+            }
+
+            if (info.CheckerCount <= 1)
+            {
+                list.Clear();
+                GeneratePromotions(list, in info);
+                list.Remove(ttMove);
+                for (int n = 0; n < list.Count; n++)
+                {
+                    yield return new GenMove(list.Sort(n), MoveGenPhase.Promotion);
+                }
+            }
+
+            list.Clear();
+            GenerateKingQuiets(kingIndex, list, in info);
+            if (info.CheckerCount <= 1)
+            {
+                GeneratePawnQuiets(list, in info, helper);
+                GeneratePieceQuiets(list, in info);
+            }
+            list.Remove(ttMove);
+
+            Move killer = ss[ply].Killers.Move1;
+            if (list.Remove(killer))
+            {
+                yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            killer = ss[ply].Killers.Move2;
+            if (list.Remove(killer))
+            {
+                yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            for (int n = 0; n < list.Count; n++)
+            {
+                yield return new GenMove(list.Sort(n), MoveGenPhase.Quiet);
+            }
+        }
 
         #endregion
 
         #region Make/Unmake Moves
 
         public bool MakeMove(Move move)
+        {
+            PushBoardState();
+            bool result = MakeMoveNs(move);
+            if (!result)
+            {
+                PopBoardState();
+            }
+
+            return result;
+        }
+
+        public bool MakeMoveNs(Move move)
         {
             ulong oldHash = hash;
 
@@ -925,10 +1162,11 @@ namespace Pedantic.Chess
 
             if (IsChecked(opponent))
             {
-                UnmakeMove();
+                UnmakeMoveNs();
                 return false;
             }
 
+            gameStack.Peek().Move = move;
             fullMoveCounter += (ushort)sideToMove;
             hash = ZobristHash.HashCastling(hash, castling);
             hash = ZobristHash.HashActiveColor(hash, sideToMove);
@@ -939,6 +1177,13 @@ namespace Pedantic.Chess
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnmakeMove()
+        {
+            UnmakeMoveNs();
+            gameStack.Pop();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void UnmakeMoveNs()
         {
             gameStack.Peek().Restore(this);
         }
@@ -980,6 +1225,12 @@ namespace Pedantic.Chess
                     ((KingMoves(sq) & Pieces(color, Piece.King)) != 0) ||
                     ((GetBishopMoves(sq, All) & DiagonalSliders(color)) != 0) ||
                     ((GetRookMoves(sq, All) & OrthogonalSliders(color)) != 0);
+        }
+
+        public void GetEvasionInfo(SquareIndex kingIndex, out EvasionInfo info, out GenMoveHelper helper)
+        {
+            helper = helpers[sideToMove];
+            info = GetEvasionInfo(kingIndex, helper);
         }
 
         private EvasionInfo GetEvasionInfo(SquareIndex kingIndex, GenMoveHelper helper)
@@ -1165,7 +1416,7 @@ namespace Pedantic.Chess
 
         private string ToVerboseString()
         {
-            StringBuilder sb = new();
+            ValueStringBuilder sb = new(stackalloc char[256]);
             sb.AppendLine("  A B C D E F G H");
             for (Rank rank = Rank.Rank8; rank >= Rank.Rank1; rank--)
             {
@@ -1299,6 +1550,36 @@ namespace Pedantic.Chess
             return (enPassant != SquareIndex.None) && (Units(color) & Pawns & PawnDefends(color, enPassant)) != 0;
         }
 
+        public unsafe (bool Repeated, bool OverFiftyMoves) PositionRepeated()
+        {
+            if (halfMoveClock < 4 || gameStack.Count <= 1)
+            {
+                return (false, false);
+            }
+
+            if (halfMoveClock > 99)
+            {
+                return (false, true);
+            }
+
+            var stackSpan = gameStack.AsSpan();
+            int max = Math.Max(stackSpan.Length - halfMoveClock, 0);
+            int start = stackSpan.Length - 2;
+
+            fixed (BoardState* pStart = &stackSpan[start], pEnd = &stackSpan[max])
+            {
+                for (BoardState* p = pStart; p >= pEnd; p -= 2)
+                {
+                    if (hash == p->Hash)
+                    {
+                        return (true, false);
+                    }
+                }
+            }
+
+            return (false, false);
+        }
+
         #endregion
 
         #region Miscellaneous / Interfaces
@@ -1429,19 +1710,19 @@ namespace Pedantic.Chess
 
         private static readonly CastlingRookMove wqRookMove = 
             new(SquareIndex.E1, SquareIndex.C1, SquareIndex.D1, SquareIndex.A1, SquareIndex.D1,
-                CastlingRights.WhiteQueenSide);
+                CastlingRights.WhiteQueenSide, new Bitboard(SquareIndex.B1, SquareIndex.C1, SquareIndex.D1));
 
         private static readonly CastlingRookMove wkRookMove = 
             new(SquareIndex.E1, SquareIndex.G1, SquareIndex.F1, SquareIndex.H1, SquareIndex.F1,
-                CastlingRights.WhiteKingSide);
+                CastlingRights.WhiteKingSide, new Bitboard(SquareIndex.F1, SquareIndex.G1));
 
         private static readonly CastlingRookMove bqRookMove = 
             new(SquareIndex.E8, SquareIndex.C8, SquareIndex.D8, SquareIndex.A8, SquareIndex.D8,
-                CastlingRights.BlackQueenSide);
+                CastlingRights.BlackQueenSide, new Bitboard(SquareIndex.B8, SquareIndex.C8, SquareIndex.D8));
 
         private static readonly CastlingRookMove bkRookMove = 
             new(SquareIndex.E8, SquareIndex.G8, SquareIndex.F8, SquareIndex.H8, SquareIndex.F8,
-                CastlingRights.BlackKingSide);
+                CastlingRights.BlackKingSide, new Bitboard(SquareIndex.F8, SquareIndex.G8));
 
         private static readonly FixedArray2D<ulong> between = new (MAX_SQUARES, MAX_SQUARES)
         {

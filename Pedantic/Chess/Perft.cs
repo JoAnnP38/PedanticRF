@@ -11,7 +11,7 @@ namespace Pedantic.Chess
             this.maxDepth = maxDepth;
             this.details = details;
             this.divide = divide;
-            listPool = new(() => new MoveList(), MAX_PLY, 10); 
+            listPool = new(() => new MoveList(), (o) => o.Clear(), MAX_PLY, 10); 
             Uci = Uci.Default;
         }
 
@@ -55,7 +55,7 @@ namespace Pedantic.Chess
             for (int n = 0; n < list.Count; n++)
             {
                 Move move = list[n];
-                if (!board.MakeMove(move))
+                if (!board.MakeMoveNs(move))
                 {
                     continue;
                 }
@@ -64,7 +64,7 @@ namespace Pedantic.Chess
                 nodes += moveNodes;
                 Uci.Log($"{move} : {moveNodes} : {board.ToFenString()}");
 
-                board.UnmakeMove();
+                board.UnmakeMoveNs();
             }
 
             board.PopBoardState();
@@ -94,13 +94,13 @@ namespace Pedantic.Chess
 
             for (int n = 0; n < list.Count; n++)
             {
-                if (!board.MakeMove(list[n]))
+                if (!board.MakeMoveNs(list[n]))
                 {
                     continue;
                 }
 
                 nodes += depth == 1 ? 1 : PerftImpl(depth - 1, board.IsChecked());
-                board.UnmakeMove();
+                board.UnmakeMoveNs();
             }
 
             board.PopBoardState();

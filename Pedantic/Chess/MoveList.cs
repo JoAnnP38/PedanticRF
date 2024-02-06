@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Pedantic.Utilities;
 using static Pedantic.Chess.Constants;
 
@@ -9,7 +10,7 @@ namespace Pedantic.Chess
     {
         #region Nested Types
 
-        public readonly struct ScoredMove
+        public struct ScoredMove : IComparable<ScoredMove>
         {
             public Move Move 
             { 
@@ -23,7 +24,14 @@ namespace Pedantic.Chess
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 get; 
 
-                init; 
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                set; 
+            }
+
+            public int CompareTo(ScoredMove other)
+            {
+                // reverse ordering for sort
+                return other.Score - Score;
             }
         }
 
@@ -33,6 +41,16 @@ namespace Pedantic.Chess
         public struct ScoredMoveArray
         {
             private ScoredMove _element0;
+
+            public ReadOnlySpan<ScoredMove> AsReadOnlySpan()
+            {
+                return MemoryMarshal.CreateReadOnlySpan(ref _element0, CAPACITY);
+            }
+
+            public Span<ScoredMove> AsSpan()
+            {
+                return MemoryMarshal.CreateSpan(ref _element0, CAPACITY);
+            }
         }
 
         private class FakeHistory : IHistory
@@ -73,6 +91,12 @@ namespace Pedantic.Chess
 
             Util.Assert(index >= 0 && index < insertIndex);
             return array[index].Score;
+        }
+
+        public void SetScore(int index, int score)
+        {
+            Util.Assert(index >= 0 && index < insertIndex);
+            array[index].Score = score;
         }
 
         public void Add(Move move)
@@ -153,6 +177,12 @@ namespace Pedantic.Chess
             }
 
             return array[n].Move;
+        }
+
+        public void SortAll()
+        {
+            Span<ScoredMove> scoredMoves = array.AsSpan().Slice(0, insertIndex);
+            scoredMoves.Sort();
         }
 
         public bool Remove(Move move)

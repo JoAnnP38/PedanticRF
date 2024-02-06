@@ -2,18 +2,34 @@
 {
     public class HceEval : EvalUpdates
     {
+        static HceEval()
+        {
+            wts = Weights.Default;
+        }
+
         public HceEval()
         {
-            weights = Weights.Default;
             signs[Color.White] = (s) => s;
             signs[Color.Black] = (s) => -s;
         }
 
         public HceEval(Weights weights)
         {
-            this.weights = weights;
             signs[Color.White] = (s) => s;
             signs[Color.Black] = (s) => -s;
+        }
+
+        public static Weights Weights
+        {
+            get
+            {
+                return wts;
+            }
+            set
+            {
+                wts = value;
+                //InitializeMopUpTables();
+            }
         }
 
         public short Compute(Board board)
@@ -35,9 +51,9 @@
             foreach (SquareIndex from in board.Units(color))
             {
                 Piece piece = board.PieceBoard(from).Piece;
-                score += weights.PieceValue(piece);
-                score += weights.FriendlyPieceSquareValue(piece, kb, from);
-                score += weights.EnemyPieceSquareValue(piece, kb, from);
+                score += wts.PieceValue(piece);
+                score += wts.FriendlyPieceSquareValue(piece, kb, from);
+                score += wts.EnemyPieceSquareValue(piece, kb, from);
             }
 
             return score;
@@ -77,8 +93,9 @@
             phase = state.Phase;
         }
 
-        private Weights weights;
         private short phase;
         private ByColor<Func<Score, Score>> signs = new();
+        private static Weights wts;
+
     }
 }

@@ -1,5 +1,7 @@
 ﻿
 
+using Pedantic.Chess;
+
 namespace Pedantic.UnitTests
 {
     [TestClass]
@@ -194,25 +196,59 @@ namespace Pedantic.UnitTests
             board.GenerateMoves(list1);
             foreach (Move move in list1)
             {
-                if (board.MakeMove(move))
+                if (board.MakeMoveNs(move))
                 {
                     set1.Add(move);
-                    board.UnmakeMove();
+                    board.UnmakeMoveNs();
                 }
             }
 
             board.GenerateEvasions(list2);
             foreach (Move move in list2)
             {
-                if (board.MakeMove(move))
+                if (board.MakeMoveNs(move))
                 {
                     set2.Add(move);
-                    board.UnmakeMove();
+                    board.UnmakeMoveNs();
                 }
             }
             board.PopBoardState();
             Assert.AreEqual(set1.Count, set2.Count);
             Assert.IsTrue(set1.SetEquals(set2));
+        }
+
+        [TestMethod]
+        [DataRow(Constants.FEN_START_POS, 20)]
+        [DataRow("3kn3/4p2r/3p4/5NQP/7P/6P1/8/7K w - - 0 1", 22)]
+        public void MovesTest(string fen, int expected)
+        {
+            Board board = new Board(fen);
+            MoveList list = new();
+            SearchStack ss = new();
+            int count = 0;
+            foreach (var mv in board.Moves(0, ss, list, Move.NullMove))
+            {
+                TestContext?.WriteLine($"{mv.MovePhase}: {mv.Move.ToLongString()}");
+                ++count;
+            }
+            Assert.AreEqual(expected, count);
+        }
+
+        [TestMethod]
+        [DataRow(Constants.FEN_START_POS, 0)]
+        [DataRow("3kn3/4p2r/3p4/5NQP/7P/6P1/8/7K w - - 0 1", 3)]
+        public void QMovesTest(string fen, int expected)
+        {
+            Board board = new Board(fen);
+            MoveList list = new();
+            SearchStack ss = new();
+            int count = 0;
+            foreach (var mv in board.QMoves(0, 0, ss, list, Move.NullMove))
+            {
+                TestContext?.WriteLine($"{mv.MovePhase}: {mv.Move.ToLongString()}");
+                ++count;
+            }
+            Assert.AreEqual(expected, count);
         }
     }
 }

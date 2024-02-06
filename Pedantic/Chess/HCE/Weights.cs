@@ -36,6 +36,11 @@ namespace Pedantic.Chess.HCE
             Array.Copy(wts, weights, MAX_WEIGHTS);
         }
 
+        public Weights(string path)
+        {
+
+        }
+
         #endregion
 
         #region Accessors
