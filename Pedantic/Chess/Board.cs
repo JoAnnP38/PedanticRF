@@ -1382,7 +1382,7 @@ namespace Pedantic.Chess
 
         #region FEN String / ToString
 
-        public bool LoadFen(string fen)
+        public bool LoadFen(ReadOnlySpan<char> fen)
         {
             if (!Notation.IsValidFen(fen))
             {
@@ -1391,27 +1391,33 @@ namespace Pedantic.Chess
 
             Clear();
 
-            ReadOnlySpan<char> fenSpan = fen.AsSpan();
             Span<Range> ranges = stackalloc Range[6];
-            if (fenSpan.Split(ranges, ' ') == ranges.Length)
+            if (fen.Split(ranges, ' ') == ranges.Length)
             {
-                FenParsePieces(fenSpan[ranges[0]]);
-                sideToMove = Notation.ParseFenColor(fenSpan[ranges[1]]);
+                FenParsePieces(fen[ranges[0]]);
+                sideToMove = Notation.ParseFenColor(fen[ranges[1]]);
                 hash = ZobristHash.HashActiveColor(hash, sideToMove);
-                castling = Notation.ParseFenCastlingRights(fenSpan[ranges[2]]);
+                castling = Notation.ParseFenCastlingRights(fen[ranges[2]]);
                 hash = ZobristHash.HashCastling(hash, castling);
                 enPassantValidated = SquareIndex.None;
-                enPassant = Notation.ParseFenEnPassant(fenSpan[ranges[3]]);
+                enPassant = Notation.ParseFenEnPassant(fen[ranges[3]]);
                 if (IsEnPassantValid(sideToMove))
                 {
                     enPassantValidated = enPassant;
                     hash = ZobristHash.HashEnPassant(hash, enPassantValidated);
                 }
-                halfMoveClock = byte.Parse(fenSpan[ranges[4]]);
-                fullMoveCounter = ushort.Parse(fenSpan[ranges[5]]);
+                halfMoveClock = byte.Parse(fen[ranges[4]]);
+                fullMoveCounter = ushort.Parse(fen[ranges[5]]);
                 return true;
             }
             return false;
+
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool LoadFen(string fen)
+        {
+            return LoadFen(fen.AsSpan());
         }
 
         private string ToVerboseString()

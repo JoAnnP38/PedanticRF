@@ -183,28 +183,28 @@ namespace Pedantic.Chess
             return move.GetHashCode();
         }
 
-        public static bool TryParse(Board board, string s, out Move move)
+        public static bool TryParse(Board board, ReadOnlySpan<char> sp, out Move move)
         {
-            move = NullMove;
+            move = Move.NullMove;
 
             try
             {
-                if (s.Length < 4)
+                if (sp.Length < 4)
                 {
-                    throw new ArgumentException("Parameter too short to represent a valid move.", nameof(s));
+                    throw new ArgumentException("Parameter too short to represent a valid move.", nameof(sp));
                 }
 
-                if (!Conversions.TryParse(s[..2], out SquareIndex from))
+                if (!Conversions.TryParse(sp[..2], out SquareIndex from))
                 {
-                    throw new ArgumentException("Invalid from square in move.", nameof(s));
+                    throw new ArgumentException("Invalid from square in move.", nameof(sp));
                 }
 
-                if (!Conversions.TryParse(s[2..4], out SquareIndex to))
+                if (!Conversions.TryParse(sp[2..4], out SquareIndex to))
                 {
-                    throw new ArgumentException("Invalid to square in move.", nameof(s));
+                    throw new ArgumentException("Invalid to square in move.", nameof(sp));
                 }
 
-                Piece promote = s.Length > 4 ? Conversions.ParsePiece(s[4]) : Piece.None;
+                Piece promote = sp.Length > 4 ? Conversions.ParsePiece(sp[4]) : Piece.None;
 
                 MoveList moveList = new();
                 board.GenerateMoves(moveList);
@@ -231,6 +231,12 @@ namespace Pedantic.Chess
             }
 
             return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool TryParse(Board board, string s, out Move move)
+        {
+            return TryParse(board, s.AsSpan(), out move);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

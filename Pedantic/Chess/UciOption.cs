@@ -167,6 +167,7 @@ namespace Pedantic.Chess
             this.options = new string[options.Length];
             Array.Copy(options, this.options, options.Length);
             DefaultValue = defaultValue;
+            currentValue = DefaultValue;
         }
 
         public string DefaultValue
@@ -189,7 +190,23 @@ namespace Pedantic.Chess
             }
         }
 
-        public ReadOnlySpan<string> Options => options;
+        public string CurrentValue
+        {
+            get
+            {
+                return currentValue;
+            }
+
+            set
+            {
+                if (options.Contains(value, StringComparer.InvariantCultureIgnoreCase))
+                {
+                    currentValue = value;
+                }
+            }
+        }
+
+        public string[] Options => options;
 
         public override string ToString()
         {
@@ -204,5 +221,6 @@ namespace Pedantic.Chess
 
         private string defaultValue = string.Empty;
         private string[] options;
+        private string currentValue;
     }
 }

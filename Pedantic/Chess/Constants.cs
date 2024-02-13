@@ -24,6 +24,7 @@
         public const int INFINITE_WINDOW = short.MaxValue;
         public const ulong BB_ALL = 0xfffffffffffffffful;
         public const ulong BB_NONE = 0;
+        public const StringSplitOptions TOKEN_OPTIONS = StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries;
 
         public const string REGEX_FEN = @"^\s*([rnbqkpRNBQKP1-8]+/){7}[rnbqkpRNBQKP1-8]+\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h][36])\s\d+\s\d+\s*$";
         public const string REGEX_MOVE = @"^[a-h][1-8][a-h][1-8](n|b|r|q)?$";
@@ -35,5 +36,7 @@
         public const string APP_NAME_VER = APP_NAME + " " + APP_VERSION;
         public const string APP_AUTHOR = "JoAnn D. Peeler";
         public const string PROGRAM_URL = "https://github.com/JoAnnP38/Pedantic";
+
+        public static readonly char[] CMD_SEP = [' ', '\t'];
     }
 }

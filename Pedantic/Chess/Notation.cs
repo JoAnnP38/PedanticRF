@@ -20,6 +20,12 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsValidFen(ReadOnlySpan<char> fen)
+        {
+            return fenRegex.IsMatch(fen);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToFenPiece(Color color, Piece piece)
         {
             return piece.ToChar(color).ToString();

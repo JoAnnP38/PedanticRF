@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using Pedantic.Utilities;
 
 namespace Pedantic.Chess
@@ -161,7 +162,7 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static sbyte Bucket(this SquareIndex sq)
         {
-            return sq == SquareIndex.None ? (sbyte)-1 : (sbyte)((sbyte)sq.Rank() * 2 + (sbyte)sq.File());
+            return sq == SquareIndex.None ? (sbyte)-1 : (sbyte)((int)sq.Rank() / 2 * 4 + (int)sq.File() / 2);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -212,5 +213,57 @@ namespace Pedantic.Chess
             "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
             "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8"
         };
+    }
+
+    public static class SpanExtensions
+    {
+        public static int IndexOfNthAny(this ReadOnlySpan<char> roSpan, int nth, ReadOnlySpan<char> values)
+        {
+            int index = -1;
+            int nthCount = 0;
+            for (int n = 0; n < roSpan.Length && nthCount < nth; n++)
+            {
+                if (values.Contains(roSpan[n]))
+                {
+                    nthCount++;
+                    index = n;
+                }
+            }
+            return index;
+        }
+
+        public static int IndexOfToken(this ReadOnlySpan<char> roSpan, ReadOnlySpan<char> token)
+        {
+            for (int n = 0; n < roSpan.Length - token.Length; n++)
+            {
+                char ch = roSpan[n];
+                if (!char.IsWhiteSpace(ch))
+                {
+                    if (roSpan.Slice(n, token.Length).Equals(token, StringComparison.InvariantCulture))
+                    {
+                        int m = n + token.Length;
+                        if (char.IsWhiteSpace(roSpan[m]))
+                        {
+                            return n;
+                        }
+                    }
+                }
+            }
+            return -1;
+        }
+
+        public static int IndexOf(this ReadOnlySpan<string> roStrings, string str, StringComparison comparisonType = StringComparison.CurrentCulture)
+        {
+            int index = -1;
+            for (int n = 0; n < roStrings.Length; n++)
+            {
+                if (roStrings[n].Equals(str, comparisonType))
+                {
+                    index = n;
+                    break;
+                }
+            }
+            return index;
+        }
     }
 }

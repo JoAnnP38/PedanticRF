@@ -131,7 +131,7 @@ namespace Pedantic.Chess
                 oneLegalMove = board.OneLegalMove(list, out Move bestMove);
                 startDateTime = DateTime.Now;
 
-                while (++Depth < maxDepth && clock.CanSearchDeeper())
+                while (++Depth <= maxDepth && clock.CanSearchDeeper())
                 {
                     int iAlpha = 0, iBeta = 0;
                     clock.StartInterval();
@@ -334,6 +334,7 @@ namespace Pedantic.Chess
                 return eval.Compute(board);
             }
 
+            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
             if (depth <= 0)
             {
                 return Quiesce(alpha, beta, ply);
@@ -503,7 +504,7 @@ namespace Pedantic.Chess
             MoveList list = listPool.Rent();
             int expandedNodes = 0;
 
-            IEnumerable<GenMove> moves = inCheck ? 
+            IEnumerable<GenMove> moves = !inCheck ? 
                 board.QMoves(ply, qsPly, ss, list, ttMove) :
                 board.EvasionMoves(ply, ss, list, ttMove);
 

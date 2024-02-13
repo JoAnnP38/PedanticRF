@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
 
 using Pedantic.Utilities;
 
@@ -154,6 +155,16 @@ namespace Pedantic.Chess
             used = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Prefetch(ulong hash)
+        {
+            if (Sse.IsSupported)
+            {
+                int index = (int)(hash & mask & 0xfffffffffffffffe);
+                Sse.Prefetch0((char*)pTable + index);
+            }
+        }
+
         public void Dispose()
         {
             if (pTable != null)
@@ -166,14 +177,23 @@ namespace Pedantic.Chess
 
         private bool TryGetItem(ulong hash, out TtItem item)
         {
-            int index = (int)(hash & mask);
+            if (!GetProbeIndex(hash, out int index))
+            {
+                item = default;
+                return false;
+            }
             item = pTable[index];
-            if (!item.IsValid(hash))
+            return true;
+        }
+
+        private bool GetProbeIndex(ulong hash, out int index)
+        {
+            index = (int)(hash & mask);
+            if (!pTable[index].IsValid(hash))
             {
                 index ^= 1;
-                item = pTable[index];
 
-                if (!item.IsValid(hash))
+                if (!pTable[index].IsValid(hash))
                 {
                     return false;
                 }

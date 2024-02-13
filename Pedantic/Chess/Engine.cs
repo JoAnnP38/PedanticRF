@@ -109,6 +109,31 @@ namespace Pedantic.Chess
             TtCache.Default.Resize();
         }
 
+        public static bool SetupPosition(ReadOnlySpan<char> fen)
+        {
+            try
+            {
+                Stop();
+                bool loaded = Board.LoadFen(fen);
+                if (loaded)
+                {
+                    Uci.Default.Debug($"New position: {Board.ToFenString()}");
+                    Color = Board.SideToMove;
+                }
+                else
+                {
+                    Uci.Default.Log($"Engine failed to load position: '{fen}'");
+                }
+                return loaded;
+            }
+            catch (Exception ex)
+            {
+                Uci.Default.Log($"Engine faulted: {ex.Message}");
+                Uci.Default.Log(ex.ToString());
+                return false;
+            }
+        }
+
         public static bool SetupPosition(string fen)
         {
             try
@@ -134,6 +159,39 @@ namespace Pedantic.Chess
             }
         }
 
+        public static void MakeMoves(ReadOnlySpan<char> moves)
+        {
+            Span<Range> ranges = stackalloc Range[2];
+            int splitCount = moves.SplitAny(ranges, CMD_SEP);
+            while (splitCount > 0)
+            {
+                ReadOnlySpan<char> mv = moves[ranges[0]];
+                if (Move.TryParse(Board, mv, out Move move))
+                {
+                    if (!Board.MakeMove(move))
+                    {
+                        throw new InvalidOperationException($"Invalid move passed to engine: '{mv}'.");
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException($"Long algebraic move expected. Bad format '{mv}'.");
+                }
+
+                if (splitCount > 1)
+                {
+                    moves = moves[ranges[1]];
+                    splitCount = moves.SplitAny(ranges, CMD_SEP);
+                }
+                else
+                {
+                    splitCount = 0;
+                }
+            }
+            Color = Board.SideToMove;
+            Uci.Default.Debug($"New position: {Board.ToFenString()}");
+        }
+
         public static void MakeMoves(IEnumerable<string> moves)
         {
             foreach (string mv in moves)
@@ -151,6 +209,7 @@ namespace Pedantic.Chess
                 }
             }
 
+            Color = Board.SideToMove;
             Uci.Default.Debug($"New position: {Board.ToFenString()}");
         }
 
@@ -168,7 +227,7 @@ namespace Pedantic.Chess
                 string? exeFullName = Environment.ProcessPath;
                 string? dirFullName = Path.GetDirectoryName(exeFullName);
                 string? weightsPath = (exeFullName != null && dirFullName != null) ?
-                    Path.Combine(dirFullName, "Pedantic.hce") : null;
+                    Path.Combine(dirFullName, UciOptions.EvalFile) : null;
 
                 Weights? wts = null;
                 if (weightsPath != null && System.IO.File.Exists(weightsPath))
@@ -231,7 +290,6 @@ namespace Pedantic.Chess
 
         private static readonly GameClock time = new();
         private static Weights? weights;
-        private static Color color = Color.White;
         private static readonly SearchThreads threads = new();
         private static readonly string[] benchFens =
         {

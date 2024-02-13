@@ -50,10 +50,11 @@
 
             foreach (SquareIndex from in board.Units(color))
             {
+                SquareIndex normalFrom = from.Normalize(color);
                 Piece piece = board.PieceBoard(from).Piece;
                 score += wts.PieceValue(piece);
-                score += wts.FriendlyPieceSquareValue(piece, kb, from);
-                score += wts.EnemyPieceSquareValue(piece, kb, from);
+                score += wts.FriendlyPieceSquareValue(piece, kb, normalFrom);
+                score += wts.EnemyPieceSquareValue(piece, kb, normalFrom);
             }
 
             return score;

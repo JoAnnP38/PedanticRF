@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace Pedantic.Chess
 {
@@ -49,6 +50,21 @@ namespace Pedantic.Chess
         public bool Equals(Square other)
         {
             return bits == other.bits;
+        }
+
+        public override bool Equals([NotNullWhen(true)] object? obj)
+        {
+            Square? sq = obj as Square?;
+            if (sq == null)
+            {
+                return false;
+            }
+            return Equals(sq.Value);
+        }
+
+        public override int GetHashCode()
+        {
+            return bits.GetHashCode();
         }
 
         public static bool operator ==(Square lhs, Square rhs)

@@ -7,6 +7,7 @@ namespace Pedantic.Chess
         // Prefix UCI_T_ is for tunable paramters
         internal const string OPT_CLEAR_HASH = "Clear Hash";
         internal const string OPT_CONTEMPT = "Contempt";
+        internal const string OPT_EVAL_FILE = "EvalFile";
         internal const string OPT_HASH_TABLE_SIZE = "Hash";
         internal const string OPT_MOVE_OVERHEAD = "Move Overhead";
         internal const string OPT_OWN_BOOK = "OwnBook";
@@ -33,7 +34,7 @@ namespace Pedantic.Chess
 
         static UciOptions()
         {
-            options = new(initialOptions.Length);
+            options = new(initialOptions.Length, StringComparer.InvariantCultureIgnoreCase);
             foreach (var opt in initialOptions)
             {
                 options.Add(opt.Name, opt);
@@ -46,6 +47,16 @@ namespace Pedantic.Chess
             get
             {
                 UciOptionSpin opt = (UciOptionSpin)options[OPT_CONTEMPT];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static string EvalFile
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionString opt = (UciOptionString)options[OPT_EVAL_FILE];
                 return opt.CurrentValue;
             }
         }
@@ -270,8 +281,71 @@ namespace Pedantic.Chess
         {
             foreach (var opt in Options)
             {
-                Console.WriteLine(opt);
+                if (!opt.Name.StartsWith("UCI_T_", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Console.WriteLine(opt);
+                }
             }
+        }
+
+        public static bool SetOption(ReadOnlySpan<char> input, out string optionName)
+        {
+            optionName = string.Empty;
+            Span<Range> tokenRanges = stackalloc Range[2];
+            int splitCount = input.SplitAny(tokenRanges, CMD_SEP, TOKEN_OPTIONS);
+            if (splitCount < 2 || !input[tokenRanges[0]].Equals("name", StringComparison.InvariantCulture))
+            {
+                return false;
+            }
+
+            int index = input[tokenRanges[1]].IndexOfToken("value");
+            ReadOnlySpan<char> tail = input[tokenRanges[1]];
+            optionName = index == -1 ? tail.ToString() : tail.Slice(0, index - 1).ToString();
+            UciOptionBase? option = null;
+            if (options.ContainsKey(optionName))
+            {
+                option = options[optionName];
+            }
+
+            if (option == null)
+            {
+                return false;
+            }
+
+            string value = tail.Slice(index + 6).ToString();
+            switch (option.Type)
+            {
+                case UciOptionType.Check:
+                    UciOptionCheck check = (UciOptionCheck)option;
+                    if (bool.TryParse(value, out bool boolResult))
+                    {
+                        check.CurrentValue = boolResult;
+                    }
+                    break;
+
+                case UciOptionType.Combo:
+                    UciOptionCombo combo = (UciOptionCombo)option;
+                    combo.CurrentValue = value;
+                    break;
+
+                case UciOptionType.Spin:
+                    UciOptionSpin spin = (UciOptionSpin)option;
+                    if (int.TryParse(value, out int intResult))
+                    {
+                        spin.CurrentValue = intResult;
+                    }
+                    break;
+
+                case UciOptionType.String:
+                    UciOptionString str = (UciOptionString)option;
+                    str.CurrentValue = value;
+                    break;
+
+                default:
+                    break;
+            }
+
+            return true;
         }
 
         public static IList<UciOptionBase> Options => options.Values;
@@ -283,6 +357,7 @@ namespace Pedantic.Chess
         [
             new UciOptionButton(OPT_CLEAR_HASH),
             new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50),
+            new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce"),
             new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048),
             new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000),
             new UciOptionCheck(OPT_OWN_BOOK, false),
