@@ -6,6 +6,10 @@
     "Perft(6)": {
       "commandName": "Project",
       "commandLineArgs": "< \"e:\\repos.2\\Pedantic\\perft6test.txt\""
+    },
+    "Learn": {
+      "commandName": "Project",
+      "commandLineArgs": "learn --data \"e:/pgn files/training/master_training_data_ver7.0d.csv\" --sample 6000000 --epochs 1000 --time 0:30:00 --reset"
     }
   }
 }

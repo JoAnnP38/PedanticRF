@@ -94,7 +94,7 @@ namespace Pedantic.UnitTests
             Program.ParseUciCommand("isready");
             Program.ParseUciCommand("ucinewgame");
             Program.ParseUciCommand("position startpos");
-            Program.ParseUciCommand("go wtime 500000 btime 500000");
+            Program.ParseUciCommand("go wtime 15000 btime 15000");
             Program.ParseUciCommand("wait");
         }
 
@@ -105,7 +105,7 @@ namespace Pedantic.UnitTests
             Program.ParseUciCommand("isready");
             Program.ParseUciCommand("ucinewgame");
             Program.ParseUciCommand("position startpos");
-            Program.ParseUciCommand("go wtime 500000 winc 3000 btime 500000 binc 3000");
+            Program.ParseUciCommand("go wtime 15000 winc 100 btime 15000 binc 100");
             Program.ParseUciCommand("wait");
         }
     }

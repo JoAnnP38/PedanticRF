@@ -4,7 +4,7 @@
     {
         static HceEval()
         {
-            wts = Weights.Default;
+            wts = Engine.Weights;
         }
 
         public HceEval()

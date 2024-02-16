@@ -38,6 +38,12 @@ namespace Pedantic.Utilities
 
         public int Capacity => _chars.Length;
 
+        public void Clear()
+        {
+            _pos = 0;
+            _chars.Clear();
+        }
+
         public void EnsureCapacity(int capacity)
         {
             // This is not expected to be called this with negative capacity

@@ -336,6 +336,11 @@ namespace Pedantic.Chess
             LoadFen(fen);
         }
 
+        public Board(ReadOnlySpan<char> fen) : this()
+        {
+            LoadFen(fen);
+        }
+
         private Board(Board other) : this()
         { 
             board = other.board;
@@ -1406,7 +1411,11 @@ namespace Pedantic.Chess
                     enPassantValidated = enPassant;
                     hash = ZobristHash.HashEnPassant(hash, enPassantValidated);
                 }
-                halfMoveClock = byte.Parse(fen[ranges[4]]);
+                if (!byte.TryParse(fen[ranges[4]], out halfMoveClock))
+                {
+                    halfMoveClock = 0;
+                }
+                //halfMoveClock = byte.Parse(fen[ranges[4]]);
                 fullMoveCounter = ushort.Parse(fen[ranges[5]]);
                 return true;
             }

@@ -23,7 +23,7 @@ namespace Pedantic.Chess
 
             search = new(stack, board, clock, eval, listPool, TtCache.Default, maxDepth, maxNodes)
             {
-                CanPonder = Engine.IsPondering,
+                CanPonder = UciOptions.Ponder,
                 Uci = uci
             };
 

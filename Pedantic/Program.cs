@@ -1,6 +1,11 @@
-﻿using System.Globalization;
+﻿using System.CommandLine;
+using System.Globalization;
+using System.IO;
 using System.Text;
 using Pedantic.Chess;
+using Pedantic.Tuning;
+
+using static Pedantic.Chess.HCE.Weights;
 
 namespace Pedantic
 {
@@ -8,7 +13,7 @@ namespace Pedantic
     {
         const int BUFFER_SIZE = 8192;
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Encoding encoding = Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage);            
@@ -24,8 +29,75 @@ namespace Pedantic
             else
             {
                 Console.WriteLine("No");
-            } 
-            Task.WaitAll(RunUci());
+            }
+            Console.WriteLine();
+
+            var learnDataOption = new Option<string?>
+            (
+                name: "--data",
+                description: "The file name/path of the labeled training data file.",
+                getDefaultValue: () => null
+            );
+            var learnSampleOption = new Option<int>
+            (
+                name: "--sample",
+                description: "Specify the sample size to extract from training data.",
+                getDefaultValue: () => -1
+            );
+            var learnMaxEpochOption = new Option<int>
+            (
+                name: "--epochs",
+                description: "The maximum number of training iterations before a solution is declared.",
+                getDefaultValue: () => 1000
+            );
+            var learnMaxTimeOption = new Option<TimeSpan?>
+            (
+                name: "--time",
+                description: "The maximum duration of training session before a solution is declared.",
+                getDefaultValue: () => new TimeSpan(0, 30, 0)
+            );
+            var learnSaveOption = new Option<bool>
+            (
+                name: "--save",
+                description: "If specified the extracted sample will be saved in file so it can be reused.",
+                getDefaultValue: () => false
+            );
+            var learnResetOption = new Option<bool>
+            (
+                name: "--reset",
+                description: "Reset all evaluation weights (excluding piece weights) to zero before training begins.",
+                getDefaultValue: () => false
+            );
+            var learnEvalPctOption = new Option<int>
+            (
+                name: "--eval",
+                description: "The proportion of eval score to use in linear interpolation between eval and WDL.",
+                getDefaultValue: () => 25
+            );
+
+            var uciCmd = new Command("uci", "Start the pedantic application in UCI mode (default).");
+
+            var learnCmd = new Command("learn", "Optimize evaluation function using training data.")
+            {
+                learnDataOption,
+                learnSampleOption,
+                learnMaxEpochOption,
+                learnMaxTimeOption,
+                learnSaveOption,
+                learnResetOption,
+                learnEvalPctOption
+            };
+            var rootCmd = new RootCommand("The pedantic chess engine.")
+            {
+                uciCmd,
+                learnCmd
+            };
+
+            uciCmd.SetHandler(RunUci);
+            learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
+                learnSaveOption, learnResetOption, learnEvalPctOption);
+            rootCmd.SetHandler(RunUci);
+            await rootCmd.InvokeAsync(args);
         }
 
         static void InitializeStaticData()
@@ -41,7 +113,7 @@ namespace Pedantic
 
                 while (Engine.IsRunning)
                 {
-                    string? input = Console.ReadLine();
+                    string? input = await Task.Run(Console.ReadLine);
                     if (!string.IsNullOrWhiteSpace(input))
                     {
                         ParseUciCommand(input);
@@ -50,6 +122,7 @@ namespace Pedantic
             }
             catch (Exception ex)
             {
+                Uci.Default.Log(@$"Fatal error occurred in Pedantic: '{ex.Message}'.");
                 await Console.Error.WriteAsync(Environment.NewLine);
                 await Console.Error.WriteLineAsync($@"[{DateTime.Now}]");
                 await Console.Error.WriteLineAsync(ex.ToString());            
@@ -68,6 +141,7 @@ namespace Pedantic
             {
                 case "bench":
                     // custom: bench depth <x>
+                    Bench(inputSpan[tokenRange[1]]);
                     break;
 
                 case "debug":
@@ -83,7 +157,7 @@ namespace Pedantic
                     break;
 
                 case "perft":
-                    // custom: perft depth <x> [divide | details]
+                    // custom: perft depth <x> [divide]
                     Perft(inputSpan[tokenRange[1]]);
                     break;
 
@@ -195,11 +269,16 @@ namespace Pedantic
                 splitCount > 1)
             {
                 ReadOnlySpan<char> fen = tokens[tokenRanges[1]];
-                int fenEnd = fen.IndexOfNthAny(6, CMD_SEP);
-                if (fenEnd >= 6)
+                int fenEnd = fen.IndexOf("moves");
+                if (fenEnd == -1)
                 {
-                    Engine.SetupPosition(fen[..fenEnd]);
+                    fenEnd = fen.Length;
                 }
+                else
+                {
+                    fenEnd--;
+                }
+                Engine.SetupPosition(fen[..fenEnd]);
             }
             else
             {
@@ -210,9 +289,13 @@ namespace Pedantic
             if (splitCount > 1)
             {
                 ReadOnlySpan<char> moves = tokens[tokenRanges[1]];
-                int firstMove = moves.IndexOf("moves") + 6;
-                moves = moves[firstMove..];
-                Engine.MakeMoves(moves);
+                int firstMove = moves.IndexOf("moves");
+                if (firstMove != -1)
+                {
+                    firstMove += 6;
+                    moves = moves[firstMove..];
+                    Engine.MakeMoves(moves);
+                }
             }
         }
 
@@ -308,6 +391,15 @@ namespace Pedantic
             Engine.Perft(depth, divide, details);
         }
 
+        static void Bench(ReadOnlySpan<char> tokens)
+        {
+            TryParse(tokens, "depth", out int maxDepth, MAX_PLY - 1);
+            if (maxDepth > 0)
+            {
+                Engine.Bench(maxDepth, false);
+            }
+        }
+
         static void Debug(ReadOnlySpan<char> tokens)
         {
             Span<Range> tokenRanges = stackalloc Range[2];
@@ -321,5 +413,132 @@ namespace Pedantic
                 Engine.Debug = tokens[tokenRanges[0]].Equals("on".AsSpan(), StringComparison.InvariantCulture);
             }
         }
+
+        static void RunLearn(string? dataFile, int samples, int maxEpoch, TimeSpan? maxTime, bool save, bool reset, int evalPct)
+        {
+            try
+            {
+                PosRecord.EvalPct = Math.Clamp(evalPct, 0, 100);
+                if (dataFile == null)
+                {
+                    throw new ArgumentNullException(nameof(dataFile));
+                }
+
+                using var data = new TrainingDataFile(dataFile, Encoding.UTF8);
+                List<PosRecord> positions = samples <= 0 ? data.LoadFile() : data.LoadSample(samples, save);
+
+                var tuner = reset ? new GdTuner(positions) : new GdTuner(Engine.Weights, positions);
+                var (Error, Accuracy, Weights, K) = tuner.Train(maxEpoch, maxTime);
+                PrintSolution(positions.Count, Error, Accuracy, Weights, K);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+            }
+        }
+
+        private static void PrintSolution(int sampleSize, double error, double accuracy, Chess.HCE.Weights weights, double K)
+        {
+            indentLevel = 2;
+            WriteLine($"// Solution sample size: {sampleSize}, generated on {DateTime.Now:R}");
+            WriteLine($"// Solution K: {K:F6}, error: {error:F6}, accuracy: {accuracy:F4}");
+            WriteLine("private static readonly Score[] defaultWeights =");
+            WriteLine("{");
+            indentLevel++;
+            PrintSolutionSection(weights);
+            indentLevel--;            
+            WriteLine("};");
+        }
+
+        private static void PrintSolutionSection(Chess.HCE.Weights wts)
+        {
+            void WriteWt(Score s)
+            {
+                string score = $"S({s.MgScore,3}, {s.EgScore,3}), ";
+                Console.Write($"{score,-15}");
+            }
+
+            void WriteWtLine(Score s)
+            {
+                WriteIndent();
+                WriteWt(s);
+                Console.WriteLine();
+            }
+
+            void WriteWtsLine(Chess.HCE.Weights wts, int start, int length)
+            {
+                WriteIndent();
+                for (int n = start; n < start + length; n++)
+                {
+                    WriteWt(wts[n]);
+                }
+                Console.WriteLine();
+            }
+
+            void WriteWts2D(Chess.HCE.Weights wts, int start, int width, int length)
+            {
+                for (int n = 0; n < length; n++)
+                {
+                    if (n % width == 0)
+                    {
+                        if (n != 0)
+                        {
+                            Console.WriteLine();
+                        }
+                        WriteIndent();
+                    }
+                    WriteWt(wts[start + n]);
+                }
+                Console.WriteLine();
+            }
+
+            string[] pieceNames = { "pawns", "knights", "bishops", "rooks", "queens", "kings" };
+            string[] upperNames = { "Pawn", "Knight", "Bishop", "Rook", "Queen", "King" };
+            WriteLine("/* piece values */");
+            WriteWtsLine(wts, PIECE_VALUES, MAX_PIECES);
+            WriteLine();
+            WriteLine("/* friendly king piece square values */");
+            WriteLine("#region friendly king piece square values");
+            WriteLine();
+            for (int pc = 0; pc < MAX_PIECES; pc++)
+            {
+                for (int kp = 0; kp < MAX_KING_BUCKETS; kp++)
+                {
+                    int index = (pc * MAX_KING_BUCKETS + kp) * MAX_SQUARES;
+                    WriteLine($"/* {pieceNames[pc]}: bucket {kp} */");
+                    WriteWts2D(wts, FRIENDLY_KB_PST + index, 8, MAX_SQUARES);
+                    WriteLine();
+                }
+            }
+            WriteLine("#endregion");
+            WriteLine();
+            WriteLine("/* enemy king piece square values */");
+            WriteLine("#region enemy king piece square values");
+            WriteLine();
+            for (int pc = 0; pc < MAX_PIECES; pc++)
+            {
+                for (int kp = 0; kp < MAX_KING_BUCKETS; kp++)
+                {
+                    int index = (pc * MAX_KING_BUCKETS + kp) * MAX_SQUARES;
+                    WriteLine($"/* {pieceNames[pc]}: bucket {kp} */");
+                    WriteWts2D(wts, ENEMY_KB_PST + index, 8, MAX_SQUARES);
+                    WriteLine();
+                }
+            }
+            WriteLine("#endregion");
+        }
+
+        private static void WriteIndent()
+        {
+            string indent = new(' ', indentLevel * 4);
+            Console.Write(indent);
+        }
+        private static void WriteLine(string text = "")
+        {
+            WriteIndent();
+            Console.WriteLine(text);
+        }
+
+        private static int indentLevel = 0;
     }
 }

@@ -376,9 +376,10 @@ namespace Pedantic.Chess
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
             board.PushBoardState();
             MoveList list = listPool.Rent();
-            IEnumerable<GenMove> moves = inCheck ? 
+            IEnumerable<GenMove> moves = inCheck ?
                 board.Moves(ply, ss, list, ttMove) :
                 board.EvasionMoves(ply, ss, list, ttMove);
+            //IEnumerable<GenMove> moves = board.Moves(ply, ss, list, ttMove);
 
             foreach (GenMove genMove in moves)
             {
