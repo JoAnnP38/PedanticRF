@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Pedantic.Chess
 {
-    public class BasicSearch
+    public class BasicSearch : IInitialize
     {
         internal const int CHECK_TC_NODES_MASK = 1023;
         internal const int WAIT_TIME = 50;
@@ -318,7 +318,7 @@ namespace Pedantic.Chess
             return bestScore;
         }
 
-        private int Search(int alpha, int beta, int depth, int ply)
+        private int Search(int alpha, int beta, int depth, int ply, bool canNull = true)
         {
             pvTable.InitPly(ply);
             SelDepth = Math.Max(SelDepth, ply);
@@ -346,10 +346,13 @@ namespace Pedantic.Chess
                 return DrawScore;
             }
 
+            int score;
             int originalAlpha = alpha;
             bool isPv = beta - alpha > 1;
             bool inCheck = ss[ply - 1].IsCheckingMove;
             ref SearchItem ssItem = ref ss[ply];
+            int evaluation = ssItem.Eval = NO_SCORE;
+
 
             // mate distance pruning
             alpha = Math.Max(alpha, -CHECKMATE_SCORE + ply);
@@ -371,7 +374,40 @@ namespace Pedantic.Chess
                 ttMove = ttItem.BestMove;
             }
 
-            int score;
+            if (!inCheck)
+            {
+                evaluation = ssItem.Eval = eval.Compute(board);
+                if (!isPv)
+                {
+                    // Null Move Pruning - Prune if current evaluation looks so good that we can see what happens
+                    // if we just skip our move.
+                    if (canNull && depth >= UciOptions.NmpMinDepth && evaluation >= beta && board.PieceCount(board.SideToMove) > 1)
+                    {
+                        int R = NMP[depth];
+                        if (board.MakeMove(Move.NullMove))
+                        {
+                            ssItem.Move = Move.NullMove;
+                            ssItem.IsCheckingMove = false;
+                            ssItem.Eval = NO_SCORE;
+
+                            score = -Search(-beta, -beta + 1, Math.Max(depth - R - 1, 0), ply + 1, false);
+                            board.UnmakeMove();
+                            if (wasAborted)
+                            {
+                                return 0;
+                            }
+
+                            if (score >= beta)
+                            {
+                                ttCache.Store(board.Hash, depth, ply, alpha, beta, score, Move.NullMove);
+                                return beta;
+                            }
+                        }
+                        ssItem.Eval = (short)evaluation;
+                    }
+                }
+            }
+
             Move bestMove = Move.NullMove;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
             board.PushBoardState();
@@ -655,6 +691,14 @@ namespace Pedantic.Chess
 
         #region Static Methods
 
+        public static void Initialize() 
+        {
+            for (int ply = 0; ply < MAX_PLY; ply++)
+            {
+                NMP[ply] = NmpReduction(ply);
+            }
+        }
+
         private static bool IsCheckmate(int score, out int mateIn)
         {
             mateIn = 0;
@@ -666,6 +710,12 @@ namespace Pedantic.Chess
             }
 
             return checkMate;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte NmpReduction(int depth)
+        {
+            return (sbyte)(depth < 3 ? 0 : UciOptions.NmpBaseDeduction + Math.Max(depth - 3, 0) / UciOptions.NmpIncDivisor);
         }
 
         #endregion
@@ -690,6 +740,7 @@ namespace Pedantic.Chess
         private DateTime startDateTime = DateTime.MinValue;
         private int rootChanges = 0;
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
+        internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
 
         #endregion
     }
