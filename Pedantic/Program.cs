@@ -103,6 +103,7 @@ namespace Pedantic
         static void InitializeStaticData()
         {
             Board.Initialize();
+            BasicSearch.Initialize();
         }
 
         private static async Task RunUci()

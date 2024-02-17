@@ -31,6 +31,9 @@ namespace Pedantic.Chess
         internal const string OPT_ONE_MOVE_MAX_DEPTH = "UCI_T_OneMoveMaxDepth";
         internal const string OPT_QS_RECAPTURE_DEPTH = "UCI_T_QS_RecaptureDepth";
         internal const string OPT_QS_PROMOTION_DEPTH = "UCI_T_QS_PromotionDepth";
+        internal const string OPT_NMP_MIN_DEPTH = "UCI_T_NMP_MinDepth";
+        internal const string OPT_NMP_BASE_DEDUCTION = "UCI_T_NMP_BaseDeduction";
+        internal const string OPT_NMP_INC_DIVISOR = "UCI_T_NMP_IncDivisor";
 
         static UciOptions()
         {
@@ -277,6 +280,36 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int NmpMinDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_MIN_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int NmpBaseDeduction
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_BASE_DEDUCTION];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int NmpIncDivisor
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_INC_DIVISOR];
+                return opt.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var opt in Options)
@@ -380,7 +413,10 @@ namespace Pedantic.Chess
             new UciOptionSpin(OPT_ASP_MIN_DEPTH, 6, 1, 10),
             new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 10, 1, 20),
             new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8),
-            new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8)
+            new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8),
+            new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6),
+            new UciOptionSpin(OPT_NMP_BASE_DEDUCTION, 3, 1, 8),
+            new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8)
         ];
     }
 }

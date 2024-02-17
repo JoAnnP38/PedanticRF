@@ -515,6 +515,11 @@ namespace Pedantic.Chess
             return board[(int)sq];
         }
 
+        public int PieceCount(Color sideToMove)
+        {
+            return (Units(sideToMove).AndNot(Pieces(sideToMove, Piece.Pawn))).PopCount;
+        }
+
         public ref ByColor<SquareIndex> KingIndex
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
