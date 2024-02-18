@@ -396,6 +396,12 @@ namespace Pedantic.Chess
                 evaluation = ssItem.Eval = eval.Compute(board);
                 if (!isPv)
                 {
+                    // static null move pruning (reverse futility pruning)
+                    if (depth <= UciOptions.RfpMaxDepth && evaluation >= beta + depth * UciOptions.RfpMargin)
+                    {
+                        return evaluation;
+                    }
+
                     // Null Move Pruning - Prune if current evaluation looks so good that we can see what happens
                     // if we just skip our move.
                     if (canNull && depth >= UciOptions.NmpMinDepth && evaluation >= beta && board.PieceCount(board.SideToMove) > 1)
@@ -417,7 +423,7 @@ namespace Pedantic.Chess
                             if (score >= beta)
                             {
                                 ttCache.Store(board.Hash, depth, ply, alpha, beta, score, Move.NullMove);
-                                return beta;
+                                return score;
                             }
                         }
                         ssItem.Eval = (short)evaluation;
