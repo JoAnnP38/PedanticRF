@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Frozen;
+using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 namespace Pedantic.Chess
 {
@@ -34,6 +36,9 @@ namespace Pedantic.Chess
         internal const string OPT_NMP_MIN_DEPTH = "UCI_T_NMP_MinDepth";
         internal const string OPT_NMP_BASE_DEDUCTION = "UCI_T_NMP_BaseDeduction";
         internal const string OPT_NMP_INC_DIVISOR = "UCI_T_NMP_IncDivisor";
+        internal const string OPT_LMR_DEPTH_FACTOR = "UCI_T_LMR_DepthFactor";
+        internal const string OPT_LMR_MOVE_FACTOR = "UCI_T_LMR_MoveFactor";
+        internal const string OPT_LMR_SCALE_FACTOR = "UCI_T_LMR_ScaleFactor";
 
         static UciOptions()
         {
@@ -310,10 +315,40 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int LmrDepthFactor
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_DEPTH_FACTOR];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int LmrMoveFactor
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_MOVE_FACTOR];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int LmrScaleFactor
+        {
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_SCALE_FACTOR];
+                return opt.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
-            foreach (var opt in Options)
+            foreach (var kvp in options)
             {
+                UciOptionBase opt = kvp.Value;
                 if (!opt.Name.StartsWith("UCI_T_", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Console.WriteLine(opt);
@@ -416,7 +451,10 @@ namespace Pedantic.Chess
             new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8),
             new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6),
             new UciOptionSpin(OPT_NMP_BASE_DEDUCTION, 3, 1, 8),
-            new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8)
+            new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8),
+            new UciOptionSpin(OPT_LMR_DEPTH_FACTOR, 18, 10, 30),
+            new UciOptionSpin(OPT_LMR_MOVE_FACTOR, 10, 5, 20),
+            new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 20, 10, 30)
         ];
     }
 }
