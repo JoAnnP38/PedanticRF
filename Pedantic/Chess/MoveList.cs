@@ -133,7 +133,7 @@ namespace Pedantic.Chess
         {
             Util.Assert(insertIndex < CAPACITY);
             Move move = new(stm, piece, from, to, type);
-            array[insertIndex++] = new ScoredMove { Move = move, Score = history[move] };
+            array[insertIndex++] = new ScoredMove { Move = move, Score = history[stm, piece, to] };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

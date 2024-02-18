@@ -17,13 +17,14 @@ namespace Pedantic.Chess
 
         #region Constructors
 
-        public BasicSearch(SearchStack searchStack, Board board, GameClock clock, HceEval eval, 
+        public BasicSearch(SearchStack searchStack, Board board, GameClock clock, HceEval eval, History history,
             ObjectPool<MoveList> listPool, TtCache ttCache, int maxDepth, long maxNodes = long.MaxValue - 100)
         {
             ss = searchStack;
             this.board = board;
             this.clock = clock;
             this.eval = eval;
+            this.history = history;
             this.listPool = listPool;
             this.ttCache = ttCache;
             this.maxDepth = maxDepth;
@@ -134,6 +135,7 @@ namespace Pedantic.Chess
                 int alpha, beta, result;
                 long startNodes = 0;
                 Move ponderMove = Move.NullMove;
+                history.SetContext(0);
                 oneLegalMove = board.OneLegalMove(list, out Move bestMove);
                 startDateTime = DateTime.Now;
 
@@ -433,6 +435,8 @@ namespace Pedantic.Chess
 
             Move bestMove = Move.NullMove;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
+            history.SetContext(ply);
+            StackList<Move> quiets = new(stackalloc Move[64]);
             board.PushBoardState();
             MoveList list = listPool.Rent();
             IEnumerable<GenMove> moves = inCheck ?
@@ -450,6 +454,7 @@ namespace Pedantic.Chess
                 expandedNodes++;
                 NodesVisited++;
                 bool checkingMove = board.IsChecked();
+                bool isQuiet = genMove.Move.IsQuiet;
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = checkingMove;
                 
@@ -499,15 +504,21 @@ namespace Pedantic.Chess
 
                         if (score >= beta)
                         {
-                            if (genMove.Move.IsQuiet)
+                            if (isQuiet)
                             {
                                 ssItem.Killers.Add(genMove.Move);
+                                history.UpdateCutoff(genMove.Move, ply, ref quiets, depth);
                             }
                             break;
                         }
 
                         pvTable.MergeMove(ply, genMove.Move);
                     }
+                }
+
+                if (isQuiet)
+                {
+                    quiets.Add(genMove.Move);
                 }
             }
 
@@ -781,6 +792,7 @@ namespace Pedantic.Chess
         private readonly Board board;
         private readonly GameClock clock;
         private readonly HceEval eval;
+        private readonly History history;
         private readonly ObjectPool<MoveList> listPool;
         private readonly TtCache ttCache;
         private readonly int maxDepth;

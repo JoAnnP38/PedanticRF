@@ -94,6 +94,7 @@ namespace Pedantic.Chess
         public static void ClearHashTable()
         {
             TtCache.Default.Clear();
+            threads.ClearEvalCache();
             GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
         }
 
