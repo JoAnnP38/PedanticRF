@@ -1,6 +1,9 @@
-﻿using Pedantic.Utilities;
+﻿using System.Runtime.CompilerServices;
+
+using Pedantic.Collections;
+using Pedantic.Utilities;
 using Pedantic.Chess.HCE;
-using System.Runtime.CompilerServices;
+using Microsoft.VisualBasic.FileIO;
 
 namespace Pedantic.Chess
 {
@@ -8,6 +11,9 @@ namespace Pedantic.Chess
     {
         internal const int CHECK_TC_NODES_MASK = 1023;
         internal const int WAIT_TIME = 50;
+        internal const int LMR_MAX_MOVES = 64;
+        internal const double LMR_MIN = 0.0;
+        internal const double LMR_MAX = 15.0;
 
         #region Constructors
 
@@ -254,11 +260,17 @@ namespace Pedantic.Chess
                 }
 
                 bool checkingMove = board.IsChecked();
-                // bool isQuiet = move.IsQuiet;
-                // bool interesting = inCheck || checkingMove || !isQuiet || !alphaRaised;
+                bool isQuiet = move.IsQuiet;
+                bool interesting = inCheck || checkingMove || !isQuiet || !alphaRaised;
 
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Move = move;
+                
+                int R = 0;
+                if (!interesting)
+                {
+                    R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
+                }
 
                 if (!alphaRaised)
                 {
@@ -266,7 +278,12 @@ namespace Pedantic.Chess
                 }
                 else
                 {
-                    score = -Search(-alpha - 1, -alpha, depth - 1, 1);
+                    score = -Search(-alpha - 1, -alpha, Math.Max(depth - R - 1, 0), 1);
+
+                    if (score > alpha && R > 0)
+                    {
+                        score = -Search(-alpha - 1, -alpha, depth - 1, 1);
+                    }
 
                     if (score > alpha)
                     {
@@ -426,8 +443,18 @@ namespace Pedantic.Chess
 
                 expandedNodes++;
                 NodesVisited++;
+                bool checkingMove = board.IsChecked();
                 ssItem.Move = genMove.Move;
-                ssItem.IsCheckingMove = board.IsChecked();
+                ssItem.IsCheckingMove = checkingMove;
+                
+                bool interesting = inCheck || checkingMove || (genMove.MovePhase < MoveGenPhase.BadCapture) || expandedNodes == 1;
+
+                int R = 0;
+                if (!interesting)
+                {
+                    R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
+
+                }
                 
                 if (expandedNodes == 1)
                 {
@@ -435,7 +462,12 @@ namespace Pedantic.Chess
                 }
                 else
                 {
-                    score = -Search(-alpha - 1, -alpha, depth - 1, ply + 1);
+                    score = -Search(-alpha - 1, -alpha, Math.Max(depth - R - 1, 0), ply + 1);
+
+                    if (score > alpha && R > 0)
+                    {
+                        score = -Search(-alpha - 1, -alpha, depth - 1, ply + 1);
+                    }
 
                     if (score > alpha)
                     {
@@ -693,9 +725,26 @@ namespace Pedantic.Chess
 
         public static void Initialize() 
         {
+            Array.Clear(NMP);
             for (int ply = 0; ply < MAX_PLY; ply++)
             {
                 NMP[ply] = NmpReduction(ply);
+            }
+
+            LMR.Clear();
+            double depthFactor = UciOptions.LmrDepthFactor / 10.0;
+            double moveFactor = UciOptions.LmrMoveFactor / 10.0;
+            double scaleFactor = UciOptions.LmrScaleFactor / 10.0;
+
+            double reduction;
+            for (int depth = 3; depth < MAX_PLY; depth++)
+            {
+                for (int move = 0; move < LMR_MAX_MOVES; move++)
+                {
+                    reduction = Math.Log(depth * depthFactor) * Math.Log(move * moveFactor) / scaleFactor;
+                    reduction = (sbyte)Math.Clamp(reduction, LMR_MIN, LMR_MAX);
+                    LMR[depth, move] = (sbyte)Math.Min(reduction, Math.Max(depth - 2, 0));
+                }
             }
         }
 
@@ -741,6 +790,7 @@ namespace Pedantic.Chess
         private int rootChanges = 0;
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
+        internal static readonly FixedArray2D<sbyte> LMR = new(MAX_PLY, LMR_MAX_MOVES, true);
 
         #endregion
     }
