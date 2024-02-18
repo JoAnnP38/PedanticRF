@@ -6,7 +6,7 @@ using Pedantic.Utilities;
 namespace Pedantic.Chess.HCE
 {
     // Coefficients or weights for the HCE evaluation function
-    public sealed class Weights
+    public sealed class Weights : IInitialize
     {
         #region Feature Identifiers/Constants
 
@@ -133,6 +133,8 @@ namespace Pedantic.Chess.HCE
         }
 
         #endregion
+
+        public static void Initialize() {}
 
         private static Score S(short mgValue, short egValue) => new Score(mgValue, egValue);
         private readonly Score[] weights = new Score[MAX_WEIGHTS];

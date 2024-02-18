@@ -102,6 +102,7 @@ namespace Pedantic
 
         static void InitializeStaticData()
         {
+            Chess.HCE.Weights.Initialize();
             Board.Initialize();
             BasicSearch.Initialize();
         }

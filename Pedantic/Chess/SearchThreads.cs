@@ -39,6 +39,14 @@ namespace Pedantic.Chess
             }
         }
 
+        public void ClearEvalCache()
+        {
+            foreach (var thread in threads)
+            {
+                thread.History.Clear();
+            }
+        }
+
         public void Wait()
         {
             // wait (i.e. block) for search to be complete
