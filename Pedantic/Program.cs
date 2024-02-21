@@ -5,6 +5,7 @@ using System.Text;
 using Pedantic.Chess;
 using Pedantic.Tuning;
 
+using Pedantic.Chess.HCE;
 using static Pedantic.Chess.HCE.Weights;
 
 namespace Pedantic
@@ -100,11 +101,14 @@ namespace Pedantic
             await rootCmd.InvokeAsync(args);
         }
 
-        static void InitializeStaticData()
+        public static void InitializeStaticData()
         {
-            Chess.HCE.Weights.Initialize();
             Board.Initialize();
+            Weights.Initialize();
+            HceEval.Initialize();
+            Engine.Initialize();
             BasicSearch.Initialize();
+            Engine.SetupPosition(FEN_START_POS);
         }
 
         private static async Task RunUci()

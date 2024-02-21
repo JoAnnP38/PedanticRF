@@ -13,10 +13,11 @@ namespace Pedantic.Chess.HCE
         public static readonly Guid HCE_WEIGHTS_VERSION = new("e3afd1d2-468e-4531-a73b-01f904fc06b7");
 
         // 6 (piece weights) + (6x64x16x2) 6 Piece Types X 64 Squares X 16 King Buckets X 2 Both Kings
-        public const int MAX_WEIGHTS = 12294;
+        public const int MAX_WEIGHTS = 12295;
         public const int PIECE_VALUES = 0;      // start of piece weights
         public const int FRIENDLY_KB_PST = 6;   // start of friend king bucket piece square tables
         public const int ENEMY_KB_PST = 6150;   // start of enemy king bucket piece square tables
+        public const int TEMPO = 12294;
 
         #endregion
 
@@ -73,6 +74,12 @@ namespace Pedantic.Chess.HCE
 
             int offset = ((int)piece * MAX_KING_BUCKETS + kb.Enemy) * MAX_SQUARES + (int)square;
             return weights[ENEMY_KB_PST + offset];
+        }
+
+        public Score TempoBonus
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => weights[TEMPO];
         }
 
         public static Weights Default => defWts;
@@ -2075,6 +2082,9 @@ namespace Pedantic.Chess.HCE
             S( -3,   4),   S(  3,  13),   S( -2, -17),   S(  6,  19),   S(  7,  42),   S(  1,  25),   S( -2,   0),   S(  8,  15),
 
             #endregion
+
+            /* tempo bonus for side to move */
+            S( 16,  10),
         ];
 
         private static readonly Weights defWts = new Weights(defaultWeights);

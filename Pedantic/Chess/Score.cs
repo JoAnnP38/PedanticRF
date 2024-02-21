@@ -24,7 +24,7 @@ namespace Pedantic.Chess
 
         public short NormalizeScore(int phase)
         {
-            return (short)((MgScore * phase + EgScore * (Constants.MAX_PHASE - phase)) / Constants.MAX_PHASE);
+            return (short)((MgScore * phase + EgScore * (MAX_PHASE - phase)) / MAX_PHASE);
         }
 
         public bool Equals(Score other)

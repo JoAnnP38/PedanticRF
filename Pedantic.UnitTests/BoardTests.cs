@@ -13,7 +13,7 @@ namespace Pedantic.UnitTests
         [ClassInitialize]
         public static void ClassInit(TestContext context)
         {
-            Board.Initialize();
+            Program.InitializeStaticData();
         }
 
         [TestMethod]

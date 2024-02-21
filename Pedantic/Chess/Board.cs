@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Pedantic.Collections;
+using Pedantic.Chess.HCE;
 using Pedantic.Utilities;
 
 namespace Pedantic.Chess
@@ -73,6 +74,7 @@ namespace Pedantic.Chess
             public BitboardArray Bitboards;
             public SquareArray PieceBoard;
             public ByColor<SquareIndex> KingIndex;
+            public ByColor<Score> Material;
             public Move Move;
 
             public BoardState(Board board)
@@ -83,11 +85,12 @@ namespace Pedantic.Chess
                 EnPassantValidated = board.enPassantValidated;
                 HalfMoveClock = board.halfMoveClock;
                 FullMoveCounter = board.fullMoveCounter;
+                Phase = board.phase;
                 Hash = board.hash;
                 Bitboards = board.bitboards;
                 PieceBoard = board.board;
                 KingIndex = board.kingIndex;
-                board.eval.SaveState(ref this);
+                Material = board.material;
             }
 
             public void Restore(Board board)
@@ -98,11 +101,12 @@ namespace Pedantic.Chess
                 board.enPassantValidated = EnPassantValidated;
                 board.halfMoveClock = HalfMoveClock;
                 board.fullMoveCounter = FullMoveCounter;
+                board.phase = Phase;
                 board.hash = Hash;
                 board.bitboards = Bitboards;
                 board.board = PieceBoard;
                 board.kingIndex = KingIndex;
-                board.eval.RestoreState(ref this);
+                board.material = Material;
             }
         }
 
@@ -301,10 +305,11 @@ namespace Pedantic.Chess
         private ulong hash;
         private ByColor<SquareIndex> kingIndex;
         private ByColor<GenMoveHelper> helpers;
+        private ByColor<Score> material;
 
-        private EvalUpdates eval = new();
         private MoveList moveList = new();
         private ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
+        private byte phase;
 
         #endregion
 
@@ -353,6 +358,8 @@ namespace Pedantic.Chess
             fullMoveCounter = other.fullMoveCounter;
             hash = other.hash;
             kingIndex = other.kingIndex;
+            material = other.material;
+            phase = other.phase;
         }
 
         #endregion
@@ -476,6 +483,12 @@ namespace Pedantic.Chess
             get => hash;
         }
 
+        public byte HalfMoveClock
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => halfMoveClock;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ref Bitboard Units(Color color)
         {
@@ -509,6 +522,18 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Bitboard MajorPieces(Color color)
+        {
+            return Units(color) & (Rooks | Queens);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Bitboard MinorPieces(Color color)
+        {
+            return Units(color) & (Knights & Bishops);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Square PieceBoard(SquareIndex sq)
         {
             Util.Assert(sq != SquareIndex.None);
@@ -524,6 +549,32 @@ namespace Pedantic.Chess
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => ref kingIndex;
+        }
+
+        public ref ByColor<Score> Material
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => ref material;
+        }
+
+        public byte Phase
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => phase;
+        }
+
+        public GamePhase GamePhase
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return phase switch
+                {
+                    > 54 => GamePhase.Opening,
+                    < 16 => GamePhase.EndGame,
+                    _ => GamePhase.MidGame
+                };
+            }
         }
 
         public Move LastMove
@@ -568,6 +619,8 @@ namespace Pedantic.Chess
             enPassantValidated = SquareIndex.None;
             hash = 0;
             kingIndex.Fill(SquareIndex.None);
+            material.Clear();
+            phase = 0;
         }
 
         public void AddPiece(Color color, Piece piece, SquareIndex sq)
@@ -587,6 +640,8 @@ namespace Pedantic.Chess
             {
                 kingIndex[color] = sq;
             }
+            material[color] += HceEval.Weights.PieceValue(piece);
+            phase = (byte)Math.Min(phase + piece.PhaseValue(), MAX_PHASE);
         }
 
         public void RemovePiece(Color color, Piece piece, SquareIndex sq)
@@ -602,6 +657,8 @@ namespace Pedantic.Chess
             Units(color) &= pcMask;
             Pieces(piece) &= pcMask;
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
+            material[color] -= HceEval.Weights.PieceValue(piece);
+            phase = (byte)Math.Max(phase - piece.PhaseValue(), 0);
         }
 
         #endregion
