@@ -9,9 +9,10 @@
         [TestMethod]
         public void CtorTests()
         {
-            MoveList list = new();
+            SearchStack ss = new();
+            History hist = new(ss);
+            MoveList list = new(hist);
             Assert.AreEqual(0, list.Count);
-            Assert.Fail("Update test using real History implementation.");
         }
 
         [TestMethod]
@@ -40,7 +41,9 @@
         [TestMethod]
         public void GetScoreSortTest()
         {
-            MoveList list = new();
+            SearchStack ss = new();
+            History hist = new(ss);
+            MoveList list = new(hist);
             list.AddQuiet(Color.White, Piece.Pawn, SquareIndex.E2, SquareIndex.E4, MoveType.DblPawnMove);
             list.AddPromote(Color.White, SquareIndex.E7, SquareIndex.E8, Piece.Queen);
             list.AddCapture(Color.White, Piece.Pawn, SquareIndex.E4, SquareIndex.D5, MoveType.Capture, Piece.Pawn);
@@ -60,8 +63,6 @@
             Assert.AreEqual(moveCapture, list.Sort(1));
             Assert.AreEqual(movePromote, list.Sort(2));
             Assert.AreEqual(moveQuiet, list.Sort(3));
-
-            Assert.Fail("Update test using real History implementation.");
         }
 
         [TestMethod]

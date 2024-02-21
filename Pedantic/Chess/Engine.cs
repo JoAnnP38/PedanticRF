@@ -9,7 +9,7 @@ namespace Pedantic.Chess
     {
         public static bool IsRunning { get; private set; } = false;
         public static bool Debug { get; set; } = false;
-        public static Board Board { get; } = new(FEN_START_POS);
+        public static Board Board { get; } = new();
         public static bool IsPondering { get; private set; } = false;
         public static bool Infinite { get; set; } = false;
         public static int MovesOutOfBook { get; set; } = 0;
@@ -288,6 +288,8 @@ namespace Pedantic.Chess
             threads.Search(time, Board, maxDepth, maxNodes);
             IsRunning = true;
         }
+
+        public static void Initialize() {}
 
         private static readonly GameClock time = new();
         private static Weights? weights;

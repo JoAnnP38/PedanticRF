@@ -20,7 +20,6 @@ namespace Pedantic.Chess
             Uci uci = new(isPrimary, false);
             clock.Uci = uci;
             this.clock = clock;
-            eval.Update(board);
 
             search = new(stack, board, clock, eval, history, listPool, TtCache.Default, maxDepth, maxNodes)
             {

@@ -61,7 +61,7 @@ namespace Pedantic.Chess
 
         public static Color ParseFenColor(ReadOnlySpan<char> colorToMove)
         {
-            Util.Assert(colorToMove.Length > 0);
+            Util.Assert(colorToMove.Length > 0, "FEN color must have a length of 1.");
 
             return colorToMove[0] switch
             {

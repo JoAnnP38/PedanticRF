@@ -32,6 +32,11 @@ namespace Pedantic.Tuning
                     IncrementPieceCount(color, coefficients, piece);
                     SetPieceSquare(color, coefficients, piece, kb, normalFrom);
                 }
+
+                if (color == bd.SideToMove)
+                {
+                    SetTempoBonus(color, coefficients);
+                }
             }
         }
 
@@ -122,6 +127,12 @@ namespace Pedantic.Tuning
             index = ENEMY_KB_PST +
                 ((int)piece * MAX_KING_BUCKETS + kb.Enemy) * MAX_SQUARES + (int)square;
             v[index] = inc;
+        }
+
+        private static void SetTempoBonus(Color color, SparseArray<short> v)
+        {
+            short inc = (short)(color == Color.White ? 1 : -1);
+            v[TEMPO] = inc;
         }
     }
 }

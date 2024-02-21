@@ -10,9 +10,9 @@ namespace Pedantic.UnitTests
         public TestContext? TestContext { get; set; }
 
         [ClassInitialize]
-        public static void ClassInit(TestContext context)
+        public static void ClassInit(TestContext _)
         {
-            Board.Initialize();
+            Program.InitializeStaticData();
         }
 
         [TestMethod]
