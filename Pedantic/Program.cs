@@ -532,6 +532,26 @@ namespace Pedantic
                 }
             }
             WriteLine("#endregion");
+            WriteLine();
+            WriteLine("/* piece mobility */");
+            WriteLine("#region piece mobility");
+            WriteLine();
+            WriteLine("/* knight mobility */");
+            WriteWts2D(wts, KNIGHT_MOBILITY, 8, 9);
+            WriteLine();
+            WriteLine("/* bishop mobility */");
+            WriteWts2D(wts, BISHOP_MOBILITY, 8, 14);
+            WriteLine();
+            WriteLine("/* rook mobility */");
+            WriteWts2D(wts, ROOK_MOBILITY, 8, 15);
+            WriteLine();
+            WriteLine("/* queen mobility */");
+            WriteWts2D(wts, QUEEN_MOBILITY, 8, 28);
+            WriteLine();
+            WriteLine("#endregion");
+            WriteLine();
+            WriteLine("/* tempo bonus for side to move */");
+            WriteWtLine(wts[TEMPO]);
         }
 
         private static void WriteIndent()

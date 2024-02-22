@@ -10,6 +10,9 @@ namespace Pedantic.Chess.HCE
         {
             public Bitboard Pawns;
             public Bitboard DefendedPawns;
+            public Bitboard PieceAttacks;
+            public Bitboard PawnAttacks;
+            public Bitboard MobilityArea;
             public short Material;
             public SquareIndex KI;
             public KingBuckets KB;
@@ -64,8 +67,8 @@ namespace Pedantic.Chess.HCE
             {
                 int c = (int)color;
                 int o = (int)color.Flip();
-                KingBuckets kb = new (color, evalInfo[c].KI, evalInfo[o].KI);
-                score += signs[color](EvalMaterialAndPst(color, board, kb));
+                score += signs[color](EvalMaterialAndPst(board, evalInfo, color));
+                score += signs[color](EvalPieces(board, evalInfo, color));
 
                 if (color == board.SideToMove)
                 {
@@ -76,44 +79,43 @@ namespace Pedantic.Chess.HCE
             return score.NormalizeScore(board.Phase);
         }
 
-        private Score EvalMaterialAndPst(Color color, Board board, KingBuckets kb)
+        private Score EvalMaterialAndPst(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             // material remains up to date via incremental updates
             Score score = board.Material[color];
+            int c = (int)color;
 
             foreach (SquareIndex from in board.Units(color))
             {
                 SquareIndex normalFrom = from.Normalize(color);
                 Piece piece = board.PieceBoard(from).Piece;
-                score += wts.FriendlyPieceSquareValue(piece, kb, normalFrom);
-                score += wts.EnemyPieceSquareValue(piece, kb, normalFrom);
+                score += wts.FriendlyPieceSquareValue(piece, evalInfo[c].KB, normalFrom);
+                score += wts.EnemyPieceSquareValue(piece, evalInfo[c].KB, normalFrom);
             }
 
             return score;
         }
 
-        public (bool WhiteCanWin, bool BlackCanWin) CanWin(Board board, Span<EvalInfo> evalInfo)
+        private static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
         {
-            if (board.GamePhase != GamePhase.EndGame)
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+
+            Score score = Score.Zero;
+            for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
             {
-                return (true, true);
+                // calculate mobility
+                foreach (SquareIndex from in board.Pieces(color, piece))
+                {
+                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
+                    evalInfo[c].PieceAttacks |= pieceAttacks;
+                    int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
+                    score += wts.PieceMobility(piece, mobility);
+                }
             }
 
-            bool whiteCanWin = false, blackCanWin = false;
-
-            // detect pawns not blockaded by enemy pawns
-            if (SufficientMatingMaterial(board, evalInfo, Color.White) || HasFreePawn(Color.White, board, evalInfo))
-            {
-                whiteCanWin = true;
-            }
-
-            // detect pawns not blockaded by enemy pawns
-            if (SufficientMatingMaterial(board, evalInfo, Color.Black) || HasFreePawn(Color.Black, board, evalInfo))
-            {
-                blackCanWin = true;
-            }
-
-            return (whiteCanWin, blackCanWin);
+            return score;
         }
 
         public static bool SufficientMatingMaterial(Board board, Span<EvalInfo> evalInfo, Color side)
@@ -122,8 +124,7 @@ namespace Pedantic.Chess.HCE
             int numBishops = board.Pieces(side, Piece.Bishop).PopCount;
             bool case1 = (board.Pieces(side, Piece.Rook) | board.Pieces(side, Piece.Queen)) != 0;
             bool case2 = (numKnights >= 1 && numBishops >= 1) || numBishops >= 2 || numKnights >= 3;
-            bool case3 = HasFreePawn(side, board, evalInfo);
-            return case1 || case2 || case3;
+            return case1 || case2;
         }
 
         public int ScaleFactor(Color winningColor, Board board, Span<EvalInfo> evalInfo)
@@ -156,8 +157,9 @@ namespace Pedantic.Chess.HCE
             return isWhiteDark != isBlackDark;
         }
 
-        public void InitializeEvalInfo(Board board, Span<EvalInfo> evalInfo)
+        public static void InitializeEvalInfo(Board board, Span<EvalInfo> evalInfo)
         {
+            evalInfo.Clear();
             for (Color color = Color.White; color <= Color.Black; color++)
             {
                 int c = (int)color;
@@ -166,44 +168,26 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].Material = board.Material[color].NormalizeScore(board.Phase);
                 evalInfo[c].KI = board.KingIndex[color];
                 evalInfo[c].KB = new KingBuckets(color, board.KingIndex[color], board.KingIndex[color.Flip()]);
-
                 if (color == Color.White)
                 {
-                    evalInfo[c].DefendedPawns = 
-                        (pawns.AndNot(Bitboard.BbFileA) << 7) & pawns |
-                        (pawns.AndNot(Bitboard.BbFileH) << 9) & pawns;
+                    evalInfo[c].PawnAttacks = (pawns.AndNot(Bitboard.BbFileA) << 7) 
+                                            | (pawns.AndNot(Bitboard.BbFileH) << 9);
                 }
                 else
                 {
-                    evalInfo[c].DefendedPawns =
-                        (pawns.AndNot(Bitboard.BbFileA) >> 7) & pawns |
-                        (pawns.AndNot(Bitboard.BbFileH) >> 9) & pawns;
+                    evalInfo[c].PawnAttacks = (pawns.AndNot(Bitboard.BbFileH) >> 7)
+                                            | (pawns.AndNot(Bitboard.BbFileA) >> 9);
                 }
             }
-        }
 
-        private static bool HasFreePawn(Color color, Board board, Span<EvalInfo> evalInfo)
-        {
-            Color other = color.Flip();
-            int c = (int)color;
-            int o = (int)other;
-            Bitboard enemies = board.Units(other);
-            Bitboard pawns = evalInfo[c].Pawns, freePawns;
-
-            if (color == Color.White)
+            /* two pass init */
+            for (Color color = Color.White; color <= Color.Black; color++)
             {
-                freePawns = (pawns << 8).AndNot(evalInfo[o].DefendedPawns) 
-                          | ((pawns.AndNot(Bitboard.BbFileA) << 7) & enemies)
-                          | ((pawns.AndNot(Bitboard.BbFileH) << 9) & enemies);
+                Color other = color.Flip();
+                int c = (int)color;
+                int o = (int)other;
+                evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].PawnAttacks);
             }
-            else
-            {
-                freePawns = (pawns >> 8).AndNot(evalInfo[o].DefendedPawns)
-                          | ((pawns.AndNot(Bitboard.BbFileH) >> 7) & enemies) 
-                          | ((pawns.AndNot(Bitboard.BbFileA) >> 9) & enemies);
-            }
-
-            return freePawns != 0;
         }
 
         public static void Initialize() {}
