@@ -15,6 +15,9 @@ namespace Pedantic.Tuning
 
         public EvalFeatures(Board bd)
         {
+            Span<HceEval.EvalInfo> evalInfo = stackalloc HceEval.EvalInfo[2];
+            HceEval.InitializeEvalInfo(bd, evalInfo);
+
             sideToMove = bd.SideToMove;
             phase = 0;
 
@@ -31,6 +34,10 @@ namespace Pedantic.Tuning
 
                     IncrementPieceCount(color, coefficients, piece);
                     SetPieceSquare(color, coefficients, piece, kb, normalFrom);
+                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, bd.All);
+                    evalInfo[c].PieceAttacks |= pieceAttacks;
+                    int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
+                    IncrementPieceMobility(color, coefficients, piece, mobility);
                 }
 
                 if (color == bd.SideToMove)
@@ -97,6 +104,12 @@ namespace Pedantic.Tuning
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static short Increment(Color color)
+        {
+            return (short)(1 - ((int)color << 1));
+        }
+
         private static void IncrementPieceCount(Color color, SparseArray<short> v, Piece piece)
         {
             if (piece == Piece.King)
@@ -104,35 +117,57 @@ namespace Pedantic.Tuning
                 return;
             }
 
-            short inc = (short)(color == Color.White ? 1 : -1);
-
             int index = PIECE_VALUES + (int)piece;
             if (v.ContainsKey(index))
             {
-                v[index] += inc;
+                v[index] += Increment(color);
             }
             else
             {
-                v.Add(index, inc);
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPieceMobility(Color color, SparseArray<short> v, Piece piece, int mobility)
+        {
+            if (piece == Piece.Pawn || piece == Piece.King)
+            {
+                return;
+            }
+
+            int index = mobility + piece switch
+            {
+                Piece.Knight => KNIGHT_MOBILITY,
+                Piece.Bishop => BISHOP_MOBILITY,
+                Piece.Rook => ROOK_MOBILITY,
+                Piece.Queen => QUEEN_MOBILITY,
+                _ => throw new InvalidOperationException($"Invalid piece: {piece}")
+            };
+
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
             }
         }
 
         private static void SetPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
         {
-            short inc = (short)(color == Color.White ? 1 : -1);
             int index = FRIENDLY_KB_PST + 
                 ((int)piece * MAX_KING_BUCKETS + kb.Friendly) * MAX_SQUARES + (int)square;
-            v[index] = inc;
+            v[index] = Increment(color);
 
             index = ENEMY_KB_PST +
                 ((int)piece * MAX_KING_BUCKETS + kb.Enemy) * MAX_SQUARES + (int)square;
-            v[index] = inc;
+            v[index] = Increment(color);
         }
 
         private static void SetTempoBonus(Color color, SparseArray<short> v)
         {
-            short inc = (short)(color == Color.White ? 1 : -1);
-            v[TEMPO] = inc;
+            v[TEMPO] = Increment(color);
         }
     }
 }
