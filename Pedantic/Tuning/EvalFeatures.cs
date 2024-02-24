@@ -54,6 +54,11 @@ namespace Pedantic.Tuning
                             IncrementPassedPawn(color, coefficients, normalFrom);
                             evalInfo[c].PassedPawns |= new Bitboard(from);
                         }
+
+                        if ((pawns & HceEval.AdjacentPawnMasks[(int)from]) != 0)
+                        {
+                            IncrementPhalanxPawn(color, coefficients, normalFrom);
+                        }
                     }
                 }
 
@@ -174,6 +179,19 @@ namespace Pedantic.Tuning
         private static void IncrementPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
         {
             int index = PASSED_PAWN + (int)sq;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPhalanxPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = PHALANX_PAWN + (int)sq;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);

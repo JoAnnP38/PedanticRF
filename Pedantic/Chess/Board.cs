@@ -1328,18 +1328,17 @@ namespace Pedantic.Chess
 
             // remove king from blockers so line attacks can continue through king square
             Bitboard blockers = All ^ kingMask;
+            Bitboard exclude = Pawns | Knights | Kings;
 
-            for (Piece piece = Piece.Bishop; piece <= Piece.Queen; piece++)
+            foreach (SquareIndex from in Units(opponent).AndNot(exclude))
             {
-                foreach (SquareIndex from in Pieces(opponent, piece))
+                Piece piece = PieceBoard(from).Piece;
+                Bitboard lineAttacks = GetPieceMoves(piece, from, blockers);
+                kingDanger |= lineAttacks;
+                if ((lineAttacks & kingMask) != 0)
                 {
-                    Bitboard lineAttacks = GetPieceMoves(piece, from, blockers);
-                    kingDanger |= lineAttacks;
-                    if ((lineAttacks & kingMask) != 0)
-                    {
-                        checkers |= new Bitboard(from);
-                        checkerPiece = piece;
-                    }
+                    checkers |= new Bitboard(from);
+                    checkerPiece = piece;
                 }
             }
 
