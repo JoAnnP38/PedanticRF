@@ -71,6 +71,11 @@ namespace Pedantic.Tuning
                         {
                             SetPawnRam(color, coefficients, normalFrom);
                         }
+
+                        if ((pawns & HceEval.IsolatedPawnMasks[(int)from]) == 0)
+                        {
+                            IncrementIsolatedPawn(color, coefficients, normalFrom);
+                        }
                     }
                 }
 
@@ -210,6 +215,19 @@ namespace Pedantic.Tuning
         {
             int index = PAWN_RAM + (int)sq;
             v[index] = Increment(color);
+        }
+
+        private static void IncrementIsolatedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = ISOLATED_PAWN + (int)sq.File();
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
         }
 
         private static void SetPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
