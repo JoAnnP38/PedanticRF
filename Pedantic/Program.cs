@@ -449,11 +449,11 @@ namespace Pedantic
             WriteLine($"// Solution sample size: {sampleSize}, generated on {DateTime.Now:R}");
             WriteLine($"// Solution K: {K:F6}, error: {error:F6}, accuracy: {accuracy:F4}");
             WriteLine("private static readonly Score[] defaultWeights =");
-            WriteLine("{");
+            WriteLine("[");
             indentLevel++;
             PrintSolutionSection(weights);
             indentLevel--;            
-            WriteLine("};");
+            WriteLine("];");
         }
 
         private static void PrintSolutionSection(Chess.HCE.Weights wts)
@@ -551,8 +551,15 @@ namespace Pedantic
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* pawn structure */");
+            WriteLine("#region pawn structure");
+            WriteLine();
             WriteLine("/* passed pawn */");
             WriteWts2D(wts, PASSED_PAWN, 8, MAX_SQUARES);
+            WriteLine();
+            WriteLine("/* adjacent/phalanx pawn */");
+            WriteWts2D(wts, PHALANX_PAWN, 8, MAX_SQUARES);
+            WriteLine();
+            WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
             WriteWtLine(wts[TEMPO]);
