@@ -559,6 +559,9 @@ namespace Pedantic
             WriteLine("/* adjacent/phalanx pawn */");
             WriteWts2D(wts, PHALANX_PAWN, 8, MAX_SQUARES);
             WriteLine();
+            WriteLine("/* chained pawn */");
+            WriteWts2D(wts, CHAINED_PAWN, 8, MAX_SQUARES);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");

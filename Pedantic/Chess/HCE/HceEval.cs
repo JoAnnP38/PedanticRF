@@ -124,16 +124,22 @@ namespace Pedantic.Chess.HCE
                 Ray ray = Board.Vectors[(int)from];
                 Bitboard friendMask = color == Color.White ? ray.North : ray.South;
                 SquareIndex normalFrom = from.Normalize(color);
+                Bitboard sqMask = new Bitboard(from);
 
                 if ((otherPawns & PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                 {
                     score += wts.PassedPawn(normalFrom);
-                    evalInfo[c].PassedPawns |= new Bitboard(from);
+                    evalInfo[c].PassedPawns |= sqMask;
                 }
 
                 if ((pawns & AdjacentPawnMasks[(int)from]) != 0)
                 {
                     score += wts.PhalanxPawn(normalFrom);
+                }
+
+                if ((evalInfo[c].PawnAttacks & sqMask) != 0)
+                {
+                    score += wts.ChainedPawn(normalFrom);
                 }
             }
 
