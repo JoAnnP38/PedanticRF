@@ -23,8 +23,13 @@ namespace Pedantic.Tuning
 
             for (Color color = Color.White; color <= Color.Black; color++)
             {
+                Color other = color.Flip();
                 int c = (int)color;
+                int o = (int)other;
+
                 KingBuckets kb = new (color, bd.KingIndex[color], bd.KingIndex[color.Flip()]);
+                Bitboard pawns = evalInfo[c].Pawns;
+                Bitboard otherPawns = evalInfo[o].Pawns;
 
                 foreach (SquareIndex from in bd.Units(color))
                 {
@@ -38,6 +43,18 @@ namespace Pedantic.Tuning
                     evalInfo[c].PieceAttacks |= pieceAttacks;
                     int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
                     IncrementPieceMobility(color, coefficients, piece, mobility);
+
+                    if (piece == Piece.Pawn)
+                    {
+                        Ray ray = Board.Vectors[(int)from];
+                        Bitboard friendMask = color == Color.White ? ray.North : ray.South;
+                        
+                        if ((otherPawns & HceEval.PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
+                        {
+                            IncrementPassedPawn(color, coefficients, normalFrom);
+                            evalInfo[c].PassedPawns |= new Bitboard(from);
+                        }
+                    }
                 }
 
                 if (color == bd.SideToMove)
@@ -144,6 +161,19 @@ namespace Pedantic.Tuning
                 _ => throw new InvalidOperationException($"Invalid piece: {piece}")
             };
 
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = PASSED_PAWN + (int)sq;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);

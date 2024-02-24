@@ -550,6 +550,10 @@ namespace Pedantic
             WriteLine();
             WriteLine("#endregion");
             WriteLine();
+            WriteLine("/* pawn structure */");
+            WriteLine("/* passed pawn */");
+            WriteWts2D(wts, PASSED_PAWN, 8, MAX_SQUARES);
+            WriteLine();
             WriteLine("/* tempo bonus for side to move */");
             WriteWtLine(wts[TEMPO]);
         }
