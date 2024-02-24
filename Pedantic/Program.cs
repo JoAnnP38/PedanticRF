@@ -562,6 +562,9 @@ namespace Pedantic
             WriteLine("/* chained pawn */");
             WriteWts2D(wts, CHAINED_PAWN, 8, MAX_SQUARES);
             WriteLine();
+            WriteLine("/* pawn ram */");
+            WriteWts2D(wts, PAWN_RAM, 8, MAX_SQUARES);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");

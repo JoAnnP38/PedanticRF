@@ -30,6 +30,7 @@ namespace Pedantic.Tuning
                 KingBuckets kb = new (color, bd.KingIndex[color], bd.KingIndex[color.Flip()]);
                 Bitboard pawns = evalInfo[c].Pawns;
                 Bitboard otherPawns = evalInfo[o].Pawns;
+                Bitboard pawnRams = (color == Color.White ? otherPawns >> 8 : otherPawns << 8);
 
                 foreach (SquareIndex from in bd.Units(color))
                 {
@@ -64,6 +65,11 @@ namespace Pedantic.Tuning
                         if ((evalInfo[c].PawnAttacks & sqMask) != 0)
                         {
                             SetChainedPawn(color, coefficients, normalFrom);
+                        }
+
+                        if ((pawnRams & sqMask) != 0)
+                        {
+                            SetPawnRam(color, coefficients, normalFrom);
                         }
                     }
                 }
@@ -197,6 +203,12 @@ namespace Pedantic.Tuning
         private static void SetChainedPawn(Color color, SparseArray<short> v, SquareIndex sq)
         {
             int index = CHAINED_PAWN + (int)sq;
+            v[index] = Increment(color);
+        }
+
+        private static void SetPawnRam(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = PAWN_RAM + (int)sq;
             v[index] = Increment(color);
         }
 

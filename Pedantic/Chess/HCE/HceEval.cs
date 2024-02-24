@@ -118,6 +118,8 @@ namespace Pedantic.Chess.HCE
             }
 
             Bitboard otherPawns = evalInfo[o].Pawns;
+            Bitboard pawnRams = (color == Color.White ? otherPawns >> 8 : otherPawns << 8);
+
 
             foreach (SquareIndex from in pawns)
             {
@@ -140,6 +142,11 @@ namespace Pedantic.Chess.HCE
                 if ((evalInfo[c].PawnAttacks & sqMask) != 0)
                 {
                     score += wts.ChainedPawn(normalFrom);
+                }
+
+                if ((pawnRams & sqMask) != 0)
+                {
+                    score += wts.PawnRam(normalFrom);
                 }
             }
 
