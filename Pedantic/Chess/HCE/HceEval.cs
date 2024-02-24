@@ -1,4 +1,5 @@
 ﻿using Pedantic.Chess;
+using Pedantic.Collections;
 using Pedantic.Utilities;
 using System.Runtime.CompilerServices;
 
@@ -13,6 +14,7 @@ namespace Pedantic.Chess.HCE
             public Bitboard PieceAttacks;
             public Bitboard PawnAttacks;
             public Bitboard MobilityArea;
+            public Bitboard PassedPawns;
             public short Material;
             public SquareIndex KI;
             public KingBuckets KB;
@@ -27,7 +29,8 @@ namespace Pedantic.Chess.HCE
         }
 
         public HceEval()
-        { }
+        { 
+        }
 
         public HceEval(Weights weights)
         { 
@@ -67,8 +70,13 @@ namespace Pedantic.Chess.HCE
             {
                 int c = (int)color;
                 int o = (int)color.Flip();
-                score += signs[color](EvalMaterialAndPst(board, evalInfo, color));
-                score += signs[color](EvalPieces(board, evalInfo, color));
+                Func<Score, Score> sign = signs[color];
+                score += sign(EvalMaterialAndPst(board, evalInfo, color));
+
+                // insert alpha/beta margin check here
+
+                score += sign(EvalPawns(board, evalInfo, color));
+                score += sign(EvalPieces(board, evalInfo, color));
 
                 if (color == board.SideToMove)
                 {
@@ -96,6 +104,37 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
+        private static Score EvalPawns(Board board, Span<EvalInfo> evalInfo, Color color)
+        {
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+            Score score = Score.Zero;
+            Bitboard pawns = evalInfo[c].Pawns;
+
+            if (pawns == 0)
+            {
+                return score;
+            }
+
+            Bitboard otherPawns = evalInfo[o].Pawns;
+
+            foreach (SquareIndex from in pawns)
+            {
+                Ray ray = Board.Vectors[(int)from];
+                Bitboard friendMask = color == Color.White ? ray.North : ray.South;
+                SquareIndex normalFrom = from.Normalize(color);
+
+                if ((otherPawns & PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
+                {
+                    score += wts.PassedPawn(normalFrom);
+                    evalInfo[c].PassedPawns |= new Bitboard(from);
+                }
+            }
+
+            return score;
+        }
+
         private static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Color other = color.Flip();
@@ -103,16 +142,14 @@ namespace Pedantic.Chess.HCE
             int o = (int)other;
 
             Score score = Score.Zero;
-            for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
+            Bitboard exclude = board.Pawns | board.Kings;
+            foreach (SquareIndex from in board.Units(color).AndNot(exclude))
             {
-                // calculate mobility
-                foreach (SquareIndex from in board.Pieces(color, piece))
-                {
-                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
-                    evalInfo[c].PieceAttacks |= pieceAttacks;
-                    int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
-                    score += wts.PieceMobility(piece, mobility);
-                }
+                Piece piece = board.PieceBoard(from).Piece;
+                Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
+                evalInfo[c].PieceAttacks |= pieceAttacks;
+                int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
+                score += wts.PieceMobility(piece, mobility);
             }
 
             return score;
@@ -198,5 +235,50 @@ namespace Pedantic.Chess.HCE
         private GamePhase gamePhase;
         private static ByColor<Func<Score, Score>> signs = new();
         private static Weights wts;
+
+
+        public static readonly FixedArray2D<ulong> PassedPawnMasks = new (MAX_COLORS, MAX_SQUARES)
+        {
+            #region PassedPawnMasks data
+
+            // white passed pawn masks
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0003030303030000ul, 0x0007070707070000ul, 0x000E0E0E0E0E0000ul, 0x001C1C1C1C1C0000ul,
+            0x0038383838380000ul, 0x0070707070700000ul, 0x00E0E0E0E0E00000ul, 0x00C0C0C0C0C00000ul,
+            0x0003030303000000ul, 0x0007070707000000ul, 0x000E0E0E0E000000ul, 0x001C1C1C1C000000ul,
+            0x0038383838000000ul, 0x0070707070000000ul, 0x00E0E0E0E0000000ul, 0x00C0C0C0C0000000ul,
+            0x0003030300000000ul, 0x0007070700000000ul, 0x000E0E0E00000000ul, 0x001C1C1C00000000ul,
+            0x0038383800000000ul, 0x0070707000000000ul, 0x00E0E0E000000000ul, 0x00C0C0C000000000ul,
+            0x0003030000000000ul, 0x0007070000000000ul, 0x000E0E0000000000ul, 0x001C1C0000000000ul,
+            0x0038380000000000ul, 0x0070700000000000ul, 0x00E0E00000000000ul, 0x00C0C00000000000ul,
+            0x0003000000000000ul, 0x0007000000000000ul, 0x000E000000000000ul, 0x001C000000000000ul,
+            0x0038000000000000ul, 0x0070000000000000ul, 0x00E0000000000000ul, 0x00C0000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+
+            // black passed pawn masks
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000300ul, 0x0000000000000700ul, 0x0000000000000E00ul, 0x0000000000001C00ul,
+            0x0000000000003800ul, 0x0000000000007000ul, 0x000000000000E000ul, 0x000000000000C000ul,
+            0x0000000000030300ul, 0x0000000000070700ul, 0x00000000000E0E00ul, 0x00000000001C1C00ul,
+            0x0000000000383800ul, 0x0000000000707000ul, 0x0000000000E0E000ul, 0x0000000000C0C000ul,
+            0x0000000003030300ul, 0x0000000007070700ul, 0x000000000E0E0E00ul, 0x000000001C1C1C00ul,
+            0x0000000038383800ul, 0x0000000070707000ul, 0x00000000E0E0E000ul, 0x00000000C0C0C000ul,
+            0x0000000303030300ul, 0x0000000707070700ul, 0x0000000E0E0E0E00ul, 0x0000001C1C1C1C00ul,
+            0x0000003838383800ul, 0x0000007070707000ul, 0x000000E0E0E0E000ul, 0x000000C0C0C0C000ul,
+            0x0000030303030300ul, 0x0000070707070700ul, 0x00000E0E0E0E0E00ul, 0x00001C1C1C1C1C00ul,
+            0x0000383838383800ul, 0x0000707070707000ul, 0x0000E0E0E0E0E000ul, 0x0000C0C0C0C0C000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul,
+            0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul
+
+            #endregion PassedPawnMasks data
+        };
+
     }
 }

@@ -540,6 +540,7 @@ namespace Pedantic.Chess
             return board[(int)sq];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int PieceCount(Color sideToMove)
         {
             return (Units(sideToMove).AndNot(Pieces(sideToMove, Piece.Pawn))).PopCount;
@@ -812,16 +813,14 @@ namespace Pedantic.Chess
 
         public void GeneratePieceQuiets(MoveList list, in EvasionInfo info)
         {
-            for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
+            Bitboard exclude = Pawns | Kings;
+            foreach (SquareIndex from in Units(sideToMove).AndNot(exclude))
             {
-                foreach (SquareIndex from in Pieces(sideToMove, piece))
+                Piece piece = PieceBoard(from).Piece;
+                Bitboard attacks = GetPieceMoves(piece, from, All).AndNot(All) & info.PushMask;
+                foreach (SquareIndex to in attacks)
                 {
-                    Bitboard attacks = GetPieceMoves(piece, from, All).AndNot(All) & info.PushMask;
-
-                    foreach (SquareIndex to in attacks)
-                    {
-                        list.AddQuiet(sideToMove, piece, from, to);
-                    }
+                    list.AddQuiet(sideToMove, piece, from, to);
                 }
             }
         }
@@ -838,16 +837,15 @@ namespace Pedantic.Chess
 
         public void GeneratePieceCaptures(MoveList list, in EvasionInfo info)
         {
-            for (Piece piece = Piece.Knight; piece <= Piece.Queen; piece++)
+            Bitboard exclude = Pawns | Kings;
+            foreach (SquareIndex from in Units(sideToMove).AndNot(exclude))
             {
-                foreach (SquareIndex from in Pieces(sideToMove, piece))
-                {
-                    Bitboard attacks = GetPieceMoves(piece, from, All) & Units(Opponent) & info.CaptureMask;
+                Piece piece = PieceBoard(from).Piece;
+                Bitboard attacks = GetPieceMoves(piece, from, All) & Units(Opponent) & info.CaptureMask;
 
-                    foreach (SquareIndex to in attacks)
-                    {
-                        list.AddCapture(sideToMove, piece, from, to, MoveType.Capture, PieceBoard(to).Piece);
-                    }
+                foreach (SquareIndex to in attacks)
+                {
+                    list.AddCapture(sideToMove, piece, from, to, MoveType.Capture, PieceBoard(to).Piece);
                 }
             }
         }
