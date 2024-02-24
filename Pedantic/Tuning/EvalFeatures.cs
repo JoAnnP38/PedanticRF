@@ -33,6 +33,7 @@ namespace Pedantic.Tuning
 
                 foreach (SquareIndex from in bd.Units(color))
                 {
+                    Bitboard sqMask = new Bitboard(from);
                     SquareIndex normalFrom = from.Normalize(color);
                     Piece piece = bd.PieceBoard(from).Piece;
                     phase += piece.PhaseValue();
@@ -51,13 +52,18 @@ namespace Pedantic.Tuning
                         
                         if ((otherPawns & HceEval.PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                         {
-                            IncrementPassedPawn(color, coefficients, normalFrom);
-                            evalInfo[c].PassedPawns |= new Bitboard(from);
+                            SetPassedPawn(color, coefficients, normalFrom);
+                            evalInfo[c].PassedPawns |= sqMask;
                         }
 
                         if ((pawns & HceEval.AdjacentPawnMasks[(int)from]) != 0)
                         {
-                            IncrementPhalanxPawn(color, coefficients, normalFrom);
+                            SetPhalanxPawn(color, coefficients, normalFrom);
+                        }
+
+                        if ((evalInfo[c].PawnAttacks & sqMask) != 0)
+                        {
+                            SetChainedPawn(color, coefficients, normalFrom);
                         }
                     }
                 }
@@ -176,30 +182,22 @@ namespace Pedantic.Tuning
             }
         }
 
-        private static void IncrementPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        private static void SetPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
         {
             int index = PASSED_PAWN + (int)sq;
-            if (v.ContainsKey(index))
-            {
-                v[index] += Increment(color);
-            }
-            else
-            {
-                v.Add(index, Increment(color));
-            }
+            v[index] = Increment(color);
         }
 
-        private static void IncrementPhalanxPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        private static void SetPhalanxPawn(Color color, SparseArray<short> v, SquareIndex sq)
         {
             int index = PHALANX_PAWN + (int)sq;
-            if (v.ContainsKey(index))
-            {
-                v[index] += Increment(color);
-            }
-            else
-            {
-                v.Add(index, Increment(color));
-            }
+            v[index] = Increment(color);
+        }
+
+        private static void SetChainedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = CHAINED_PAWN + (int)sq;
+            v[index] = Increment(color);
         }
 
         private static void SetPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
