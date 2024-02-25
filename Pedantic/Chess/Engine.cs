@@ -250,8 +250,8 @@ namespace Pedantic.Chess
             catch (Exception ex)
             {
                 Console.WriteLine(ex);
-                throw;
             }
+            return null;
         }
 
         public static void Bench(int depth, bool extend)

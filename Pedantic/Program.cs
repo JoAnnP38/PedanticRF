@@ -566,7 +566,7 @@ namespace Pedantic
             WriteWts2D(wts, PAWN_RAM, 8, MAX_SQUARES);
             WriteLine();
             WriteLine("/* isolated pawn */");
-            WriteWts2D(wts, ISOLATED_PAWN, 8, MAX_COORDS);
+            WriteWts2D(wts, ISOLATED_PAWN, 8, MAX_SQUARES);
             WriteLine();
             WriteLine("#endregion");
             WriteLine();

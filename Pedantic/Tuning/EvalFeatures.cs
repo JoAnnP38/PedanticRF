@@ -40,7 +40,7 @@ namespace Pedantic.Tuning
                     phase += piece.PhaseValue();
 
                     IncrementPieceCount(color, coefficients, piece);
-                    SetPieceSquare(color, coefficients, piece, kb, normalFrom);
+                    IncrementPieceSquare(color, coefficients, piece, kb, normalFrom);
                     Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, bd.All);
                     evalInfo[c].PieceAttacks |= pieceAttacks;
                     int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
@@ -53,23 +53,23 @@ namespace Pedantic.Tuning
                         
                         if ((otherPawns & HceEval.PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                         {
-                            SetPassedPawn(color, coefficients, normalFrom);
+                            IncrementPassedPawn(color, coefficients, normalFrom);
                             evalInfo[c].PassedPawns |= sqMask;
                         }
 
                         if ((pawns & HceEval.AdjacentPawnMasks[(int)from]) != 0)
                         {
-                            SetPhalanxPawn(color, coefficients, normalFrom);
+                            IncrementPhalanxPawn(color, coefficients, normalFrom);
                         }
 
                         if ((evalInfo[c].PawnAttacks & sqMask) != 0)
                         {
-                            SetChainedPawn(color, coefficients, normalFrom);
+                            IncrementChainedPawn(color, coefficients, normalFrom);
                         }
 
                         if ((pawnRams & sqMask) != 0)
                         {
-                            SetPawnRam(color, coefficients, normalFrom);
+                            IncrementPawnRam(color, coefficients, normalFrom);
                         }
 
                         if ((pawns & HceEval.IsolatedPawnMasks[(int)from]) == 0)
@@ -193,33 +193,9 @@ namespace Pedantic.Tuning
             }
         }
 
-        private static void SetPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        private static void IncrementPassedPawn(Color color, SparseArray<short> v, SquareIndex sq)
         {
             int index = PASSED_PAWN + (int)sq;
-            v[index] = Increment(color);
-        }
-
-        private static void SetPhalanxPawn(Color color, SparseArray<short> v, SquareIndex sq)
-        {
-            int index = PHALANX_PAWN + (int)sq;
-            v[index] = Increment(color);
-        }
-
-        private static void SetChainedPawn(Color color, SparseArray<short> v, SquareIndex sq)
-        {
-            int index = CHAINED_PAWN + (int)sq;
-            v[index] = Increment(color);
-        }
-
-        private static void SetPawnRam(Color color, SparseArray<short> v, SquareIndex sq)
-        {
-            int index = PAWN_RAM + (int)sq;
-            v[index] = Increment(color);
-        }
-
-        private static void IncrementIsolatedPawn(Color color, SparseArray<short> v, SquareIndex sq)
-        {
-            int index = ISOLATED_PAWN + (int)sq.File();
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);
@@ -230,15 +206,81 @@ namespace Pedantic.Tuning
             }
         }
 
-        private static void SetPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
+        private static void IncrementPhalanxPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = PHALANX_PAWN + (int)sq;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementChainedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = CHAINED_PAWN + (int)sq;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPawnRam(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = PAWN_RAM + (int)sq;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementIsolatedPawn(Color color, SparseArray<short> v, SquareIndex sq)
+        {
+            int index = ISOLATED_PAWN + (int)sq;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
         {
             int index = FRIENDLY_KB_PST + 
                 ((int)piece * MAX_KING_BUCKETS + kb.Friendly) * MAX_SQUARES + (int)square;
-            v[index] = Increment(color);
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
 
             index = ENEMY_KB_PST +
                 ((int)piece * MAX_KING_BUCKETS + kb.Enemy) * MAX_SQUARES + (int)square;
-            v[index] = Increment(color);
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
         }
 
         private static void SetTempoBonus(Color color, SparseArray<short> v)
