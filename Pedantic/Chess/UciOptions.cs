@@ -41,6 +41,8 @@ namespace Pedantic.Chess
         internal const string OPT_LMR_SCALE_FACTOR = "UCI_T_LMR_ScaleFactor";
         internal const string OPT_RFP_MAX_DEPTH = "UCI_T_RFP_MaxDepth";
         internal const string OPT_RFP_MARGIN = "UCI_T_RFP_Margin";
+        internal const string OPT_LMP_MAX_DEPTH = "UCI_T_LMP_MaxDepth";
+        internal const string OPT_LMP_DEPTH_INCREMENT = "UCI_T_LMP_DepthIncrement";
 
         static UciOptions()
         {
@@ -367,6 +369,26 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int LmpMaxDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMP_MAX_DEPTH];
+                return opt.CurrentValue;
+            }
+        }
+
+        public static int LmpDepthIncrement
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMP_DEPTH_INCREMENT];
+                return opt.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var kvp in options)
@@ -479,7 +501,9 @@ namespace Pedantic.Chess
             new UciOptionSpin(OPT_LMR_MOVE_FACTOR, 10, 5, 20),
             new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 20, 10, 30),
             new UciOptionSpin(OPT_RFP_MAX_DEPTH, 6, 4, 12),
-            new UciOptionSpin(OPT_RFP_MARGIN, 85, 25, 250)
+            new UciOptionSpin(OPT_RFP_MARGIN, 85, 25, 250),
+            new UciOptionSpin(OPT_LMP_MAX_DEPTH, 6, 1, 10),
+            new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 1, 0, 5)
         ];
     }
 }
