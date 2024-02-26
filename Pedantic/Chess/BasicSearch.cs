@@ -14,6 +14,7 @@ namespace Pedantic.Chess
         internal const int LMR_MAX_MOVES = 64;
         internal const double LMR_MIN = 0.0;
         internal const double LMR_MAX = 15.0;
+        internal const int LMP_MAX_DEPTH_CUTOFF = 11;
 
         #region Constructors
 
@@ -369,6 +370,7 @@ namespace Pedantic.Chess
             int originalAlpha = alpha;
             bool isPv = beta - alpha > 1;
             bool inCheck = ss[ply - 1].IsCheckingMove;
+            bool canPrune = false;
             ref SearchItem ssItem = ref ss[ply];
             int evaluation = ssItem.Eval = NO_SCORE;
 
@@ -430,6 +432,8 @@ namespace Pedantic.Chess
                         }
                         ssItem.Eval = (short)evaluation;
                     }
+
+                    canPrune = canNull;
                 }
             }
 
@@ -452,7 +456,6 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
-                NodesVisited++;
                 bool checkingMove = board.IsChecked();
                 bool isQuiet = genMove.Move.IsQuiet;
                 ssItem.Move = genMove.Move;
@@ -463,9 +466,15 @@ namespace Pedantic.Chess
                 int R = 0;
                 if (!interesting)
                 {
+                    if (canPrune && depth <= UciOptions.LmpMaxDepth && expandedNodes > LMP[depth])
+                    {
+                        board.UnmakeMoveNs();
+                        continue;                    
+                    }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
-
                 }
+
+                NodesVisited++;
                 
                 if (expandedNodes == 1)
                 {
@@ -743,6 +752,7 @@ namespace Pedantic.Chess
         public static void Initialize() 
         {
             Array.Clear(NMP);
+            Array.Clear(LMP);
             for (int ply = 0; ply < MAX_PLY; ply++)
             {
                 NMP[ply] = NmpReduction(ply);
@@ -754,13 +764,20 @@ namespace Pedantic.Chess
             double scaleFactor = UciOptions.LmrScaleFactor / 10.0;
 
             double reduction;
-            for (int depth = 3; depth < MAX_PLY; depth++)
+            for (int depth = 1; depth < MAX_PLY; depth++)
             {
-                for (int move = 0; move < LMR_MAX_MOVES; move++)
+                if (depth >= 3)
                 {
-                    reduction = Math.Log(depth * depthFactor) * Math.Log(move * moveFactor) / scaleFactor;
-                    reduction = (sbyte)Math.Clamp(reduction, LMR_MIN, LMR_MAX);
-                    LMR[depth, move] = (sbyte)Math.Min(reduction, Math.Max(depth - 2, 0));
+                    for (int move = 0; move < LMR_MAX_MOVES; move++)
+                    {
+                        reduction = Math.Log(depth * depthFactor) * Math.Log(move * moveFactor) / scaleFactor;
+                        reduction = (sbyte)Math.Clamp(reduction, LMR_MIN, LMR_MAX);
+                        LMR[depth, move] = (sbyte)Math.Min(reduction, Math.Max(depth - 2, 0));
+                    }
+                }
+                if (depth < LMP_MAX_DEPTH_CUTOFF)
+                {
+                    LMP[depth] = (sbyte)Math.Clamp(depth * depth + UciOptions.LmpDepthIncrement, 1, 127);
                 }
             }
         }
@@ -808,6 +825,7 @@ namespace Pedantic.Chess
         private int rootChanges = 0;
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
+        internal static readonly sbyte[] LMP = new sbyte[LMP_MAX_DEPTH_CUTOFF];
         internal static readonly FixedArray2D<sbyte> LMR = new(MAX_PLY, LMR_MAX_MOVES, true);
 
         #endregion
