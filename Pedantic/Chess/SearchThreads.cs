@@ -43,7 +43,17 @@ namespace Pedantic.Chess
         {
             foreach (var thread in threads)
             {
+                thread.EvalCache.Clear();
                 thread.History.Clear();
+            }
+        }
+
+        public void ResizeEvalCache()
+        {
+            int sizeMb = UciOptions.HashTableSize / 16;
+            foreach (var thread in threads)
+            {
+                thread.EvalCache.Resize(sizeMb);
             }
         }
 

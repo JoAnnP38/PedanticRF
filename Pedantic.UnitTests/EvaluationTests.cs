@@ -20,7 +20,8 @@ namespace Pedantic.UnitTests
         public void ComputeTest()
         {
             Board board = new Board(Constants.FEN_START_POS);
-            HceEval eval = new(Weights.Default);
+            EvalCache cache = new();
+            HceEval eval = new(cache, Weights.Default);
             short result = eval.Compute(board);
             Assert.AreEqual(0, result);
 
