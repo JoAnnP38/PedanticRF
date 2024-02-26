@@ -71,6 +71,7 @@ namespace Pedantic.Chess
             public KingBuckets KingBuckets;
             public ushort FullMoveCounter;
             public ulong Hash;
+            public ulong PawnHash;
             public BitboardArray Bitboards;
             public SquareArray PieceBoard;
             public ByColor<SquareIndex> KingIndex;
@@ -87,6 +88,7 @@ namespace Pedantic.Chess
                 FullMoveCounter = board.fullMoveCounter;
                 Phase = board.phase;
                 Hash = board.hash;
+                PawnHash = board.pawnHash;
                 Bitboards = board.bitboards;
                 PieceBoard = board.board;
                 KingIndex = board.kingIndex;
@@ -103,6 +105,7 @@ namespace Pedantic.Chess
                 board.fullMoveCounter = FullMoveCounter;
                 board.phase = Phase;
                 board.hash = Hash;
+                board.pawnHash = PawnHash;
                 board.bitboards = Bitboards;
                 board.board = PieceBoard;
                 board.kingIndex = KingIndex;
@@ -303,6 +306,7 @@ namespace Pedantic.Chess
         private byte halfMoveClock;
         private ushort fullMoveCounter;
         private ulong hash;
+        private ulong pawnHash;
         private ByColor<SquareIndex> kingIndex;
         private ByColor<GenMoveHelper> helpers;
         private ByColor<Score> material;
@@ -483,6 +487,12 @@ namespace Pedantic.Chess
             get => hash;
         }
 
+        public ulong PawnHash
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => pawnHash;
+        }
+
         public byte HalfMoveClock
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -619,6 +629,7 @@ namespace Pedantic.Chess
             enPassant = SquareIndex.None;
             enPassantValidated = SquareIndex.None;
             hash = 0;
+            pawnHash = 0;
             kingIndex.Fill(SquareIndex.None);
             material.Clear();
             phase = 0;
@@ -637,12 +648,17 @@ namespace Pedantic.Chess
             Units(color) |= pcMask;
             Pieces(piece) |= pcMask;
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
-            if (piece == Piece.King)
+            material[color] += HceEval.Weights.PieceValue(piece);
+            phase = (byte)Math.Min(phase + piece.PhaseValue(), MAX_PHASE);
+
+            if (piece == Piece.Pawn)
+            {
+                pawnHash = ZobristHash.HashPiece(pawnHash, color, piece, sq);
+            }
+            else if (piece == Piece.King)
             {
                 kingIndex[color] = sq;
             }
-            material[color] += HceEval.Weights.PieceValue(piece);
-            phase = (byte)Math.Min(phase + piece.PhaseValue(), MAX_PHASE);
         }
 
         public void RemovePiece(Color color, Piece piece, SquareIndex sq)
@@ -660,6 +676,11 @@ namespace Pedantic.Chess
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
             material[color] -= HceEval.Weights.PieceValue(piece);
             phase = (byte)Math.Max(phase - piece.PhaseValue(), 0);
+
+            if (piece == Piece.Pawn)
+            {
+                pawnHash = ZobristHash.HashPiece(pawnHash, color, piece, sq);
+            }
         }
 
         #endregion

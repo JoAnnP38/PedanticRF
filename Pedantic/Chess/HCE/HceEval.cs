@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Pedantic.Chess.HCE
 {
-    public class HceEval : IInitialize
+    public sealed class HceEval : IInitialize
     {
         public struct EvalInfo
         {
@@ -24,15 +24,14 @@ namespace Pedantic.Chess.HCE
         static HceEval()
         {
             wts = Engine.Weights;
-            signs[Color.White] = (s) => s;
-            signs[Color.Black] = (s) => -s;
         }
 
-        public HceEval()
+        public HceEval(EvalCache evalCache)
         { 
+            cache = evalCache;
         }
 
-        public HceEval(Weights weights)
+        public HceEval(EvalCache evalCache, Weights weights) : this(evalCache)
         { 
             Weights = weights;
         }
@@ -65,26 +64,37 @@ namespace Pedantic.Chess.HCE
 
         public short ComputeNormal(Board board, Span<EvalInfo> evalInfo)
         {
-            Score score = Score.Zero;
-            for (Color color = Color.White; color <= Color.Black; color++)
-            {
-                int c = (int)color;
-                int o = (int)color.Flip();
-                Func<Score, Score> sign = signs[color];
-                score += sign(EvalMaterialAndPst(board, evalInfo, color));
+            cache.PrefetchPawnCache(board.PawnHash);
+            Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
+            score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
 
-                // insert alpha/beta margin check here
+            // insert alpha/beta lazy eval check here
 
-                score += sign(EvalPawns(board, evalInfo, color));
-                score += sign(EvalPieces(board, evalInfo, color));
-
-                if (color == board.SideToMove)
-                {
-                    score += signs[color](wts.TempoBonus);
-                }
-            }
+            score += ProbePawnCache(board, evalInfo);
+            score += EvalPieces(board, evalInfo, Color.White);
+            score -= EvalPieces(board, evalInfo, Color.Black);
+            score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
 
             return score.NormalizeScore(board.Phase);
+        }
+
+        public Score ProbePawnCache(Board board, Span<EvalInfo> evalInfo)
+        {
+            Score pawnScore;
+            if (cache.ProbePawnCache(board.PawnHash, out EvalCache.PawnCacheItem item))
+            {
+                evalInfo[0].PassedPawns = item.PassedPawns & board.Units(Color.White);
+                evalInfo[1].PassedPawns = item.PassedPawns & board.Units(Color.Black);
+                pawnScore = item.Eval;
+            }
+            else
+            {
+                pawnScore = EvalPawns(board, evalInfo, Color.White) - EvalPawns(board, evalInfo, Color.Black);
+                Bitboard passedPawns = evalInfo[0].PassedPawns | evalInfo[1].PassedPawns;
+                cache.SavePawnEval(board.PawnHash, passedPawns, pawnScore);
+            }
+
+            return pawnScore;
         }
 
         private Score EvalMaterialAndPst(Board board, Span<EvalInfo> evalInfo, Color color)
@@ -255,8 +265,7 @@ namespace Pedantic.Chess.HCE
         public readonly Bitboard BB_KS_MASK = new Bitboard(0xf0f0f0f0f0f0f0f0ul);
         public readonly Bitboard BB_QS_MASK = new Bitboard(0x0f0f0f0f0f0f0f0ful);
 
-        private GamePhase gamePhase;
-        private static ByColor<Func<Score, Score>> signs = new();
+        private readonly EvalCache cache;
         private static Weights wts;
 
 

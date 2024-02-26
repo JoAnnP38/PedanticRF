@@ -161,7 +161,7 @@ namespace Pedantic.Chess
             if (Sse.IsSupported)
             {
                 int index = (int)(hash & mask & 0xfffffffffffffffe);
-                Sse.Prefetch0((char*)pTable + index);
+                Sse.Prefetch0(pTable + index);
             }
         }
 

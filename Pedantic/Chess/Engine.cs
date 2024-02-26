@@ -108,6 +108,7 @@ namespace Pedantic.Chess
         public static void ResizeHashTable()
         {
             TtCache.Default.Resize();
+            threads.ResizeEvalCache();
         }
 
         public static bool SetupPosition(ReadOnlySpan<char> fen)

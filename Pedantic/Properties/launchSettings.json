@@ -10,6 +10,10 @@
     "Learn": {
       "commandName": "Project",
       "commandLineArgs": "learn --data \"e:/pgn files/training/master_training_data_ver7.0d.csv\" --sample 600000 --epochs 1000 --time 0:20:00 --reset"
+    },
+    "Search": {
+      "commandName": "Project",
+      "commandLineArgs": "< \"e:\\repos.2\\Pedantic\\uci_test.txt\""
     }
   }
 }

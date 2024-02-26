@@ -62,7 +62,8 @@ namespace Pedantic.UnitTests
             Board bd = new Board(fen);
             EvalFeatures features = new(bd);
             short expected = features.Compute(HceEval.Weights);
-            HceEval eval = new();
+            EvalCache cache = new();
+            HceEval eval = new(cache);
             short actual = eval.Compute(bd);
             Assert.AreEqual(expected, actual);
         }

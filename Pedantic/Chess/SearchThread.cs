@@ -11,6 +11,7 @@ namespace Pedantic.Chess
             this.isPrimary = isPrimary;
             search = null;
             clock = null;
+            eval = new(cache);
             history = new(stack);
             listPool = new(() => new MoveList(history), (o) => o.Clear(), MAX_PLY, 32);
         }
@@ -51,13 +52,15 @@ namespace Pedantic.Chess
         public double TotalTime => (search?.Elapsed ?? 0) / 1000.0;
         public bool IsPrimary => isPrimary;
         public SearchStack Stack => stack;
+        public EvalCache EvalCache => cache;
         public History History => history;
         public ObjectPool<MoveList> MoveListPool => listPool;
 
         private readonly bool isPrimary;
         private BasicSearch? search;
         private GameClock? clock;
-        private readonly HceEval eval = new();
+        private readonly EvalCache cache = new();
+        private readonly HceEval eval;
         private readonly SearchStack stack = new();
         private readonly History history;
         private readonly ObjectPool<MoveList> listPool;
