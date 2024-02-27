@@ -444,8 +444,8 @@ namespace Pedantic.Chess
             board.PushBoardState();
             MoveList list = listPool.Rent();
             IEnumerable<GenMove> moves = inCheck ?
-                board.Moves(ply, ss, list, ttMove) :
-                board.EvasionMoves(ply, ss, list, ttMove);
+                board.Moves(ply, history, ss, list, ttMove) :
+                board.EvasionMoves(ply, history, ss, list, ttMove);
             //IEnumerable<GenMove> moves = board.Moves(ply, ss, list, ttMove);
 
             foreach (GenMove genMove in moves)
@@ -601,7 +601,7 @@ namespace Pedantic.Chess
 
             IEnumerable<GenMove> moves = !inCheck ? 
                 board.QMoves(ply, qsPly, ss, list, ttMove) :
-                board.EvasionMoves(ply, ss, list, ttMove);
+                board.EvasionMoves(ply, history, ss, list, ttMove);
 
             foreach (GenMove genMove in moves)
             {
