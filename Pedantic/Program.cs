@@ -570,6 +570,17 @@ namespace Pedantic
             WriteLine();
             WriteLine("#endregion");
             WriteLine();
+            WriteLine("/* king safety */");
+            WriteLine("#region king safety");
+            WriteLine();
+            WriteLine("/* squares attacked near enemy king */");
+            WriteIndent(); WriteWt(wts.KingAttack(0));
+            Console.WriteLine("\t/* attacks to squares 1 from king */");
+            WriteIndent(); WriteWt(wts.KingAttack(1));
+            Console.WriteLine("\t/* attacks to squares 2 from king */");
+            WriteLine();
+            WriteLine("#endregion");
+            WriteLine();
             WriteLine("/* tempo bonus for side to move */");
             WriteWtLine(wts[TEMPO]);
         }

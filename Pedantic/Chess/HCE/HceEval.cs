@@ -2,15 +2,36 @@
 using Pedantic.Collections;
 using Pedantic.Utilities;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Pedantic.Chess.HCE
 {
     public sealed class HceEval : IInitialize
     {
+        public const int MAX_ATTACK_LEN = 16;
+
+        [InlineArray(MAX_ATTACK_LEN)]
+        public struct AttackArray
+        {
+            public const int CAPACITY = MAX_ATTACK_LEN;
+            private Bitboard _element0;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Span<Bitboard> AsSpan()
+            {
+                return MemoryMarshal.CreateSpan(ref _element0, CAPACITY);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Clear()
+            {
+                AsSpan().Clear();
+            }
+        }
+
         public struct EvalInfo
         {
             public Bitboard Pawns;
-            public Bitboard DefendedPawns;
             public Bitboard PieceAttacks;
             public Bitboard PawnAttacks;
             public Bitboard MobilityArea;
@@ -18,7 +39,8 @@ namespace Pedantic.Chess.HCE
             public short Material;
             public SquareIndex KI;
             public KingBuckets KB;
-            public GamePhase GamePhase;
+            public byte AttackCount;
+            public AttackArray Attacks;
         }
         
         static HceEval()
@@ -73,6 +95,8 @@ namespace Pedantic.Chess.HCE
             score += ProbePawnCache(board, evalInfo);
             score += EvalPieces(board, evalInfo, Color.White);
             score -= EvalPieces(board, evalInfo, Color.Black);
+            score += EvalKingSafety(board, evalInfo, Color.White);
+            score -= EvalKingSafety(board, evalInfo, Color.Black);
             score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
 
             return score.NormalizeScore(board.Phase);
@@ -181,8 +205,30 @@ namespace Pedantic.Chess.HCE
                 Piece piece = board.PieceBoard(from).Piece;
                 Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
                 evalInfo[c].PieceAttacks |= pieceAttacks;
+                if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
+                {
+                    evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
+                }
                 int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
                 score += wts.PieceMobility(piece, mobility);
+            }
+
+            return score;
+        }
+
+        private static Score EvalKingSafety(Board board, Span<EvalInfo> evalInfo, Color color)
+        {
+            Score score = Score.Zero;
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+
+            SquareIndex enemyKI = evalInfo[o].KI;
+            for (int n = 0; n < evalInfo[c].AttackCount; n++)
+            {
+                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].PawnAttacks);
+                score += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount * wts.KingAttack(0);
+                score += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount * wts.KingAttack(1);
             }
 
             return score;
@@ -356,6 +402,49 @@ namespace Pedantic.Chess.HCE
             0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul
 
             #endregion AdjacentPawnMasks data
+        };
+
+        public static readonly FixedArray2D<ulong> KingProximity = new (2, MAX_SQUARES)
+        {
+            #region KingProximity data
+
+            // masks for D0
+            0x0000000000000302ul, 0x0000000000000705ul, 0x0000000000000E0Aul, 0x0000000000001C14ul,
+            0x0000000000003828ul, 0x0000000000007050ul, 0x000000000000E0A0ul, 0x000000000000C040ul,
+            0x0000000000030203ul, 0x0000000000070507ul, 0x00000000000E0A0Eul, 0x00000000001C141Cul,
+            0x0000000000382838ul, 0x0000000000705070ul, 0x0000000000E0A0E0ul, 0x0000000000C040C0ul,
+            0x0000000003020300ul, 0x0000000007050700ul, 0x000000000E0A0E00ul, 0x000000001C141C00ul,
+            0x0000000038283800ul, 0x0000000070507000ul, 0x00000000E0A0E000ul, 0x00000000C040C000ul,
+            0x0000000302030000ul, 0x0000000705070000ul, 0x0000000E0A0E0000ul, 0x0000001C141C0000ul,
+            0x0000003828380000ul, 0x0000007050700000ul, 0x000000E0A0E00000ul, 0x000000C040C00000ul,
+            0x0000030203000000ul, 0x0000070507000000ul, 0x00000E0A0E000000ul, 0x00001C141C000000ul,
+            0x0000382838000000ul, 0x0000705070000000ul, 0x0000E0A0E0000000ul, 0x0000C040C0000000ul,
+            0x0003020300000000ul, 0x0007050700000000ul, 0x000E0A0E00000000ul, 0x001C141C00000000ul,
+            0x0038283800000000ul, 0x0070507000000000ul, 0x00E0A0E000000000ul, 0x00C040C000000000ul,
+            0x0302030000000000ul, 0x0705070000000000ul, 0x0E0A0E0000000000ul, 0x1C141C0000000000ul,
+            0x3828380000000000ul, 0x7050700000000000ul, 0xE0A0E00000000000ul, 0xC040C00000000000ul,
+            0x0203000000000000ul, 0x0507000000000000ul, 0x0A0E000000000000ul, 0x141C000000000000ul,
+            0x2838000000000000ul, 0x5070000000000000ul, 0xA0E0000000000000ul, 0x40C0000000000000ul,
+
+            // masks for D1
+            0x0000000000070404ul, 0x00000000000F0808ul, 0x00000000001F1111ul, 0x00000000003E2222ul,
+            0x00000000007C4444ul, 0x0000000000F88888ul, 0x0000000000F01010ul, 0x0000000000E02020ul,
+            0x0000000007040404ul, 0x000000000F080808ul, 0x000000001F111111ul, 0x000000003E222222ul,
+            0x000000007C444444ul, 0x00000000F8888888ul, 0x00000000F0101010ul, 0x00000000E0202020ul,
+            0x0000000704040407ul, 0x0000000F0808080Ful, 0x0000001F1111111Ful, 0x0000003E2222223Eul,
+            0x0000007C4444447Cul, 0x000000F8888888F8ul, 0x000000F0101010F0ul, 0x000000E0202020E0ul,
+            0x0000070404040700ul, 0x00000F0808080F00ul, 0x00001F1111111F00ul, 0x00003E2222223E00ul,
+            0x00007C4444447C00ul, 0x0000F8888888F800ul, 0x0000F0101010F000ul, 0x0000E0202020E000ul,
+            0x0007040404070000ul, 0x000F0808080F0000ul, 0x001F1111111F0000ul, 0x003E2222223E0000ul,
+            0x007C4444447C0000ul, 0x00F8888888F80000ul, 0x00F0101010F00000ul, 0x00E0202020E00000ul,
+            0x0704040407000000ul, 0x0F0808080F000000ul, 0x1F1111111F000000ul, 0x3E2222223E000000ul,
+            0x7C4444447C000000ul, 0xF8888888F8000000ul, 0xF0101010F0000000ul, 0xE0202020E0000000ul,
+            0x0404040700000000ul, 0x0808080F00000000ul, 0x1111111F00000000ul, 0x2222223E00000000ul,
+            0x4444447C00000000ul, 0x888888F800000000ul, 0x101010F000000000ul, 0x202020E000000000ul,
+            0x0404070000000000ul, 0x08080F0000000000ul, 0x11111F0000000000ul, 0x22223E0000000000ul,
+            0x44447C0000000000ul, 0x8888F80000000000ul, 0x1010F00000000000ul, 0x2020E00000000000ul,
+
+            #endregion KingProximity data
         };
 
     }
