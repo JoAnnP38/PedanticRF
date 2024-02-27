@@ -42,7 +42,14 @@ namespace Pedantic.Tuning
                     IncrementPieceCount(color, coefficients, piece);
                     IncrementPieceSquare(color, coefficients, piece, kb, normalFrom);
                     Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, bd.All);
-                    evalInfo[c].PieceAttacks |= pieceAttacks;
+                    if (piece != Piece.Pawn && piece != Piece.King)
+                    {
+                        evalInfo[c].PieceAttacks |= pieceAttacks;
+                        if (pieceAttacks != 0 && evalInfo[c].AttackCount < HceEval.MAX_ATTACK_LEN)
+                        {
+                            evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
+                        }
+                    }
                     int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
                     IncrementPieceMobility(color, coefficients, piece, mobility);
 
@@ -77,6 +84,16 @@ namespace Pedantic.Tuning
                             IncrementIsolatedPawn(color, coefficients, normalFrom);
                         }
                     }
+                }
+
+                SquareIndex enemyKI = evalInfo[o].KI;
+                for (int n = 0; n < evalInfo[c].AttackCount; n++)
+                {
+                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].PawnAttacks);
+                    int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
+                    IncrementKingAttack(color, coefficients, 0, count);
+                    count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
+                    IncrementKingAttack(color, coefficients, 1, count);
                 }
 
                 if (color == bd.SideToMove)
@@ -255,6 +272,19 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementKingAttack(Color color, SparseArray<short> v, int dist, int count)
+        {
+            int index = KING_ATTACK + dist;
+            if (v.ContainsKey(index))
+            {
+                v[index] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v[index] = (short)(count * Increment(color));
             }
         }
 
