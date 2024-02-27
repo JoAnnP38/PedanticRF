@@ -99,6 +99,20 @@ namespace Pedantic.Chess
             }
         }
 
+        public readonly bool IsValid
+        {
+            get
+            {
+                return  Stm >= Color.None && Stm <= Color.Black &&
+                        Piece >= Piece.None && Piece <= Piece.King &&
+                        From >= SquareIndex.None && From <= SquareIndex.H8 &&
+                        To >= SquareIndex.None && To <= SquareIndex.H8 &&
+                        Type >= MoveType.Normal && Type <= MoveType.Null &&
+                        Capture >= Piece.None && Capture <= Piece.Queen &&
+                        Promote >= Piece.None && Promote <= Piece.Queen;
+            }
+        }
+
         public readonly bool IsCapture
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -185,7 +199,7 @@ namespace Pedantic.Chess
 
         public static bool TryParse(Board board, ReadOnlySpan<char> sp, out Move move)
         {
-            move = Move.NullMove;
+            move = NullMove;
 
             try
             {

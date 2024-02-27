@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Pedantic.Collections;
+using Pedantic.Utilities;
 
 namespace Pedantic.Chess
 {
@@ -13,14 +14,17 @@ namespace Pedantic.Chess
         internal const short BONUS_COEFF = 96;
 
         private short[] history;
+        private Move[] counterMoves;
         private SearchStack ss;
         private int ply;
 
         public History(SearchStack searchStack)
         {
             history = new short[HISTORY_LEN];
+            counterMoves = new Move[HISTORY_LEN];
             ss = searchStack;
             ply = 0;
+            Clear();
         }
 
         public short this[Color stm, Piece piece, SquareIndex sq]
@@ -42,10 +46,23 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Move CounterMove(Move lastMove)
+        {
+            Util.Assert(lastMove.IsValid);
+            if (lastMove == Move.NullMove)
+            {
+                return Move.NullMove;
+            }
+            return counterMoves[GetIndex(lastMove)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             Span<short> h = history;
             h.Clear();
+            Span<Move> m = counterMoves;
+            m.Fill(Move.NullMove);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,6 +83,12 @@ namespace Pedantic.Chess
             {
                 index = GetIndex(quiets[n]);
                 UpdateHistory(ref history[index], malus);
+            }
+
+            Move lastMove = ss[ply - 1].Move;
+            if (lastMove != Move.NullMove)
+            {
+                counterMoves[GetIndex(lastMove)] = move;
             }
         }
 

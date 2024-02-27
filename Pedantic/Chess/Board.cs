@@ -988,7 +988,7 @@ namespace Pedantic.Chess
             return false;
         }
 
-        public IEnumerable<GenMove> Moves(int ply, SearchStack ss, MoveList list, Move ttMove)
+        public IEnumerable<GenMove> Moves(int ply, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
             {
@@ -1029,6 +1029,12 @@ namespace Pedantic.Chess
             if (list.Remove(killer))
             {
                 yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            Move counter = history.CounterMove(ss[ply - 1].Move);
+            if (list.Remove(counter))
+            {
+                yield return new GenMove(counter, MoveGenPhase.Counter);
             }
 
             for (int n = 0; n < list.Count; n++)
@@ -1074,7 +1080,7 @@ namespace Pedantic.Chess
             }
         }
 
-        public IEnumerable<GenMove> EvasionMoves(int ply, SearchStack ss, MoveList list, Move ttMove)
+        public IEnumerable<GenMove> EvasionMoves(int ply, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
             {
@@ -1127,6 +1133,12 @@ namespace Pedantic.Chess
             if (list.Remove(killer))
             {
                 yield return new GenMove(killer, MoveGenPhase.Killers);
+            }
+
+            Move counter = history.CounterMove(ss[ply - 1].Move);
+            if (list.Remove(counter))
+            {
+                yield return new GenMove(counter, MoveGenPhase.Counter);
             }
 
             for (int n = 0; n < list.Count; n++)
