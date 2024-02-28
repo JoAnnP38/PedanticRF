@@ -96,6 +96,16 @@ namespace Pedantic.Tuning
                     IncrementKingAttack(color, coefficients, 1, count);
                 }
 
+                if ((evalInfo[c].CanCastle & 0x01) != 0)
+                {
+                    IncrementCanCastleKS(color, coefficients);
+                }
+
+                if ((evalInfo[c].CanCastle & 0x02) != 0)
+                {
+                    IncrementCanCastleQS(color, coefficients);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -287,6 +297,31 @@ namespace Pedantic.Tuning
                 v[index] = (short)(count * Increment(color));
             }
         }
+
+        private static void IncrementCanCastleKS(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(CAN_CASTLE_KS))
+            {
+                v[CAN_CASTLE_KS] += Increment(color);
+            }
+            else
+            {
+                v.Add(CAN_CASTLE_KS, Increment(color));
+            }
+        }
+
+        private static void IncrementCanCastleQS(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(CAN_CASTLE_QS))
+            {
+                v[CAN_CASTLE_QS] += Increment(color);
+            }
+            else
+            {
+                v.Add(CAN_CASTLE_QS, Increment(color));
+            }
+        }
+        
 
         private static void IncrementPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
         {
