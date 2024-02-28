@@ -353,12 +353,12 @@ namespace Pedantic.Chess
             {
                 return eval.Compute(board);
             }
-
-            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
             if (depth <= 0)
             {
                 return Quiesce(alpha, beta, ply);
             }
+
+            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
 
             var rep = board.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)
@@ -560,6 +560,8 @@ namespace Pedantic.Chess
             {
                 return eval.Compute(board);
             }
+
+            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
 
             var rep = board.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)

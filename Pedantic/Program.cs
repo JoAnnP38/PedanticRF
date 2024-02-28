@@ -575,9 +575,15 @@ namespace Pedantic
             WriteLine();
             WriteLine("/* squares attacked near enemy king */");
             WriteIndent(); WriteWt(wts.KingAttack(0));
-            Console.WriteLine("\t/* attacks to squares 1 from king */");
+            Console.WriteLine("\t// attacks to squares 1 from king");
             WriteIndent(); WriteWt(wts.KingAttack(1));
-            Console.WriteLine("\t/* attacks to squares 2 from king */");
+            Console.WriteLine("\t// attacks to squares 2 from king");
+            WriteLine();
+            WriteLine("/* castling available */");
+            WriteIndent(); WriteWt(wts.CanCastleKS);
+            Console.WriteLine("\t// king-side castling available");
+            WriteIndent(); WriteWt(wts.CanCastleQS);
+            Console.WriteLine("\t// queen-side castling available");
             WriteLine();
             WriteLine("#endregion");
             WriteLine();
