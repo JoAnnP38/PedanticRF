@@ -4,7 +4,6 @@ using Pedantic.Collections;
 using Pedantic.Utilities;
 using System.Runtime.CompilerServices;
 using static Pedantic.Chess.HCE.Weights;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Pedantic.Tuning
 {
@@ -28,7 +27,6 @@ namespace Pedantic.Tuning
                 int c = (int)color;
                 int o = (int)other;
 
-                SquareIndex KI = evalInfo[c].KI;
                 KingBuckets kb = new (color, bd.KingIndex[color], bd.KingIndex[color.Flip()]);
                 Bitboard pawns = evalInfo[c].Pawns;
                 Bitboard otherPawns = evalInfo[o].Pawns;
@@ -106,20 +104,6 @@ namespace Pedantic.Tuning
                 if ((evalInfo[c].CanCastle & 0x02) != 0)
                 {
                     IncrementCanCastleQS(color, coefficients);
-                }
-
-                if (bd.DiagonalSliders(other) != 0)
-                {
-                    Bitboard attacks = Board.GetPieceMoves(Piece.Bishop, KI, bd.All);
-                    int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
-                    IncrementKsDiagonalMobility(color, coefficients, mobility);
-                }
-
-                if (bd.OrthogonalSliders(other) != 0)
-                {
-                    Bitboard attacks = Board.GetPieceMoves(Piece.Rook, KI, bd.All);
-                    int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
-                    IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
 
                 if (color == bd.SideToMove)
@@ -338,41 +322,6 @@ namespace Pedantic.Tuning
             }
         }
         
-        private static void IncrementKsDiagonalMobility(Color color, SparseArray<short> v, int count)
-        {
-            if (count <= 0)
-            {
-                return;
-            }
-
-            int index = KS_DIAG_MOBILITY + count - 1;
-            if (v.ContainsKey(index))
-            {
-                v[index] += Increment(color);
-            }
-            else
-            {
-                v.Add(index, Increment(color));
-            }
-        }
-
-        private static void IncrementKsOrthogonalMobility(Color color, SparseArray<short> v, int count)
-        {
-            if (count <= 0)
-            {
-                return;
-            }
-
-            int index = KS_ORTH_MOBILITY + count - 1;
-            if (v.ContainsKey(index))
-            {
-                v[index] += Increment(color);
-            }
-            else
-            {
-                v.Add(index, Increment(color));
-            }
-        }
 
         private static void IncrementPieceSquare(Color color, SparseArray<short> v, Piece piece, KingBuckets kb, SquareIndex square)
         {

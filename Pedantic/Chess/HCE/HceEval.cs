@@ -224,7 +224,6 @@ namespace Pedantic.Chess.HCE
             int c = (int)color;
             int o = (int)other;
 
-            // give a bonus to each attack on a square within 1 or 2 squares from the enemy king
             SquareIndex enemyKI = evalInfo[o].KI;
             for (int n = 0; n < evalInfo[c].AttackCount; n++)
             {
@@ -233,7 +232,6 @@ namespace Pedantic.Chess.HCE
                 score += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount * wts.KingAttack(1);
             }
 
-            // give a bonus for castling rights to force engine to castle and not forfeit them for free
             if ((evalInfo[c].CanCastle & 0x01) != 0)
             {
                 score += wts.CanCastleKS;
@@ -242,23 +240,6 @@ namespace Pedantic.Chess.HCE
             if ((evalInfo[c].CanCastle & 0x02) != 0)
             {
                 score += wts.CanCastleQS;
-            }
-
-            // give a penalty for each square that a line piece (i.e. B, R or Q) would have an 
-            // attack on our king
-            SquareIndex KI = evalInfo[c].KI;
-            if (board.DiagonalSliders(other) != 0)
-            {
-                Bitboard attacks = Board.GetPieceMoves(Piece.Bishop, KI, board.All);
-                int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
-                score += wts.KsDiagonalMobility(mobility);
-            }
-
-            if (board.OrthogonalSliders(other) != 0)
-            {
-                Bitboard attacks = Board.GetPieceMoves(Piece.Rook, KI, board.All);
-                int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
-                score += wts.KsOrthogonalMobility(mobility);
             }
 
             return score;

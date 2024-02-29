@@ -585,13 +585,6 @@ namespace Pedantic
             WriteIndent(); WriteWt(wts.CanCastleQS);
             Console.WriteLine("\t// queen-side castling available");
             WriteLine();
-            WriteLine("/* king mobility penalties (open line attacks) */");
-            WriteLine("/* diagonal lines */");
-            WriteWts2D(wts, KS_DIAG_MOBILITY, 8, 13);
-            WriteLine();
-            WriteLine("/* orthogonal lines */");
-            WriteWts2D(wts, KS_ORTH_MOBILITY, 8, 14);
-            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
