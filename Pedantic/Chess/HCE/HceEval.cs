@@ -90,14 +90,13 @@ namespace Pedantic.Chess.HCE
             cache.PrefetchPawnCache(board.PawnHash);
             Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
             score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
-
-            // insert alpha/beta lazy eval check here
-
             score += ProbePawnCache(board, evalInfo);
             score += EvalPieces(board, evalInfo, Color.White);
             score -= EvalPieces(board, evalInfo, Color.Black);
             score += EvalKingSafety(board, evalInfo, Color.White);
             score -= EvalKingSafety(board, evalInfo, Color.Black);
+            score += EvalPassedPawns(board, evalInfo, Color.White);
+            score -= EvalPassedPawns(board, evalInfo, Color.Black);
             score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
 
             return score.NormalizeScore(board.Phase);
@@ -264,6 +263,35 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
+        private static Score EvalPassedPawns(Board board, Span<EvalInfo> evalInfo, Color color)
+        {
+            Score score = Score.Zero;
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+
+            foreach (SquareIndex ppIndex in evalInfo[c].PassedPawns)
+            {
+                Rank normalRank = ppIndex.Normalize(color).Rank();
+                if (normalRank < Rank.Rank4)
+                {
+                    continue;
+                }
+
+                if (board.PieceCount(other) == 1)
+                {
+                    SquareIndex promoteSq = ChessMath.ToSquareIndex(ppIndex.File(), PromoteRank(color));
+                    if (ChessMath.Distance(ppIndex, promoteSq) < 
+                        ChessMath.Distance(evalInfo[o].KI, promoteSq) - (other == board.SideToMove ? 1 : 0))
+                    {
+                        score += wts.KingOutsidePasserSquare;
+                    }
+                }
+            }
+
+            return score;
+        }
+
         public static bool SufficientMatingMaterial(Board board, Span<EvalInfo> evalInfo, Color side)
         {
             int numKnights = board.Pieces(side, Piece.Knight).PopCount;
@@ -339,6 +367,12 @@ namespace Pedantic.Chess.HCE
                 int o = (int)other;
                 evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].PawnAttacks);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rank PromoteRank(Color color)
+        {
+            return color == Color.White ? Rank.Rank8 : Rank.Rank1;
         }
 
         public static void Initialize() {}

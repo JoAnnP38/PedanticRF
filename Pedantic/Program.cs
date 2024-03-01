@@ -503,8 +503,8 @@ namespace Pedantic
             WriteLine("/* piece values */");
             WriteWtsLine(wts, PIECE_VALUES, MAX_PIECES);
             WriteLine();
-            WriteLine("/* friendly king piece square values */");
-            WriteLine("#region friendly king piece square values");
+            WriteLine("/* friendly king relative piece square values */");
+            WriteLine("#region friendly king relative piece square values");
             WriteLine();
             for (int pc = 0; pc < MAX_PIECES; pc++)
             {
@@ -518,8 +518,8 @@ namespace Pedantic
             }
             WriteLine("#endregion");
             WriteLine();
-            WriteLine("/* enemy king piece square values */");
-            WriteLine("#region enemy king piece square values");
+            WriteLine("/* enemy king relative piece square values */");
+            WriteLine("#region enemy king relative piece square values");
             WriteLine();
             for (int pc = 0; pc < MAX_PIECES; pc++)
             {
@@ -591,6 +591,14 @@ namespace Pedantic
             WriteLine();
             WriteLine("/* orthogonal lines */");
             WriteWts2D(wts, KS_ORTH_MOBILITY, 8, 14);
+            WriteLine();
+            WriteLine("#endregion");
+            WriteLine();
+            WriteLine("/* passed pawns */");
+            WriteLine("#region passed pawns");
+            WriteLine();
+            WriteLine("/* enemy king outside passed pawn square */");
+            WriteWtLine(wts.KingOutsidePasserSquare);
             WriteLine();
             WriteLine("#endregion");
             WriteLine();

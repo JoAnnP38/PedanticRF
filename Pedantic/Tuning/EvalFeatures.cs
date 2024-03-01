@@ -122,6 +122,25 @@ namespace Pedantic.Tuning
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
 
+                foreach (SquareIndex ppIndex in evalInfo[c].PassedPawns)
+                {
+                    Rank normalRank = ppIndex.Normalize(color).Rank();
+                    if (normalRank < Rank.Rank4)
+                    {
+                        continue;
+                    }
+
+                    if (bd.PieceCount(other) == 1)
+                    {
+                        SquareIndex promoteSq = ChessMath.ToSquareIndex(ppIndex.File(), HceEval.PromoteRank(color));
+                        if (ChessMath.Distance(ppIndex, promoteSq) <
+                            ChessMath.Distance(evalInfo[o].KI, promoteSq) - (other == bd.SideToMove ? 1 : 0))
+                        {
+                            IncrementKingOutsidePasserSquare(color, coefficients);
+                        }
+                    }
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -371,6 +390,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementKingOutsidePasserSquare(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(KING_OUTSIDE_PP_SQUARE))
+            {
+                v[KING_OUTSIDE_PP_SQUARE] += Increment(color);
+            }
+            else
+            {
+                v.Add(KING_OUTSIDE_PP_SQUARE, Increment(color));
             }
         }
 
