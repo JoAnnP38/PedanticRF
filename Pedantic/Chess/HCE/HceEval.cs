@@ -34,6 +34,7 @@ namespace Pedantic.Chess.HCE
             public Bitboard Pawns;
             public Bitboard PieceAttacks;
             public Bitboard PawnAttacks;
+            public Bitboard KingAttacks;
             public Bitboard MobilityArea;
             public Bitboard PassedPawns;
             public short Material;
@@ -287,6 +288,14 @@ namespace Pedantic.Chess.HCE
                         score += wts.KingOutsidePasserSquare;
                     }
                 }
+
+                Bitboard advanceMask = new Bitboard(Board.PawnPlus(color, ppIndex));
+                Bitboard attacksMask = evalInfo[o].PawnAttacks | evalInfo[o].PieceAttacks | evalInfo[o].KingAttacks;
+
+                if ((advanceMask & board.All) == 0 && (advanceMask & attacksMask) == 0)
+                {
+                    score += wts.PassedPawnCanAdvance(normalRank);
+                }
             }
 
             return score;
@@ -342,6 +351,7 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].Material = board.Material[color].NormalizeScore(board.Phase);
                 evalInfo[c].KI = board.KingIndex[color];
                 evalInfo[c].KB = new KingBuckets(color, board.KingIndex[color], board.KingIndex[color.Flip()]);
+                evalInfo[c].KingAttacks = Board.GetPieceMoves(Piece.King, evalInfo[c].KI, board.All);
 
                 if (color == Color.White)
                 {
