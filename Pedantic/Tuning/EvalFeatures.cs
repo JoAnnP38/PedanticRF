@@ -139,6 +139,14 @@ namespace Pedantic.Tuning
                             IncrementKingOutsidePasserSquare(color, coefficients);
                         }
                     }
+
+                    Bitboard advanceMask = new Bitboard(Board.PawnPlus(color, ppIndex));
+                    Bitboard attacksMask = evalInfo[o].PawnAttacks | evalInfo[o].PieceAttacks | evalInfo[o].KingAttacks;
+
+                    if ((advanceMask & bd.All) == 0 && (advanceMask & attacksMask) == 0)
+                    {
+                        IncrementPassedPawnCanAdvance(color, coefficients, normalRank);
+                    }
                 }
 
                 if (color == bd.SideToMove)
@@ -402,6 +410,19 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(KING_OUTSIDE_PP_SQUARE, Increment(color));
+            }
+        }
+
+        private static void IncrementPassedPawnCanAdvance(Color color, SparseArray<short> v, Rank rank)
+        {
+            int index = PP_CAN_ADVANCE + (rank - Rank.Rank4);
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
             }
         }
 

@@ -600,6 +600,9 @@ namespace Pedantic
             WriteLine("/* enemy king outside passed pawn square */");
             WriteWtLine(wts.KingOutsidePasserSquare);
             WriteLine();
+            WriteLine("/* passed pawn can advance */");
+            WriteWts2D(wts, PP_CAN_ADVANCE, 8, 4);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
