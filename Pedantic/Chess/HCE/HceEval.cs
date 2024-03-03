@@ -298,6 +298,24 @@ namespace Pedantic.Chess.HCE
                 }
             }
 
+            Bitboard ePassedPawns = evalInfo[o].PassedPawns;
+            if (other == Color.White)
+            {
+                ePassedPawns <<= 8;
+            }
+            else
+            {
+                ePassedPawns >>= 8;
+            }
+
+            Bitboard blockers = board.Units(color) & ePassedPawns;
+            foreach (SquareIndex sq in blockers)
+            {
+                Piece blocker = board.PieceBoard(sq).Piece;
+                Rank normalRank = sq.Normalize(other).Rank();
+                score += wts.BlockedPassedPawn(blocker, normalRank - 1);
+            }
+
             return score;
         }
 

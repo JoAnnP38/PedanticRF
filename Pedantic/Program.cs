@@ -603,6 +603,18 @@ namespace Pedantic
             WriteLine("/* passed pawn can advance */");
             WriteWts2D(wts, PP_CAN_ADVANCE, 8, 4);
             WriteLine();
+            WriteLine("/* blocked passed pawn */");
+            for (Piece pc = Piece.Knight; pc <= Piece.King; pc++)
+            {
+                int index = BLOCKED_PASSED_PAWN + ((int)pc - 1) * MAX_COORDS;
+                WriteIndent();
+                for (int rank = 0; rank < MAX_COORDS; rank++)
+                {
+                    WriteWt(wts[index + rank]);
+                }
+                Console.WriteLine($"\t// blocked by {pc}");
+            }
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
