@@ -251,5 +251,35 @@ namespace Pedantic.UnitTests
             }
             Assert.AreEqual(expected, count);
         }
+
+        [TestMethod]
+        [DataRow("4k3/1pp1q1pp/2n5/4p2R/3B1b2/2QP1N2/1P2PP2/4K3 w - - 0 1", Color.White, 100)]
+        [DataRow("8/1pp1q1pp/2n2k2/4p2R/3B1b2/2QP1N2/1P2PP2/4K3 w - - 0 1", Color.White, -200)]
+        public void See0Test(string fen, Color stm, int expected)
+        {
+            Board bd = new(fen);
+            Move move = new (stm, Piece.Bishop, SquareIndex.D4, SquareIndex.E5, MoveType.Capture, Piece.Pawn);
+            int seeEval = bd.See0(move);
+            Assert.AreEqual(expected, seeEval);
+        }
+
+        [TestMethod]
+        [DataRow("8/1pp1q1pp/2n2k2/4p2R/3B1b2/2QP1N2/1P2PP2/4K1r1 w - - 0 1", false)]
+        [DataRow("8/1pp1q1pp/2n2k2/4p2R/3B4/2QP1N2/1P2PP1b/4K1r1 w - - 0 1", false)]
+        [DataRow("8/1pp1q1pp/2n2k2/4p2R/3B4/2QP4/1P1NPP1b/4K1rR w - - 0 1", true)]
+        public void See1Test(string fen, bool safe)
+        {
+            Board bd = new(fen);
+            Move move = new (Color.Black, Piece.Rook, SquareIndex.G6, SquareIndex.G1);
+            int seeEval = bd.See1(move);
+            if (safe)
+            {
+                Assert.IsTrue(seeEval <= 0);
+            }
+            else
+            {
+                Assert.IsTrue(seeEval > 0);
+            }
+        }
     }
 }

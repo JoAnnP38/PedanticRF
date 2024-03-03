@@ -6,11 +6,18 @@ using System.Text.RegularExpressions;
 using Pedantic.Collections;
 using Pedantic.Chess.HCE;
 using Pedantic.Utilities;
+using System.Buffers;
 
 namespace Pedantic.Chess
 {
     public sealed partial class Board : ICloneable, IInitialize
     {
+        #region Board Constants
+
+        public const int MAX_BAD_CAPTURES = 20;
+
+        #endregion
+
         #region Inner Data Structures
 
         [InlineArray(MAX_SQUARES)]
@@ -312,7 +319,8 @@ namespace Pedantic.Chess
         private ByColor<Score> material;
 
         private MoveList moveList = new();
-        private ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
+        private readonly ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
+        private readonly Move[][] badCaptures = Mem.Allocate2D<Move>(MAX_PLY, 20);
         private byte phase;
 
         #endregion
@@ -519,10 +527,22 @@ namespace Pedantic.Chess
             return Units(color) & Pieces(piece);
         }
 
+        public Bitboard DiagonalSliders_
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Bishops | Queens;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Bitboard DiagonalSliders(Color color)
         {
             return Units(color) & (Bishops | Queens);
+        }
+
+        public Bitboard OrthogonalSliders_
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Rooks | Queens;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -995,6 +1015,9 @@ namespace Pedantic.Chess
                 yield return new GenMove(ttMove, MoveGenPhase.HashMove);
             }
 
+            Move[] bc = badCaptures[ply];
+            int bcCount = 0;
+
             list.Clear();
             SquareIndex kingIndex = KingIndex[sideToMove];
             EvasionInfo info = new();
@@ -1003,7 +1026,13 @@ namespace Pedantic.Chess
 
             for (int n = 0; n < list.Count; n++)
             {
-                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+                Move move = list.Sort(n);
+                if (bcCount < MAX_BAD_CAPTURES && move.Piece.Value() > move.Capture.Value() && See0(move) < 0)
+                {
+                    bc[bcCount++] = move;
+                    continue;
+                }
+                yield return new GenMove(move, MoveGenPhase.GoodCapture);
             }
 
             list.Clear();
@@ -1037,6 +1066,11 @@ namespace Pedantic.Chess
                 yield return new GenMove(counter, MoveGenPhase.Counter);
             }
 
+            for (int n = 0; n < bcCount; n++)
+            {
+                yield return new GenMove(bc[n], MoveGenPhase.BadCapture);
+            }
+
             for (int n = 0; n < list.Count; n++)
             {
                 yield return new GenMove(list.Sort(n), MoveGenPhase.Quiet);
@@ -1049,6 +1083,9 @@ namespace Pedantic.Chess
             {
                 yield return new GenMove(ttMove, MoveGenPhase.HashMove);
             }
+
+            Move[] bc = badCaptures[ply];
+            int bcCount = 0;
 
             list.Clear();
             SquareIndex kingIndex = KingIndex[sideToMove];
@@ -1063,7 +1100,13 @@ namespace Pedantic.Chess
 
             for (int n = 0; n < list.Count; n++)
             {
-                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+                Move move = list.Sort(n);
+                if (bcCount < MAX_BAD_CAPTURES && move.Piece.Value() > move.Capture.Value() && See0(move) < 0)
+                {
+                    bc[bcCount++] = move;
+                    continue;
+                }
+                yield return new GenMove(move, MoveGenPhase.GoodCapture);
             }
 
             if (qsPly < UciOptions.PromotionDepth)
@@ -1078,6 +1121,11 @@ namespace Pedantic.Chess
                     yield return new GenMove(list.Sort(n), MoveGenPhase.Promotion);
                 }
             }
+
+            for (int n = 0; n < bcCount; n++)
+            {
+                yield return new GenMove(bc[n], MoveGenPhase.BadCapture);
+            }
         }
 
         public IEnumerable<GenMove> EvasionMoves(int ply, History history, SearchStack ss, MoveList list, Move ttMove)
@@ -1086,6 +1134,9 @@ namespace Pedantic.Chess
             {
                 yield return new GenMove(ttMove, MoveGenPhase.HashMove);
             }
+
+            Move[] bc = badCaptures[ply];
+            int bcCount = 0;
 
             SquareIndex kingIndex = KingIndex[sideToMove];
             GetEvasionInfo(kingIndex, out EvasionInfo info, out GenMoveHelper helper);
@@ -1100,7 +1151,13 @@ namespace Pedantic.Chess
             list.Remove(ttMove);
             for (int n = 0; n < list.Count; n++)
             {
-                yield return new GenMove(list.Sort(n), MoveGenPhase.GoodCapture);
+                Move move = list.Sort(n);
+                if (bcCount < MAX_BAD_CAPTURES && move.Piece.Value() > move.Capture.Value() && See0(move) < 0)
+                {
+                    bc[bcCount++] = move;
+                    continue;
+                }
+                yield return new GenMove(move, MoveGenPhase.GoodCapture);
             }
 
             if (info.CheckerCount <= 1)
@@ -1139,6 +1196,11 @@ namespace Pedantic.Chess
             if (list.Remove(counter))
             {
                 yield return new GenMove(counter, MoveGenPhase.Counter);
+            }
+
+            for (int n = 0; n < bcCount; n++)
+            {
+                yield return new GenMove(bc[n], MoveGenPhase.BadCapture);
             }
 
             for (int n = 0; n < list.Count; n++)
@@ -1473,6 +1535,138 @@ namespace Pedantic.Chess
         public static Bitboard GetQueenAttacks(SquareIndex from, Bitboard blockers)
         {
             return GetBishopAttacks(from, blockers) | GetRookAttacks(from, blockers);
+        }
+
+        // SEE where move hasn't been made on the board yet
+        public int See0(Move move)
+        {
+            Bitboard tempAll = All;
+            Span<int> captures = stackalloc int[32];
+            captures.Clear();
+
+            SquareIndex from = move.From;
+            SquareIndex to = move.To;
+            Piece captured = move.Capture;
+            Piece pc = move.IsPromote ? move.Promote : move.Piece;
+
+            Bitboard attacksTo = AttacksTo(to);
+            captures[0] = captured.Value();
+
+            Color them = move.Stm.Flip();
+            tempAll = tempAll.ResetBit(from);
+
+            return SeeImpl(captures, them, to, pc, attacksTo, tempAll);
+        }
+
+        // SEE where move has already been made on the board
+        // stm - color of the side making the move
+        // move - the last move
+        public int See1(Move move)
+        {
+            Span<int> captures = stackalloc int[32];
+            captures.Clear();
+
+            SquareIndex to = move.To;
+            Bitboard attacksTo = AttacksTo(to);
+            Piece pc = move.Piece;
+            captures[0] = pc.Value();
+
+            Color them = move.Stm.Flip();
+            Bitboard attacksFrom = Bitboard.None;
+            Piece piece = Piece.Pawn;
+            for (; piece <= Piece.King; piece++)
+            {
+                attacksFrom = Pieces(them, piece) & attacksTo;
+                if (attacksFrom != 0)
+                {
+                    break;
+                }
+            }
+
+            if (piece > Piece.King)
+            {
+                return 0;
+            }
+
+            Bitboard tempAll = All.ResetBit((SquareIndex)attacksFrom.TzCount);
+
+            return SeeImpl(captures, them.Flip(), to, piece, attacksTo, tempAll);
+        }
+
+        public Bitboard AttacksTo(SquareIndex sq)
+        {
+            Bitboard attacksTo = Pieces(Color.White, Piece.Pawn) & PawnDefends(Color.White, sq);
+            attacksTo |= Pieces(Color.Black, Piece.Pawn) & PawnDefends(Color.Black, sq);
+            attacksTo |= Knights & (Bitboard)knightMoves[(int)sq];
+            attacksTo |= Kings & (Bitboard)kingMoves[(int)sq];
+            attacksTo |= DiagonalSliders_ & GetBishopMoves(sq, All);
+            attacksTo |= OrthogonalSliders_ & GetRookMoves(sq, All);
+            return attacksTo;
+        }
+
+        private int SeeImpl(Span<int> captures, Color stm, SquareIndex to, Piece piece, 
+            Bitboard attacks, Bitboard blockers)
+        {
+            int cIndex = 1;
+            int atkPieceValue = piece.Value();
+            Bitboard dSliders = Bishops | Queens;
+            Bitboard oSliders = Rooks | Queens;
+
+            if (piece == Piece.Pawn || piece.IsDiagonalSlider())
+            {
+                attacks |= GetBishopMoves(to, blockers) & dSliders;
+            }
+            
+            if (piece == Piece.Pawn || piece.IsOrthogonalSlider())
+            {
+                attacks |= GetRookMoves(to, blockers) & oSliders;
+            }
+
+            for (attacks &= blockers; attacks != 0; attacks &= blockers)
+            {
+                Bitboard attacksFrom = Bitboard.None;
+                piece = Piece.Pawn;
+                for (; piece <= Piece.King; piece++)
+                {
+                    attacksFrom = Pieces(stm, piece) & attacks;
+                    if (attacksFrom != 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (piece > Piece.King)
+                {
+                    break;
+                }
+
+                blockers = blockers.ResetBit((SquareIndex)attacksFrom.TzCount);
+                if (piece == Piece.Pawn || piece.IsDiagonalSlider())
+                {
+                    attacks |= GetBishopMoves(to, blockers) & dSliders;
+                }
+
+                if (piece == Piece.Pawn || piece.IsOrthogonalSlider())
+                {
+                    attacks |= GetRookMoves(to, blockers) & oSliders;
+                }
+
+                captures[cIndex] = -captures[cIndex - 1] + atkPieceValue;
+                atkPieceValue = piece.Value();
+                if (captures[cIndex++] - atkPieceValue > 0)
+                {
+                    break;
+                }
+
+                stm = stm.Flip();
+            }
+
+            for (int n = cIndex - 1; n > 0; n--)
+            {
+                captures[n - 1] = -Math.Max(-captures[n - 1], captures[n]);
+            }
+
+            return captures[0];
         }
 
         #endregion

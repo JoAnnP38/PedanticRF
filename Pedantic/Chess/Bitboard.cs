@@ -120,6 +120,18 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Bitboard SetBit(SquareIndex sq)
+        {
+            return (Bitboard)BitOps.SetBit(bb, (int)sq);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Bitboard ResetBit(SquareIndex sq)
+        {
+            return (Bitboard)BitOps.ResetBit(bb, (int)sq);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(Bitboard other)
         {
             return bb == other.bb;
