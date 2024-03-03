@@ -149,6 +149,24 @@ namespace Pedantic.Tuning
                     }
                 }
 
+                Bitboard ePassedPawns = evalInfo[o].PassedPawns;
+                if (other == Color.White)
+                {
+                    ePassedPawns <<= 8;
+                }
+                else
+                {
+                    ePassedPawns >>= 8;
+                }
+
+                Bitboard blockers = bd.Units(color) & ePassedPawns;
+                foreach (SquareIndex sq in blockers)
+                {
+                    Piece blocker = bd.PieceBoard(sq).Piece;
+                    Rank normalRank = sq.Normalize(other).Rank();
+                    IncrementBlockedPassedPawn(color, coefficients, blocker, normalRank - 1);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -416,6 +434,19 @@ namespace Pedantic.Tuning
         private static void IncrementPassedPawnCanAdvance(Color color, SparseArray<short> v, Rank rank)
         {
             int index = PP_CAN_ADVANCE + (rank - Rank.Rank4);
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementBlockedPassedPawn(Color color, SparseArray<short> v, Piece blocker, Rank rank)
+        {
+            int index = BLOCKED_PASSED_PAWN + ((int)blocker - 1) * MAX_COORDS + (int)rank;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);
