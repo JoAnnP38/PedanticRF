@@ -122,6 +122,19 @@ namespace Pedantic.Tuning
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
 
+                if (color == bd.SideToMove)
+                {
+                    SetTempoBonus(color, coefficients);
+                }
+            }
+
+            for (Color color = Color.White; color <= Color.Black; color++)
+            {
+                Color other = color.Flip();
+                int c = (int)color;
+                int o = (int)other;
+
+
                 foreach (SquareIndex ppIndex in evalInfo[c].PassedPawns)
                 {
                     Rank normalRank = ppIndex.Normalize(color).Rank();
@@ -165,12 +178,7 @@ namespace Pedantic.Tuning
                     Piece blocker = bd.PieceBoard(sq).Piece;
                     Rank normalRank = sq.Normalize(other).Rank();
                     IncrementBlockedPassedPawn(color, coefficients, blocker, normalRank - 1);
-                }
-
-                if (color == bd.SideToMove)
-                {
-                    SetTempoBonus(color, coefficients);
-                }
+                }            
             }
         }
 
