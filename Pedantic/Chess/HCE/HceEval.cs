@@ -96,6 +96,8 @@ namespace Pedantic.Chess.HCE
             score -= EvalMobility(board, evalInfo, Color.Black);
             score += EvalKingSafety(board, evalInfo, Color.White);
             score -= EvalKingSafety(board, evalInfo, Color.Black);
+            score += EvalPieces(board, evalInfo, Color.White);
+            score -= EvalPieces(board, evalInfo, Color.Black);
             score += EvalPassedPawns(board, evalInfo, Color.White);
             score -= EvalPassedPawns(board, evalInfo, Color.Black);
             score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
@@ -259,6 +261,21 @@ namespace Pedantic.Chess.HCE
                 Bitboard attacks = Board.GetPieceMoves(Piece.Rook, KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsOrthogonalMobility(mobility);
+            }
+
+            return score;
+        }
+
+        private static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
+        {
+            Score score = Score.Zero;
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+
+            if (board.Pieces(color, Piece.Bishop).PopCount >= 2)
+            {
+                score += wts.BishopPair;
             }
 
             return score;
