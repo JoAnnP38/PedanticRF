@@ -92,8 +92,8 @@ namespace Pedantic.Chess.HCE
             Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
             score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
             score += ProbePawnCache(board, evalInfo);
-            score += EvalPieces(board, evalInfo, Color.White);
-            score -= EvalPieces(board, evalInfo, Color.Black);
+            score += EvalMobility(board, evalInfo, Color.White);
+            score -= EvalMobility(board, evalInfo, Color.Black);
             score += EvalKingSafety(board, evalInfo, Color.White);
             score -= EvalKingSafety(board, evalInfo, Color.Black);
             score += EvalPassedPawns(board, evalInfo, Color.White);
@@ -193,7 +193,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
+        private static Score EvalMobility(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Color other = color.Flip();
             int c = (int)color;

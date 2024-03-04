@@ -455,6 +455,7 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
+                NodesVisited++;
                 bool checkingMove = board.IsChecked();
                 bool isQuiet = genMove.Move.IsQuiet;
                 ssItem.Move = genMove.Move;
@@ -472,8 +473,6 @@ namespace Pedantic.Chess
                     }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
                 }
-
-                NodesVisited++;
                 
                 if (expandedNodes == 1)
                 {
@@ -612,6 +611,7 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
+                NodesVisited++;
                 bool isCheckingMove = board.IsChecked();
 
                 if (!inCheck && !isCheckingMove && genMove.MovePhase == MoveGenPhase.BadCapture)
@@ -620,7 +620,6 @@ namespace Pedantic.Chess
                     continue;
                 }
 
-                NodesVisited++;
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = isCheckingMove;
 
