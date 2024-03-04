@@ -617,6 +617,14 @@ namespace Pedantic
             WriteLine();
             WriteLine("#endregion");
             WriteLine();
+            WriteLine("/* piece evaluations */");
+            WriteLine("#region piece evaluations");
+            WriteLine();
+            WriteLine("/* bishop pair */");
+            WriteWtLine(wts.BishopPair);
+            WriteLine();
+            WriteLine("#endregion");
+            WriteLine();
             WriteLine("/* tempo bonus for side to move */");
             WriteWtLine(wts[TEMPO]);
         }

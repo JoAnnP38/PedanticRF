@@ -1093,6 +1093,7 @@ namespace Pedantic.Chess
 
             if (qsPly >= UciOptions.RecaptureDepth)
             {
+                // TODO: create unit test for generating recaptures
                 info = new EvasionInfo(0, Bitboard.None, new Bitboard(ss[ply - 1].Move.To), Bitboard.None);
             }
             GenerateCaptures(kingIndex, list, in info);

@@ -122,6 +122,11 @@ namespace Pedantic.Tuning
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
 
+                if (bd.Pieces(color, Piece.Bishop).PopCount >= 2)
+                {
+                    IncrementBishopPair(color, coefficients);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -462,6 +467,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementBishopPair(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(BISHOP_PAIR))
+            {
+                v[BISHOP_PAIR] += Increment(color);
+            }
+            else
+            {
+                v.Add(BISHOP_PAIR, Increment(color));
             }
         }
 
