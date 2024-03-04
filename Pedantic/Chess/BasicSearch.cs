@@ -446,7 +446,6 @@ namespace Pedantic.Chess
             IEnumerable<GenMove> moves = inCheck ?
                 board.Moves(ply, history, ss, list, ttMove) :
                 board.EvasionMoves(ply, history, ss, list, ttMove);
-            //IEnumerable<GenMove> moves = board.Moves(ply, ss, list, ttMove);
 
             foreach (GenMove genMove in moves)
             {
@@ -613,9 +612,17 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
+                bool isCheckingMove = board.IsChecked();
+
+                if (!inCheck && !isCheckingMove && genMove.MovePhase == MoveGenPhase.BadCapture)
+                {
+                    board.UnmakeMoveNs();
+                    continue;
+                }
+
                 NodesVisited++;
                 ssItem.Move = genMove.Move;
-                ssItem.IsCheckingMove = board.IsChecked();
+                ssItem.IsCheckingMove = isCheckingMove;
 
                 score = -Quiesce(-beta, -alpha, ply + 1, qsPly + 1);
                 board.UnmakeMoveNs();
