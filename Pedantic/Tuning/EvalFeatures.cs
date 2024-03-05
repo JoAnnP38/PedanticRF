@@ -122,9 +122,19 @@ namespace Pedantic.Tuning
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
 
-                if (bd.Pieces(color, Piece.Bishop).PopCount >= 2)
+                Bitboard bishops = bd.Pieces(color, Piece.Bishop);
+                int bishopCount = bishops.PopCount;
+                if (bishopCount >= 2)
                 {
                     IncrementBishopPair(color, coefficients);
+                }
+                else if (bishopCount == 1)
+                {
+                    SquareIndex sq = (SquareIndex)bishops.TzCount;
+                    Bitboard badPawnMask = sq.IsDark() ? 
+                        (Bitboard)HceEval.DARK_SQUARES_MASK : (Bitboard)HceEval.LITE_SQUARES_MASK;
+                    int badPawnCount = (evalInfo[c].Pawns & badPawnMask).PopCount;
+                    IncrementBadBishopPawn(color, coefficients, badPawnCount);
                 }
 
                 if (color == bd.SideToMove)
@@ -479,6 +489,23 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(BISHOP_PAIR, Increment(color));
+            }
+        }
+
+        private static void IncrementBadBishopPawn(Color color, SparseArray<short> v, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            if (v.ContainsKey(BAD_BISHOP_PAWN))
+            {
+                v[BAD_BISHOP_PAWN] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v.Add(BAD_BISHOP_PAWN, (short)(count * Increment(color)));
             }
         }
 

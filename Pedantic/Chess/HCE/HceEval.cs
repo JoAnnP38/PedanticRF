@@ -9,6 +9,9 @@ namespace Pedantic.Chess.HCE
     public sealed class HceEval : IInitialize
     {
         public const int MAX_ATTACK_LEN = 16;
+        public const ulong DARK_SQUARES_MASK = 0xAA55AA55AA55AA55ul;
+        public const ulong LITE_SQUARES_MASK = 0x55AA55AA55AA55AAul;
+
 
         [InlineArray(MAX_ATTACK_LEN)]
         public struct AttackArray
@@ -273,9 +276,18 @@ namespace Pedantic.Chess.HCE
             int c = (int)color;
             int o = (int)other;
 
-            if (board.Pieces(color, Piece.Bishop).PopCount >= 2)
+            Bitboard bishops = board.Pieces(color, Piece.Bishop);
+            int bishopCount = bishops.PopCount;
+            if (bishopCount >= 2)
             {
                 score += wts.BishopPair;
+            }
+            else if (bishopCount == 1)
+            {
+                SquareIndex sq = (SquareIndex)bishops.TzCount;
+                Bitboard badPawnMask = sq.IsDark() ? (Bitboard)DARK_SQUARES_MASK : (Bitboard)LITE_SQUARES_MASK;
+                int badPawnCount = (evalInfo[c].Pawns & badPawnMask).PopCount;
+                score += badPawnCount * wts.BadBishopPawn;
             }
 
             return score;
