@@ -623,6 +623,9 @@ namespace Pedantic
             WriteLine("/* bishop pair */");
             WriteWtLine(wts.BishopPair);
             WriteLine();
+            WriteLine("/* bad bishop pawn */");
+            WriteWtLine(wts.BadBishopPawn);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
