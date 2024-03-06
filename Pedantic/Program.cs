@@ -626,6 +626,9 @@ namespace Pedantic
             WriteLine("/* bad bishop pawn */");
             WriteWtLine(wts.BadBishopPawn);
             WriteLine();
+            WriteLine("/* rook on open file */");
+            WriteWtLine(wts.RookOnOpenFile);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");

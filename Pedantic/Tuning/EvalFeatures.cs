@@ -32,6 +32,7 @@ namespace Pedantic.Tuning
                 KingBuckets kb = new (color, bd.KingIndex[color], bd.KingIndex[color.Flip()]);
                 Bitboard pawns = evalInfo[c].Pawns;
                 Bitboard otherPawns = evalInfo[o].Pawns;
+                Bitboard allPawns = pawns | otherPawns;
                 Bitboard pawnRams = (color == Color.White ? otherPawns >> 8 : otherPawns << 8);
 
                 foreach (SquareIndex from in bd.Units(color))
@@ -84,6 +85,14 @@ namespace Pedantic.Tuning
                         if ((pawns & HceEval.IsolatedPawnMasks[(int)from]) == 0)
                         {
                             IncrementIsolatedPawn(color, coefficients, normalFrom);
+                        }
+                    }
+                    else if (piece == Piece.Rook)
+                    {
+                        Bitboard fileMask = new Bitboard(from.File());
+                        if ((allPawns & fileMask) == 0)
+                        {
+                            IncrementRookOnOpenFile(color, coefficients);
                         }
                     }
                 }
@@ -506,6 +515,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(BAD_BISHOP_PAWN, (short)(count * Increment(color)));
+            }
+        }
+
+        private static void IncrementRookOnOpenFile(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(ROOK_ON_OPEN_FILE))
+            {
+                v[ROOK_ON_OPEN_FILE] += Increment(color);
+            }
+            else
+            {
+                v.Add(ROOK_ON_OPEN_FILE, Increment(color));
             }
         }
 

@@ -290,6 +290,19 @@ namespace Pedantic.Chess.HCE
                 score += badPawnCount * wts.BadBishopPawn;
             }
 
+            Bitboard pawns = evalInfo[c].Pawns;
+            Bitboard otherPawns = evalInfo[o].Pawns;
+            Bitboard allPawns = pawns | otherPawns;
+
+            foreach (SquareIndex sq in board.Pieces(color, Piece.Rook))
+            {
+                Bitboard fileMask = new Bitboard(sq.File());
+                if ((allPawns & fileMask) == 0)
+                {
+                    score += wts.RookOnOpenFile;
+                }
+            }
+
             return score;
         }
 
