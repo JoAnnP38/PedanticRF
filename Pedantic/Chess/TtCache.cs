@@ -20,11 +20,11 @@ namespace Pedantic.Chess
             private readonly ulong data;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public TtItem(ulong hash, short score, Bound bound, byte depth, byte age)
+            public TtItem(ulong hash, short score, Bound bound, sbyte depth, byte age)
                 : this(hash, score, bound, depth, age, Move.NullMove)
             { }
 
-            public TtItem(ulong hash, short score, Bound bound, byte depth, ushort age, Move bestMove)
+            public TtItem(ulong hash, short score, Bound bound, sbyte depth, ushort age, Move bestMove)
             {
                 data = ((ulong)bestMove & 0x01ffffffful)
                      | (((ulong)score & 0x0fffful) << 29)
@@ -43,7 +43,7 @@ namespace Pedantic.Chess
             public Move BestMove => (Move)(uint)BitOps.BitFieldExtract(data, 0, 29);
             public short Score => (short)BitOps.BitFieldExtract(data, 29, 16);
             public Bound Bound => (Bound)BitOps.BitFieldExtract(data, 45, 2);
-            public byte Depth => (byte)BitOps.BitFieldExtract(data, 47, 8);
+            public sbyte Depth => (sbyte)BitOps.BitFieldExtract(data, 47, 8);
             public ushort Age => (ushort)BitOps.BitFieldExtract(data, 55, 9);
         }
 
@@ -145,7 +145,7 @@ namespace Pedantic.Chess
                 bound = Bound.Lower;
             }
 
-            pTable[index] = new TtItem(hash, (short)score, bound, (byte)depth, generation, bestMove);
+            pTable[index] = new TtItem(hash, (short)score, bound, (sbyte)depth, generation, bestMove);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
