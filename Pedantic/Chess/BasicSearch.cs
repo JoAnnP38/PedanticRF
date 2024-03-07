@@ -3,7 +3,6 @@
 using Pedantic.Collections;
 using Pedantic.Utilities;
 using Pedantic.Chess.HCE;
-using Microsoft.VisualBasic.FileIO;
 
 namespace Pedantic.Chess
 {
@@ -466,10 +465,20 @@ namespace Pedantic.Chess
                 int R = 0;
                 if (!interesting)
                 {
-                    if (canPrune && depth <= UciOptions.LmpMaxDepth && expandedNodes > LMP[depth])
-                    {
-                        board.UnmakeMoveNs();
-                        continue;                    
+                    if (canPrune)
+                    { 
+                        if (depth <= UciOptions.FutMaxDepth && !genMove.Move.IsPawnMove && 
+                            evaluation + depth * UciOptions.FutMargin < alpha)
+                        {
+                            board.UnmakeMoveNs();
+                            continue;
+                        }
+
+                        if (depth <= UciOptions.LmpMaxDepth && expandedNodes > LMP[depth])
+                        {
+                            board.UnmakeMoveNs();
+                            continue;                    
+                        }
                     }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
                 }
@@ -806,7 +815,7 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static sbyte NmpReduction(int depth)
         {
-            return (sbyte)(depth < 3 ? 0 : UciOptions.NmpBaseDeduction + Math.Max(depth - 3, 0) / UciOptions.NmpIncDivisor);
+            return (sbyte)(depth < 3 ? 0 : UciOptions.NmpBaseReduction + Math.Max(depth - 3, 0) / UciOptions.NmpIncDivisor);
         }
 
         #endregion

@@ -34,7 +34,7 @@ namespace Pedantic.Chess
         internal const string OPT_QS_RECAPTURE_DEPTH = "UCI_T_QS_RecaptureDepth";
         internal const string OPT_QS_PROMOTION_DEPTH = "UCI_T_QS_PromotionDepth";
         internal const string OPT_NMP_MIN_DEPTH = "UCI_T_NMP_MinDepth";
-        internal const string OPT_NMP_BASE_DEDUCTION = "UCI_T_NMP_BaseDeduction";
+        internal const string OPT_NMP_BASE_REDUCTION = "UCI_T_NMP_BaseReduction";
         internal const string OPT_NMP_INC_DIVISOR = "UCI_T_NMP_IncDivisor";
         internal const string OPT_LMR_DEPTH_FACTOR = "UCI_T_LMR_DepthFactor";
         internal const string OPT_LMR_MOVE_FACTOR = "UCI_T_LMR_MoveFactor";
@@ -43,14 +43,52 @@ namespace Pedantic.Chess
         internal const string OPT_RFP_MARGIN = "UCI_T_RFP_Margin";
         internal const string OPT_LMP_MAX_DEPTH = "UCI_T_LMP_MaxDepth";
         internal const string OPT_LMP_DEPTH_INCREMENT = "UCI_T_LMP_DepthIncrement";
+        internal const string OPT_FUT_MAX_DEPTH = "UCI_T_FUT_MaxDepth";
+        internal const string OPT_FUT_MARGIN = "UCI_T_FUT_Margin";
 
         static UciOptions()
         {
-            options = new(initialOptions.Length, StringComparer.InvariantCultureIgnoreCase);
-            foreach (var opt in initialOptions)
+            options = new(StringComparer.InvariantCultureIgnoreCase)
             {
-                options.Add(opt.Name, opt);
-            }
+                { clearHash.Name, clearHash },
+                { engineAbout.Name, engineAbout },
+                { opponent.Name, opponent },
+                { contempt.Name, contempt },
+                { evalFile.Name, evalFile },
+                { hashTableSize.Name, hashTableSize },
+                { moveOverhead.Name, moveOverhead },
+                { ownBook.Name, ownBook },
+                { ponder.Name, ponder },
+                { randomSearch.Name, randomSearch },
+                { syzygyPath.Name, syzygyPath },
+                { syzygyProbeRoot.Name, syzygyProbeRoot },
+                { syzygyProbeDepth.Name, syzygyProbeDepth },
+                { threads.Name, threads },
+                { analyseMode.Name, analyseMode },
+                { tmBranchFactor.Name, tmBranchFactor },
+                { tmDefMovesToGo.Name, tmDefMovesToGo },
+                { tmDefMovesToGoPonder.Name, tmDefMovesToGoPonder },
+                { tmDefMovesToGoSuddenDeath.Name, tmDefMovesToGoPonder },
+                { tmAbsoluteLimit.Name, tmAbsoluteLimit },
+                { tmDifficultyMin.Name, tmDifficultyMin },
+                { tmDifficultyMax.Name, tmDifficultyMax },
+                { aspMinDepth.Name, aspMinDepth },
+                { oneMoveMaxDepth.Name, oneMoveMaxDepth },
+                { recaptureDepth.Name, recaptureDepth },
+                { promotionDepth.Name, promotionDepth },
+                { nmpMinDepth.Name, nmpMinDepth },
+                { nmpBaseReduction.Name, nmpBaseReduction },
+                { nmpIncDivisor.Name, nmpIncDivisor },
+                { lmrDepthFactor.Name, lmrDepthFactor },
+                { lmrMoveFactor.Name, lmrMoveFactor },
+                { lmrScaleFactor.Name, lmrScaleFactor },
+                { rfpMaxDepth.Name, rfpMaxDepth },
+                { rfpMargin.Name, rfpMargin },
+                { lmpMaxDepth.Name, lmpMaxDepth },
+                { lmpDepthIncrement.Name, lmpDepthIncrement },
+                { futMaxDepth.Name, futMaxDepth },
+                { futMargin.Name, futMargin }
+            };
         }
 
         public static int Contempt
@@ -58,8 +96,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_CONTEMPT];
-                return opt.CurrentValue;
+                return contempt.CurrentValue;
             }
         }
 
@@ -68,8 +105,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionString opt = (UciOptionString)options[OPT_EVAL_FILE];
-                return opt.CurrentValue;
+                return evalFile.CurrentValue;
             }
         }
 
@@ -78,15 +114,13 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_HASH_TABLE_SIZE];
-                return opt.CurrentValue;
+                return hashTableSize.CurrentValue;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_HASH_TABLE_SIZE];
-                opt.CurrentValue = value;
+                hashTableSize.CurrentValue = value;
             }
         }
 
@@ -95,8 +129,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_MOVE_OVERHEAD];
-                return opt.CurrentValue;
+                return moveOverhead.CurrentValue;
             }
         }
 
@@ -105,8 +138,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionCheck opt = (UciOptionCheck)options[OPT_OWN_BOOK];
-                return opt.CurrentValue;
+                return ownBook.CurrentValue;
             }
         }
 
@@ -115,8 +147,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionCheck opt = (UciOptionCheck)options[OPT_PONDER];
-                return opt.CurrentValue;
+                return ponder.CurrentValue;
             }
         }
 
@@ -125,8 +156,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionCheck opt = (UciOptionCheck)options[OPT_RANDOM_SEARCH];
-                return opt.CurrentValue;
+                return randomSearch.CurrentValue;
             }
         }
 
@@ -135,8 +165,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionString opt = (UciOptionString)options[OPT_SYZYGY_PATH];
-                return opt.CurrentValue;
+                return syzygyPath.CurrentValue;
             }
         }
 
@@ -145,8 +174,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionCheck opt = (UciOptionCheck)options[OPT_SYZYGY_PROBE_ROOT];
-                return opt.CurrentValue;
+                return syzygyProbeRoot.CurrentValue;
             }
         }
 
@@ -155,8 +183,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_SYZYGY_PROBE_DEPTH];
-                return opt.CurrentValue;
+                return syzygyProbeDepth.CurrentValue;
             }
         }
 
@@ -165,8 +192,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_THREADS];
-                return opt.CurrentValue;
+                return threads.CurrentValue;
             }
         }
 
@@ -174,8 +200,7 @@ namespace Pedantic.Chess
         {
             get
             {
-                UciOptionCheck opt = (UciOptionCheck)options[OPT_ANALYSE_MODE];
-                return opt.CurrentValue;
+                return analyseMode.CurrentValue;
             }
         }
 
@@ -184,8 +209,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_BRANCH_FACTOR];
-                return opt.CurrentValue;
+                return tmBranchFactor.CurrentValue;
             }
         }
 
@@ -194,8 +218,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_DEF_MOVES_TO_GO];
-                return opt.CurrentValue;
+                return tmDefMovesToGo.CurrentValue;
             }
         }
 
@@ -204,8 +227,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_DEF_MOVES_TO_GO_PONDER];
-                return opt.CurrentValue;
+                return tmDefMovesToGoPonder.CurrentValue;
             }
         }
 
@@ -214,8 +236,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH];
-                return opt.CurrentValue;
+                return tmDefMovesToGoSuddenDeath.CurrentValue;
             }
         }
 
@@ -224,8 +245,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_ABSOLUTE_LIMIT];
-                return opt.CurrentValue;
+                return tmAbsoluteLimit.CurrentValue;
             }
         }
 
@@ -234,8 +254,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_DIFFICULTY_MIN];
-                return opt.CurrentValue;
+                return tmDifficultyMin.CurrentValue;
             }
         }
 
@@ -244,8 +263,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_TM_DIFFICULTY_MAX];
-                return opt.CurrentValue;
+                return tmDifficultyMax.CurrentValue;
             }
         }
 
@@ -254,8 +272,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_ASP_MIN_DEPTH];
-                return opt.CurrentValue;
+                return aspMinDepth.CurrentValue;
             }
         }
 
@@ -264,8 +281,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_ONE_MOVE_MAX_DEPTH];
-                return opt.CurrentValue;
+                return oneMoveMaxDepth.CurrentValue;
             }
         }
 
@@ -274,8 +290,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_QS_RECAPTURE_DEPTH];
-                return opt.CurrentValue;
+                return recaptureDepth.CurrentValue;
             }
         }
 
@@ -284,8 +299,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_QS_PROMOTION_DEPTH];
-                return opt.CurrentValue;
+                return promotionDepth.CurrentValue;
             }
         }
 
@@ -294,18 +308,16 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_MIN_DEPTH];
-                return opt.CurrentValue;
+                return nmpMinDepth.CurrentValue;
             }
         }
 
-        public static int NmpBaseDeduction
+        public static int NmpBaseReduction
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_BASE_DEDUCTION];
-                return opt.CurrentValue;
+                return nmpBaseReduction.CurrentValue;
             }
         }
 
@@ -314,8 +326,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_NMP_INC_DIVISOR];
-                return opt.CurrentValue;
+                return nmpIncDivisor.CurrentValue;
             }
         }
 
@@ -324,8 +335,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_DEPTH_FACTOR];
-                return opt.CurrentValue;
+                return lmrDepthFactor.CurrentValue;
             }
         }
 
@@ -334,8 +344,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_MOVE_FACTOR];
-                return opt.CurrentValue;
+                return lmrMoveFactor.CurrentValue;
             }
         }
 
@@ -344,8 +353,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMR_SCALE_FACTOR];
-                return opt.CurrentValue;
+                return lmrScaleFactor.CurrentValue;
             }
         }
 
@@ -354,8 +362,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_RFP_MAX_DEPTH];
-                return opt.CurrentValue;
+                return rfpMaxDepth.CurrentValue;
             }
         }
 
@@ -364,8 +371,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_RFP_MARGIN];
-                return opt.CurrentValue;
+                return rfpMargin.CurrentValue;
             }
         }
 
@@ -374,8 +380,7 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMP_MAX_DEPTH];
-                return opt.CurrentValue;
+                return lmpMaxDepth.CurrentValue;
             }
         }
 
@@ -384,8 +389,25 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                UciOptionSpin opt = (UciOptionSpin)options[OPT_LMP_DEPTH_INCREMENT];
-                return opt.CurrentValue;
+                return lmpDepthIncrement.CurrentValue;
+            }
+        }
+
+        public static int FutMaxDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return futMaxDepth.CurrentValue;
+            }
+        }
+
+        public static int FutMargin
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return futMargin.CurrentValue;
             }
         }
 
@@ -466,44 +488,43 @@ namespace Pedantic.Chess
         private static readonly SortedList<string, UciOptionBase> options;
 
         // UCI Options
-        private static readonly UciOptionBase[] initialOptions =
-        [
-            new UciOptionButton(OPT_CLEAR_HASH),
-            new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50),
-            new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce"),
-            new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048),
-            new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000),
-            new UciOptionCheck(OPT_OWN_BOOK, false),
-            new UciOptionCheck(OPT_PONDER, false),
-            new UciOptionCheck(OPT_RANDOM_SEARCH, false),
-            new UciOptionString(OPT_SYZYGY_PATH, string.Empty),
-            new UciOptionCheck(OPT_SYZYGY_PROBE_ROOT, true),
-            new UciOptionSpin(OPT_SYZYGY_PROBE_DEPTH, 2, 1, MAX_PLY - 1),
-            new UciOptionSpin(OPT_THREADS, 1, 1, Environment.ProcessorCount),
-            new UciOptionCheck(OPT_ANALYSE_MODE, false),
-            new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}"),
-            new UciOptionString(OPT_OPPONENT, "none none computer generic engine"),
-            new UciOptionSpin(OPT_TM_BRANCH_FACTOR, 30, 20, 40),
-            new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO, 30, 20, 40),
-            new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO_PONDER, 35, 20, 40),
-            new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH, 40, 20, 40),
-            new UciOptionSpin(OPT_TM_ABSOLUTE_LIMIT, 5, 2, 8),
-            new UciOptionSpin(OPT_TM_DIFFICULTY_MIN, 60, 0, 60),
-            new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300),
-            new UciOptionSpin(OPT_ASP_MIN_DEPTH, 6, 1, 10),
-            new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 10, 1, 20),
-            new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8),
-            new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8),
-            new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6),
-            new UciOptionSpin(OPT_NMP_BASE_DEDUCTION, 3, 1, 8),
-            new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8),
-            new UciOptionSpin(OPT_LMR_DEPTH_FACTOR, 18, 10, 30),
-            new UciOptionSpin(OPT_LMR_MOVE_FACTOR, 10, 5, 20),
-            new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 20, 10, 30),
-            new UciOptionSpin(OPT_RFP_MAX_DEPTH, 6, 4, 12),
-            new UciOptionSpin(OPT_RFP_MARGIN, 85, 25, 250),
-            new UciOptionSpin(OPT_LMP_MAX_DEPTH, 6, 1, 10),
-            new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 1, 0, 5)
-        ];
+        private static UciOptionButton clearHash = new UciOptionButton(OPT_CLEAR_HASH);
+        private static UciOptionString engineAbout = new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}");
+        private static UciOptionString opponent = new UciOptionString(OPT_OPPONENT, "none none computer generic engine");
+        private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
+        private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
+        private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048);
+        private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000);
+        private static UciOptionCheck ownBook = new UciOptionCheck(OPT_OWN_BOOK, false);
+        private static UciOptionCheck ponder = new UciOptionCheck(OPT_PONDER, false);
+        private static UciOptionCheck randomSearch = new UciOptionCheck(OPT_RANDOM_SEARCH, false);
+        private static UciOptionString syzygyPath = new UciOptionString(OPT_SYZYGY_PATH, string.Empty);
+        private static UciOptionCheck syzygyProbeRoot = new UciOptionCheck(OPT_SYZYGY_PROBE_ROOT, true);
+        private static UciOptionSpin syzygyProbeDepth = new UciOptionSpin(OPT_SYZYGY_PROBE_DEPTH, 2, 1, MAX_PLY - 1);
+        private static UciOptionSpin threads = new UciOptionSpin(OPT_THREADS, 1, 1, Environment.ProcessorCount);
+        private static UciOptionCheck analyseMode = new UciOptionCheck(OPT_ANALYSE_MODE, false);
+        private static UciOptionSpin tmBranchFactor = new UciOptionSpin(OPT_TM_BRANCH_FACTOR, 30, 20, 40);
+        private static UciOptionSpin tmDefMovesToGo = new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO, 30, 20, 40);
+        private static UciOptionSpin tmDefMovesToGoPonder = new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO_PONDER, 35, 20, 40);
+        private static UciOptionSpin tmDefMovesToGoSuddenDeath = new UciOptionSpin(OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH, 40, 20, 40);
+        private static UciOptionSpin tmAbsoluteLimit = new UciOptionSpin(OPT_TM_ABSOLUTE_LIMIT, 5, 2, 8);
+        private static UciOptionSpin tmDifficultyMin = new UciOptionSpin(OPT_TM_DIFFICULTY_MIN, 60, 0, 60);
+        private static UciOptionSpin tmDifficultyMax = new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300);
+        private static UciOptionSpin aspMinDepth = new UciOptionSpin(OPT_ASP_MIN_DEPTH, 6, 1, 10);
+        private static UciOptionSpin oneMoveMaxDepth = new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 10, 1, 20);
+        private static UciOptionSpin recaptureDepth = new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8);
+        private static UciOptionSpin promotionDepth = new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8);
+        private static UciOptionSpin nmpMinDepth = new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6);
+        private static UciOptionSpin nmpBaseReduction = new UciOptionSpin(OPT_NMP_BASE_REDUCTION, 3, 1, 8);
+        private static UciOptionSpin nmpIncDivisor = new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8);
+        private static UciOptionSpin lmrDepthFactor = new UciOptionSpin(OPT_LMR_DEPTH_FACTOR, 18, 10, 30);
+        private static UciOptionSpin lmrMoveFactor = new UciOptionSpin(OPT_LMR_MOVE_FACTOR, 10, 5, 20);
+        private static UciOptionSpin lmrScaleFactor = new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 20, 10, 30);
+        private static UciOptionSpin rfpMaxDepth = new UciOptionSpin(OPT_RFP_MAX_DEPTH, 6, 4, 12);
+        private static UciOptionSpin rfpMargin = new UciOptionSpin(OPT_RFP_MARGIN, 85, 25, 250);
+        private static UciOptionSpin lmpMaxDepth = new UciOptionSpin(OPT_LMP_MAX_DEPTH, 6, 1, 10);
+        private static UciOptionSpin lmpDepthIncrement = new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 1, 0, 5);
+        private static UciOptionSpin futMaxDepth = new UciOptionSpin(OPT_FUT_MAX_DEPTH, 7, 1, 10);
+        private static UciOptionSpin futMargin = new UciOptionSpin(OPT_FUT_MARGIN, 70, 35, 200);
     }
 }
