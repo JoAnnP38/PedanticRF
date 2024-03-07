@@ -629,6 +629,9 @@ namespace Pedantic
             WriteLine("/* rook on open file */");
             WriteWtLine(wts.RookOnOpenFile);
             WriteLine();
+            WriteLine("/* rook on half-open file */");
+            WriteWtLine(wts.RookOnHalfOpenFile);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");

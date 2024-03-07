@@ -94,6 +94,11 @@ namespace Pedantic.Tuning
                         {
                             IncrementRookOnOpenFile(color, coefficients);
                         }
+
+                        if ((pawns & fileMask) == 0 && (otherPawns & fileMask) != 0)
+                        {
+                            IncrementRookOnHalfOpenFile(color, coefficients);
+                        }
                     }
                 }
 
@@ -527,6 +532,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(ROOK_ON_OPEN_FILE, Increment(color));
+            }
+        }
+
+        private static void IncrementRookOnHalfOpenFile(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(ROOK_ON_HALF_OPEN_FILE))
+            {
+                v[ROOK_ON_HALF_OPEN_FILE] += Increment(color);
+            }
+            else
+            {
+                v.Add(ROOK_ON_HALF_OPEN_FILE, Increment(color));
             }
         }
 

@@ -108,5 +108,16 @@ namespace Pedantic.UnitTests
             Program.ParseUciCommand("go wtime 15000 winc 100 btime 15000 binc 100");
             Program.ParseUciCommand("wait");
         }
+
+        [TestMethod]
+        public void BlindToCheckmateTest()
+        {
+            Program.ParseUciCommand("uci");
+            Program.ParseUciCommand("isready");
+            Program.ParseUciCommand("ucinewgame");
+            Program.ParseUciCommand("position fen 1r1r2k1/3p1ppp/1N1bpB2/1P6/2P1bq2/P7/2B1QPPP/R4RK1 w - - 0 20");
+            Program.ParseUciCommand("go depth 4");
+            Program.ParseUciCommand("wait");
+        }
     }
 }
