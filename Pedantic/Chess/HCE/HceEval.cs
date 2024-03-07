@@ -301,6 +301,11 @@ namespace Pedantic.Chess.HCE
                 {
                     score += wts.RookOnOpenFile;
                 }
+
+                if ((pawns & fileMask) == 0 && (otherPawns & fileMask) != 0)
+                {
+                    score += wts.RookOnHalfOpenFile;
+                }
             }
 
             return score;
