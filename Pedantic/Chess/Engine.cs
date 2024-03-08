@@ -1,6 +1,5 @@
-﻿using System.IO;
-using Pedantic.Chess.HCE;
-using Pedantic.Collections;
+﻿using Pedantic.Chess.HCE;
+using Pedantic.Tablebase;
 using Pedantic.Utilities;
 
 namespace Pedantic.Chess
@@ -255,6 +254,72 @@ namespace Pedantic.Chess
             return null;
         }
 
+        private static bool ProbeRootTb(Board board, out Move move, out TbGameResult gameResult)
+        {
+            move = Move.NullMove;
+            gameResult = TbGameResult.Draw;
+            if (UciOptions.SyzygyProbeRoot && Syzygy.IsInitialized && BitOps.PopCount(board.All) <= Syzygy.TbLargest)
+            {
+                MoveList moveList = new();
+                board.GenerateMoves(moveList);
+                TbResult result = Syzygy.ProbeRoot(board.WhitePieces, board.BlackPieces,
+                    board.Kings, board.Queens, board.Rooks, board.Bishops, board.Knights, board.Pawns,
+                    board.HalfMoveClock, (uint)board.Castling, 
+                    (uint)(board.EnPassantValidated != SquareIndex.None ? board.EnPassantValidated : 0),
+                    board.SideToMove == Color.White, null);
+
+                gameResult = result.Wdl;
+                SquareIndex from = (SquareIndex)result.From;
+                SquareIndex to = (SquareIndex)result.To;
+                uint tbPromotes = result.Promotes;
+                Piece promote = (Piece)(5 - tbPromotes);
+                promote = promote == Piece.King ? Piece.None : promote;
+
+                for (int n = 0; n < moveList.Count; n++)
+                {
+                    move = moveList[n];
+                    if (move.From == from && move.To == to && move.Promote == promote)
+                    {
+                        if (board.MakeMove(move))
+                        {
+                            board.UnmakeMove();
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool ProbePvTb(Board board, Span<Move> pv, out int pvLen, out int score)
+        {
+            pvLen = 0; score = 0;
+            if (ProbeRootTb(board, out Move move, out TbGameResult gameResult))
+            {
+                Board clone = board.Clone();
+                for (int ply = 0; ply < pv.Length; ply++)
+                {
+                    pv[pvLen++] = move;
+                    clone.MakeMove(move);
+                    if (!ProbeRootTb(clone, out move, out _))
+                    {
+                        break;
+                    }
+                }
+                score = gameResult switch
+                {
+                    TbGameResult.Loss       => -CHECKMATE_SCORE,
+                    TbGameResult.BlessedLoss=> -CHECKMATE_SCORE,
+                    TbGameResult.Draw       => 0,
+                    TbGameResult.CursedWin  => CHECKMATE_SCORE,
+                    TbGameResult.Win        => CHECKMATE_SCORE,
+                    _ => 0
+                };
+                return true;
+            }
+            return false;
+        }
+
         public static void Bench(int depth, bool extend)
         {
             long totalNodes = 0;
@@ -280,6 +345,14 @@ namespace Pedantic.Chess
 
         private static void StartSearch(int maxDepth, long maxNodes)
         {
+            Span<Move> pv = stackalloc Move[12];
+            if (ProbePvTb(Board, pv, out int pvLen, out int score))
+            {
+                Uci.Default.Info(1, 1, score, pvLen, 0, pv.Slice(0, pvLen).ToArray(), TtCache.Default.Usage, pvLen);
+                Uci.Default.BestMove(pv[0], Move.NullMove);
+                return;
+            }
+
             if (UciOptions.AnalyseMode)
             {
                 ClearHashTable();

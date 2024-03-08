@@ -1,11 +1,11 @@
 ﻿using System.CommandLine;
 using System.Globalization;
-using System.IO;
 using System.Text;
 using Pedantic.Chess;
 using Pedantic.Tuning;
-
+using Pedantic.Tablebase;
 using Pedantic.Chess.HCE;
+
 using static Pedantic.Chess.HCE.Weights;
 
 namespace Pedantic
@@ -251,6 +251,25 @@ namespace Pedantic
 
                     case "threads":
                         Engine.SearchThreads = UciOptions.Threads;
+                        break;
+
+                    case "syzygypath":
+                        string path = UciOptions.SyzygyPath;
+                        if (path != string.Empty && string.Compare(path, "<empty>", true) != 0)
+                        {
+                            if (!Path.Exists(path))
+                            {
+                                Uci.Default.Log($"Ignoring specified SyzygyPath: '{path}'. Path doesn't exist.");
+                            }
+                            else
+                            {
+                                bool result = Syzygy.Initialize(path);
+                                if (!result)
+                                {
+                                    Uci.Default.Log($"Could not locate valid Syzygy tablebase files at '{path}'.");
+                                }
+                            }
+                        }
                         break;
 
                     default:
