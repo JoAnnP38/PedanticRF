@@ -3,6 +3,7 @@
 using Pedantic.Collections;
 using Pedantic.Utilities;
 using Pedantic.Chess.HCE;
+using Pedantic.Tablebase;
 
 namespace Pedantic.Chess
 {
@@ -394,6 +395,11 @@ namespace Pedantic.Chess
                 ttMove = ttItem.BestMove;
             }
 
+            if (ProbeTb(depth, ply, alpha, beta, out score))
+            {
+                return score;
+            }
+
             if (!inCheck)
             {
                 evaluation = ssItem.Eval = eval.Compute(board);
@@ -691,6 +697,50 @@ namespace Pedantic.Chess
             return bestScore;
         }
 
+        private bool ProbeTb(int depth, int ply, int alpha, int beta, out int score)
+        {
+            score = 0;
+            if (Syzygy.IsInitialized && depth >= UciOptions.SyzygyProbeDepth && 
+                /*board.HalfMoveClock == 0 && board.Castling == CastlingRights.None &&*/
+                BitOps.PopCount(board.All) <= Syzygy.TbLargest)
+            {
+                TbResult result = Syzygy.ProbeWdl(board.WhitePieces, board.BlackPieces, 
+                    board.Kings, board.Queens, board.Rooks, board.Bishops, board.Knights, board.Pawns,
+                    board.HalfMoveClock, (uint)board.Castling, (uint)(board.EnPassantValidated != SquareIndex.None ? board.EnPassantValidated : 0), 
+                    board.SideToMove == Color.White);
+
+                if (result == TbResult.TbFailure)
+                {
+                    return false;
+                }
+
+                tbHits++;
+                Bound bound = Bound.Exact;
+                if (result.Wdl == TbGameResult.Win)
+                {
+                    score = TABLEBASE_WIN - ply;
+                    bound = Bound.Lower;
+                }
+                else if (result.Wdl == TbGameResult.Loss)
+                {
+                    score = TABLEBASE_LOSS + ply;
+                    bound = Bound.Upper;
+                }
+                else
+                {
+                    score = (int)result.Wdl;
+                }
+
+                if (bound == Bound.Exact || 
+                    (bound == Bound.Upper && score <= alpha) || (bound == Bound.Lower && score >= beta))
+                {
+                    ttCache.Store(board.Hash, MAX_PLY, ply, alpha, beta, score, Move.NullMove);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private void SetAspWindow(int depth, int iAlpha, int iBeta, out int alpha, out int beta)
         {
             alpha = -INFINITE_WINDOW;
@@ -707,7 +757,7 @@ namespace Pedantic.Chess
         {
             if (Depth >= UciOptions.AspMinDepth)
             {
-                Uci.Info(Depth, SelDepth, score, NodesVisited, clock.Elapsed, PV, ttCache.Usage, 0, bound);
+                Uci.Info(Depth, SelDepth, score, NodesVisited, clock.Elapsed, PV, ttCache.Usage, tbHits, bound);
             }
             if (bound == Bound.Lower)
             {
@@ -776,11 +826,11 @@ namespace Pedantic.Chess
 
             if (IsCheckmate(Score, out int mateIn))
             {
-                Uci.InfoMate(Depth, SelDepth, mateIn, NodesVisited, Elapsed, pv, ttCache.Usage, 0);
+                Uci.InfoMate(Depth, SelDepth, mateIn, NodesVisited, Elapsed, pv, ttCache.Usage, tbHits);
             }
             else
             {
-                Uci.Info(Depth, SelDepth, Score, NodesVisited, Elapsed, pv, ttCache.Usage, 0);
+                Uci.Info(Depth, SelDepth, Score, NodesVisited, Elapsed, pv, ttCache.Usage, tbHits);
             }
         }
 
@@ -862,6 +912,7 @@ namespace Pedantic.Chess
         private bool startReporting = false;
         private DateTime startDateTime = DateTime.MinValue;
         private int rootChanges = 0;
+        private long tbHits = 0;
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
         internal static readonly sbyte[] LMP = new sbyte[LMP_MAX_DEPTH_CUTOFF];
