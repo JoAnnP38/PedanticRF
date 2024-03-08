@@ -1,5 +1,6 @@
 uci
 setoption name Hash value 128
+setoption name SyzygyPath value c:/tb/syzygy/3-4-5-6/
 ucinewgame
 isready
 position fen r7/6k1/1p6/2pp1p2/7Q/8/p1P2K1P/8 w - - 0 32
