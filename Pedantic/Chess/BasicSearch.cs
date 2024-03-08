@@ -484,23 +484,6 @@ namespace Pedantic.Chess
                             board.UnmakeMoveNs();
                             continue;                    
                         }
-
-                        if (depth <= UciOptions.SeeMaxDepth)
-                        {
-                            int captureValue = genMove.Move.Capture.Value();
-                            if (genMove.MovePhase == MoveGenPhase.BadCapture &&
-                                (depth <= 1 || board.See1(genMove.Move) - captureValue > (depth - 1) * UciOptions.SeeCaptureMargin))
-                            {
-                                board.UnmakeMoveNs();
-                                continue;
-                            }
-                            else if (genMove.MovePhase == MoveGenPhase.Quiet &&
-                                board.See1(genMove.Move) > depth * UciOptions.SeeQuietMargin)
-                            {
-                                board.UnmakeMoveNs();
-                                continue;
-                            }
-                        }
                     }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
                 }

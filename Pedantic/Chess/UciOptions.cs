@@ -46,9 +46,6 @@ namespace Pedantic.Chess
         internal const string OPT_FUT_MAX_DEPTH = "UCI_T_FUT_MaxDepth";
         internal const string OPT_FUT_MARGIN = "UCI_T_FUT_Margin";
         internal const string OPT_IIR_MIN_DEPTH = "UCI_T_IIR_MinDepth";
-        internal const string OPT_SEE_MAX_DEPTH = "UCI_T_SEE_MaxDepth";
-        internal const string OPT_SEE_CAPTURE_MARGIN = "UCI_T_SEE_CaptureMargin";
-        internal const string OPT_SEE_QUIET_MARGIN = "UCI_T_SEE_QuietMargin";
 
         static UciOptions()
         {
@@ -92,10 +89,7 @@ namespace Pedantic.Chess
                 { lmpDepthIncrement.Name, lmpDepthIncrement },
                 { futMaxDepth.Name, futMaxDepth },
                 { futMargin.Name, futMargin },
-                { iirMinDepth.Name, iirMinDepth },
-                { seeMaxDepth.Name, seeMaxDepth },
-                { seeCaptureMargin.Name, seeCaptureMargin },
-                { seeQuietMargin.Name, seeQuietMargin }
+                { iirMinDepth.Name, iirMinDepth }
             };
         }
 
@@ -428,33 +422,6 @@ namespace Pedantic.Chess
             }
         }
 
-        public static int SeeMaxDepth
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return seeMaxDepth.CurrentValue;
-            }
-        }
-
-        public static int SeeCaptureMargin
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return seeCaptureMargin.CurrentValue;
-            }
-        }
-
-        public static int SeeQuietMargin
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return seeQuietMargin.CurrentValue;
-            }
-        }
-
         public static void WriteLine()
         {
             foreach (var kvp in options)
@@ -571,8 +538,5 @@ namespace Pedantic.Chess
         private static UciOptionSpin futMaxDepth = new UciOptionSpin(OPT_FUT_MAX_DEPTH, 7, 1, 10);
         private static UciOptionSpin futMargin = new UciOptionSpin(OPT_FUT_MARGIN, 70, 35, 200);
         private static UciOptionSpin iirMinDepth = new UciOptionSpin(OPT_IIR_MIN_DEPTH, 5, 1, 10);
-        private static UciOptionSpin seeMaxDepth = new UciOptionSpin(OPT_SEE_MAX_DEPTH, 7, 1, 12);
-        private static UciOptionSpin seeCaptureMargin = new UciOptionSpin(OPT_SEE_CAPTURE_MARGIN, 100, 25, 200);
-        private static UciOptionSpin seeQuietMargin = new UciOptionSpin(OPT_SEE_QUIET_MARGIN, 60, 25, 200);
     }
 }
