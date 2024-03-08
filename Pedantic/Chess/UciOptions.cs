@@ -45,6 +45,7 @@ namespace Pedantic.Chess
         internal const string OPT_LMP_DEPTH_INCREMENT = "UCI_T_LMP_DepthIncrement";
         internal const string OPT_FUT_MAX_DEPTH = "UCI_T_FUT_MaxDepth";
         internal const string OPT_FUT_MARGIN = "UCI_T_FUT_Margin";
+        internal const string OPT_IIR_MIN_DEPTH = "UCI_T_IIR_MinDepth";
 
         static UciOptions()
         {
@@ -87,7 +88,8 @@ namespace Pedantic.Chess
                 { lmpMaxDepth.Name, lmpMaxDepth },
                 { lmpDepthIncrement.Name, lmpDepthIncrement },
                 { futMaxDepth.Name, futMaxDepth },
-                { futMargin.Name, futMargin }
+                { futMargin.Name, futMargin },
+                { iirMinDepth.Name, iirMinDepth }
             };
         }
 
@@ -411,6 +413,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int IirMinDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return iirMinDepth.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var kvp in options)
@@ -526,5 +537,6 @@ namespace Pedantic.Chess
         private static UciOptionSpin lmpDepthIncrement = new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 1, 0, 5);
         private static UciOptionSpin futMaxDepth = new UciOptionSpin(OPT_FUT_MAX_DEPTH, 7, 1, 10);
         private static UciOptionSpin futMargin = new UciOptionSpin(OPT_FUT_MARGIN, 70, 35, 200);
+        private static UciOptionSpin iirMinDepth = new UciOptionSpin(OPT_IIR_MIN_DEPTH, 5, 1, 10);
     }
 }

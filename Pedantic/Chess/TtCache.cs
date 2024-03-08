@@ -20,6 +20,10 @@ namespace Pedantic.Chess
             private readonly ulong data;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public TtItem() : this(0, 0, Bound.None, 0, 0, Move.NullMove)
+            { }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TtItem(ulong hash, short score, Bound bound, sbyte depth, byte age)
                 : this(hash, score, bound, depth, age, Move.NullMove)
             { }
@@ -179,7 +183,7 @@ namespace Pedantic.Chess
         {
             if (!GetProbeIndex(hash, out int index))
             {
-                item = default;
+                item = new TtItem();
                 return false;
             }
             item = pTable[index];

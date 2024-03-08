@@ -436,6 +436,11 @@ namespace Pedantic.Chess
                 }
             }
 
+            if (!inCheck && depth >= UciOptions.IirMinDepth && ttMove == Move.NullMove)
+            {
+                depth--;
+            }
+
             Move bestMove = Move.NullMove;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
             history.SetContext(ply);
