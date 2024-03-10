@@ -151,7 +151,7 @@ namespace Pedantic.Tuning
                     IncrementBadBishopPawn(color, coefficients, badPawnCount);
                 }
 
-                Bitboard targets = bd.Units(other).AndNot(otherPawns | bd.Kings);
+                Bitboard targets = bd.Units(other).AndNot(otherPawns);
                 Bitboard pushAttacks;
                 
                 if (color == Color.White)
@@ -171,6 +171,12 @@ namespace Pedantic.Tuning
                 {
                     Piece threatenedPiece = bd.PieceBoard(sq).Piece;
                     IncrementPushedPawnThreat(color, coefficients, threatenedPiece);
+                }
+
+                foreach (SquareIndex sq in evalInfo[c].PawnAttacks & targets)
+                {
+                    Piece threatenedPiece = bd.PieceBoard(sq).Piece;
+                    IncrementPawnThreat(color, coefficients, threatenedPiece);
                 }
 
                 if (color == bd.SideToMove)
@@ -597,6 +603,19 @@ namespace Pedantic.Tuning
         private static void IncrementPushedPawnThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
         {
             int index = PAWN_PUSH_THREAT + (int)threatenedPiece;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPawnThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
+        {
+            int index = PAWN_THREAT + (int)threatenedPiece;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);

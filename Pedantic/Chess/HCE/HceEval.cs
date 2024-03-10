@@ -377,7 +377,7 @@ namespace Pedantic.Chess.HCE
 
             Bitboard pawns = evalInfo[c].Pawns;
             Bitboard otherPawns = evalInfo[o].Pawns;
-            Bitboard targets = board.Units(other).AndNot(otherPawns | board.Kings);
+            Bitboard targets = board.Units(other).AndNot(otherPawns);
             Bitboard pushAttacks;
 
             if (targets == 0)
@@ -402,6 +402,12 @@ namespace Pedantic.Chess.HCE
             {
                 Piece threatenedPiece = board.PieceBoard(sq).Piece;
                 score += wts.PushedPawnThreat(threatenedPiece);
+            }
+
+            foreach (SquareIndex sq in evalInfo[c].PawnAttacks & targets)
+            {
+                Piece threatenedPiece = board.PieceBoard(sq).Piece;
+                score += wts.PawnThreat(threatenedPiece);
             }
 
             return score;
