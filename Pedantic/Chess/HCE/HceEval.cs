@@ -103,6 +103,8 @@ namespace Pedantic.Chess.HCE
             score -= EvalPieces(board, evalInfo, Color.Black);
             score += EvalPassedPawns(board, evalInfo, Color.White);
             score -= EvalPassedPawns(board, evalInfo, Color.Black);
+            score += EvalThreats(board, evalInfo, Color.White);
+            score -= EvalThreats(board, evalInfo, Color.Black);
             score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
 
             return score.NormalizeScore(board.Phase);
@@ -361,6 +363,45 @@ namespace Pedantic.Chess.HCE
                 Piece blocker = board.PieceBoard(sq).Piece;
                 Rank normalRank = sq.Normalize(other).Rank();
                 score += wts.BlockedPassedPawn(blocker, normalRank - 1);
+            }
+
+            return score;
+        }
+
+        private static Score EvalThreats(Board board, Span<EvalInfo> evalInfo, Color color)
+        {
+            Score score = Score.Zero;
+            Color other = color.Flip();
+            int c = (int)color;
+            int o = (int)other;
+
+            Bitboard pawns = evalInfo[c].Pawns;
+            Bitboard otherPawns = evalInfo[o].Pawns;
+            Bitboard targets = board.Units(other).AndNot(otherPawns | board.Kings);
+            Bitboard pushAttacks;
+
+            if (targets == 0)
+            {
+                return score;
+            }
+
+            if (color == Color.White)
+            {
+                Bitboard pawnPushes = (pawns << 8).AndNot(board.All);
+                pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileA) << 7) |
+                              (pawnPushes.AndNot(Bitboard.BbFileH) << 9);
+            }
+            else
+            {
+                Bitboard pawnPushes = (pawns >> 8).AndNot(board.All);
+                pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileH) >> 7) |
+                              (pawnPushes.AndNot(Bitboard.BbFileA) >> 9);
+            }
+
+            foreach (SquareIndex sq in pushAttacks & targets)
+            {
+                Piece threatenedPiece = board.PieceBoard(sq).Piece;
+                score += wts.PushedPawnThreat(threatenedPiece);
             }
 
             return score;
