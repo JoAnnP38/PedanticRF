@@ -653,6 +653,14 @@ namespace Pedantic
             WriteLine();
             WriteLine("#endregion");
             WriteLine();
+            WriteLine("/* threats */");
+            WriteLine("#region threats");
+            WriteLine();
+            WriteLine("/* pushed pawn threats */");
+            WriteWts2D(wts, PAWN_PUSH_THREAT, 8, MAX_PIECES);
+            WriteLine();
+            WriteLine("#endregion");
+            WriteLine();
             WriteLine("/* tempo bonus for side to move */");
             WriteWtLine(wts[TEMPO]);
         }

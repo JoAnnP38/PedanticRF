@@ -151,6 +151,28 @@ namespace Pedantic.Tuning
                     IncrementBadBishopPawn(color, coefficients, badPawnCount);
                 }
 
+                Bitboard targets = bd.Units(other).AndNot(otherPawns | bd.Kings);
+                Bitboard pushAttacks;
+                
+                if (color == Color.White)
+                {
+                    Bitboard pawnPushes = (pawns << 8).AndNot(bd.All);
+                    pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileA) << 7) |
+                                  (pawnPushes.AndNot(Bitboard.BbFileH) << 9);
+                }
+                else
+                {
+                    Bitboard pawnPushes = (pawns >> 8).AndNot(bd.All);
+                    pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileH) >> 7) |
+                                  (pawnPushes.AndNot(Bitboard.BbFileA) >> 9);
+                }
+
+                foreach (SquareIndex sq in pushAttacks & targets)
+                {
+                    Piece threatenedPiece = bd.PieceBoard(sq).Piece;
+                    IncrementPushedPawnThreat(color, coefficients, threatenedPiece);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -562,6 +584,19 @@ namespace Pedantic.Tuning
 
             index = ENEMY_KB_PST +
                 ((int)piece * MAX_KING_BUCKETS + kb.Enemy) * MAX_SQUARES + (int)square;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPushedPawnThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
+        {
+            int index = PAWN_PUSH_THREAT + (int)threatenedPiece;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);
