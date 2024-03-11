@@ -180,6 +180,15 @@ namespace Pedantic.Tuning
                     IncrementPawnThreat(color, coefficients, threatenedPiece);
                 }
 
+                targets &= ~bd.Kings;
+                Bitboard minorAttacks = evalInfo[c].AttackBy[AttackBy.Knight] | evalInfo[c].AttackBy[AttackBy.Bishop];
+
+                foreach (SquareIndex sq in minorAttacks & targets)
+                {
+                    Piece threatenedPiece = bd.PieceBoard(sq).Piece;
+                    IncrementMinorThreat(color, coefficients, threatenedPiece);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -617,6 +626,19 @@ namespace Pedantic.Tuning
         private static void IncrementPawnThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
         {
             int index = PAWN_THREAT + (int)threatenedPiece;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementMinorThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
+        {
+            int index = MINOR_THREAT + (int)threatenedPiece;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);
