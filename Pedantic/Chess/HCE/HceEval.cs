@@ -439,6 +439,14 @@ namespace Pedantic.Chess.HCE
                 score += wts.MinorThreat(threatenedPiece);
             }
 
+            targets &= ~evalInfo[o].AttackBy[AttackBy.Pawn];
+            attacks = evalInfo[c].AttackBy[AttackBy.Rook];
+            foreach (SquareIndex sq in attacks & targets)
+            {
+                Piece threatenedPiece = board.PieceBoard(sq).Piece;
+                score += wts.RookThreat(threatenedPiece);
+            }
+
             return score;
         }
 
