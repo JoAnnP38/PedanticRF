@@ -47,7 +47,8 @@ namespace Pedantic.Tuning
                     Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, bd.All);
                     if (piece != Piece.Pawn && piece != Piece.King)
                     {
-                        evalInfo[c].PieceAttacks |= pieceAttacks;
+                        evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
+                        evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                         if (pieceAttacks != 0 && evalInfo[c].AttackCount < HceEval.MAX_ATTACK_LEN)
                         {
                             evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
@@ -72,7 +73,7 @@ namespace Pedantic.Tuning
                             IncrementPhalanxPawn(color, coefficients, normalFrom);
                         }
 
-                        if ((evalInfo[c].PawnAttacks & sqMask) != 0)
+                        if ((evalInfo[c].AttackBy[AttackBy.Pawn] & sqMask) != 0)
                         {
                             IncrementChainedPawn(color, coefficients, normalFrom);
                         }
@@ -105,7 +106,7 @@ namespace Pedantic.Tuning
                 SquareIndex enemyKI = evalInfo[o].KI;
                 for (int n = 0; n < evalInfo[c].AttackCount; n++)
                 {
-                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].PawnAttacks);
+                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
                     int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
                     IncrementKingAttack(color, coefficients, 0, count);
                     count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
@@ -173,7 +174,7 @@ namespace Pedantic.Tuning
                     IncrementPushedPawnThreat(color, coefficients, threatenedPiece);
                 }
 
-                foreach (SquareIndex sq in evalInfo[c].PawnAttacks & targets)
+                foreach (SquareIndex sq in evalInfo[c].AttackBy[AttackBy.Pawn] & targets)
                 {
                     Piece threatenedPiece = bd.PieceBoard(sq).Piece;
                     IncrementPawnThreat(color, coefficients, threatenedPiece);
@@ -211,7 +212,7 @@ namespace Pedantic.Tuning
                     }
 
                     Bitboard advanceMask = new Bitboard(Board.PawnPlus(color, ppIndex));
-                    Bitboard attacksMask = evalInfo[o].PawnAttacks | evalInfo[o].PieceAttacks | evalInfo[o].KingAttacks;
+                    Bitboard attacksMask = evalInfo[o].AttackBy[AttackBy.All];
 
                     if ((advanceMask & bd.All) == 0 && (advanceMask & attacksMask) == 0)
                     {

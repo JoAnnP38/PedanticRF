@@ -1459,6 +1459,19 @@ namespace Pedantic.Chess
             return new EvasionInfo(checkerCount, kingDanger, captureMask, pushMask);
         }
 
+        public Bitboard GetXrayAttacks(Color color, Piece piece, SquareIndex from)
+        {
+            Bitboard blockers = All ^ Pieces(color, Piece.Queen);
+            blockers ^= piece switch
+            {
+                Piece.Bishop => Pieces(color, Piece.Bishop),
+                Piece.Rook => Pieces(color, Piece.Rook),
+                Piece.Queen => Pieces(color, Piece.Bishop) | Pieces(color, Piece.Rook),
+                _ => Bitboard.None
+            };
+            return GetPieceMoves(piece, from, blockers);
+        }
+
         public static Bitboard GetPieceMoves(Piece piece, SquareIndex from, Bitboard blockers)
         {
             return piece switch
@@ -1468,7 +1481,7 @@ namespace Pedantic.Chess
                 Piece.Rook => GetRookMoves(from, blockers),
                 Piece.Queen => GetQueenMoves(from, blockers),
                 Piece.King => KingMoves(from),
-                _ => (Bitboard)0ul
+                _ => Bitboard.None
             };
         }
 
