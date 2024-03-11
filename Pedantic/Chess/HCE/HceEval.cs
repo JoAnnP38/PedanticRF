@@ -8,7 +8,7 @@ namespace Pedantic.Chess.HCE
 {
     public sealed class HceEval : IInitialize
     {
-        public const int MAX_ATTACK_LEN = 16;
+        public const int MAX_ATTACK_LEN = 8;
         public const ulong DARK_SQUARES_MASK = 0xAA55AA55AA55AA55ul;
         public const ulong LITE_SQUARES_MASK = 0x55AA55AA55AA55AAul;
 
@@ -32,12 +32,25 @@ namespace Pedantic.Chess.HCE
             }
         }
 
+        [InlineArray(MAX_PIECES + 1)]
+        public struct AttackByArray
+        {
+            public const int CAPACITY = MAX_PIECES + 1;
+            private Bitboard _element0;
+
+            public Bitboard this[AttackBy attackBy]
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => this[(int)attackBy];
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                set => this[(int)attackBy] = value;
+            }
+        }
+
         public struct EvalInfo
         {
             public Bitboard Pawns;
-            public Bitboard PieceAttacks;
-            public Bitboard PawnAttacks;
-            public Bitboard KingAttacks;
             public Bitboard MobilityArea;
             public Bitboard PassedPawns;
             public short Material;
@@ -46,6 +59,7 @@ namespace Pedantic.Chess.HCE
             public byte CanCastle;
             public byte AttackCount;
             public AttackArray Attacks;
+            public AttackByArray AttackBy;
         }
         
         static HceEval()
@@ -77,21 +91,27 @@ namespace Pedantic.Chess.HCE
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ColorToSign(Color color)
+        {
+            return ((int)color * -2) + 1;
+        }
+
         public short Compute(Board board)
         {
             Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
 
+            cache.PrefetchPawnCache(board.PawnHash);
             InitializeEvalInfo(board, evalInfo);
             short score = ComputeNormal(board, evalInfo);
             //Color winningColor = score >= 0 ? Color.White : Color.Black;
             //score = (short)((score * ScaleFactor(winningColor, board, evalInfo)) / 4);
-            score = board.SideToMove == Color.White ? score : (short)-score;
+            score = (short)(ColorToSign(board.SideToMove) * score);
             return score;
         }
 
         public short ComputeNormal(Board board, Span<EvalInfo> evalInfo)
         {
-            cache.PrefetchPawnCache(board.PawnHash);
             Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
             score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
             score += ProbePawnCache(board, evalInfo);
@@ -105,7 +125,7 @@ namespace Pedantic.Chess.HCE
             score -= EvalPassedPawns(board, evalInfo, Color.Black);
             score += EvalThreats(board, evalInfo, Color.White);
             score -= EvalThreats(board, evalInfo, Color.Black);
-            score += board.SideToMove == Color.White ? wts.TempoBonus : -wts.TempoBonus;
+            score += ColorToSign(board.SideToMove) * wts.TempoBonus;
 
             return score.NormalizeScore(board.Phase);
         }
@@ -181,7 +201,7 @@ namespace Pedantic.Chess.HCE
                     score += wts.PhalanxPawn(normalFrom);
                 }
 
-                if ((evalInfo[c].PawnAttacks & sqMask) != 0)
+                if ((evalInfo[c].AttackBy[AttackBy.Pawn] & sqMask) != 0)
                 {
                     score += wts.ChainedPawn(normalFrom);
                 }
@@ -212,7 +232,8 @@ namespace Pedantic.Chess.HCE
             {
                 Piece piece = board.PieceBoard(from).Piece;
                 Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
-                evalInfo[c].PieceAttacks |= pieceAttacks;
+                evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
                 {
                     evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
@@ -235,7 +256,7 @@ namespace Pedantic.Chess.HCE
             SquareIndex enemyKI = evalInfo[o].KI;
             for (int n = 0; n < evalInfo[c].AttackCount; n++)
             {
-                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].PawnAttacks);
+                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
                 score += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount * wts.KingAttack(0);
                 score += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount * wts.KingAttack(1);
             }
@@ -339,7 +360,7 @@ namespace Pedantic.Chess.HCE
                 }
 
                 Bitboard advanceMask = new Bitboard(Board.PawnPlus(color, ppIndex));
-                Bitboard attacksMask = evalInfo[o].PawnAttacks | evalInfo[o].PieceAttacks | evalInfo[o].KingAttacks;
+                Bitboard attacksMask = evalInfo[o].AttackBy[AttackBy.All];
 
                 if ((advanceMask & board.All) == 0 && (advanceMask & attacksMask) == 0)
                 {
@@ -404,7 +425,7 @@ namespace Pedantic.Chess.HCE
                 score += wts.PushedPawnThreat(threatenedPiece);
             }
 
-            foreach (SquareIndex sq in evalInfo[c].PawnAttacks & targets)
+            foreach (SquareIndex sq in evalInfo[c].AttackBy[AttackBy.Pawn] & targets)
             {
                 Piece threatenedPiece = board.PieceBoard(sq).Piece;
                 score += wts.PawnThreat(threatenedPiece);
@@ -463,22 +484,27 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].Material = board.Material[color].NormalizeScore(board.Phase);
                 evalInfo[c].KI = board.KingIndex[color];
                 evalInfo[c].KB = new KingBuckets(color, board.KingIndex[color], board.KingIndex[color.Flip()]);
-                evalInfo[c].KingAttacks = Board.GetPieceMoves(Piece.King, evalInfo[c].KI, board.All);
+                Bitboard attacks = Board.GetPieceMoves(Piece.King, evalInfo[c].KI, board.All);
+                evalInfo[c].AttackBy[AttackBy.King] = attacks;
+                evalInfo[c].AttackBy[AttackBy.All] = attacks;
 
                 if (color == Color.White)
                 {
-                    evalInfo[c].PawnAttacks = (pawns.AndNot(Bitboard.BbFileA) << 7) 
-                                            | (pawns.AndNot(Bitboard.BbFileH) << 9);
+                    attacks = (pawns.AndNot(Bitboard.BbFileA) << 7) 
+                            | (pawns.AndNot(Bitboard.BbFileH) << 9);
 
                     evalInfo[c].CanCastle = (byte)(board.Castling & CastlingRights.WhiteRights);
                 }
                 else
                 {
-                    evalInfo[c].PawnAttacks = (pawns.AndNot(Bitboard.BbFileH) >> 7)
-                                            | (pawns.AndNot(Bitboard.BbFileA) >> 9);
+                    attacks = (pawns.AndNot(Bitboard.BbFileH) >> 7)
+                            | (pawns.AndNot(Bitboard.BbFileA) >> 9);
 
                     evalInfo[c].CanCastle = (byte)((int)(board.Castling & CastlingRights.BlackRights) >> 2);
                 }
+
+                evalInfo[c].AttackBy[AttackBy.Pawn] = attacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= attacks;
             }
 
             /* two pass init */
@@ -487,7 +513,7 @@ namespace Pedantic.Chess.HCE
                 Color other = color.Flip();
                 int c = (int)color;
                 int o = (int)other;
-                evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].PawnAttacks);
+                evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].AttackBy[AttackBy.Pawn]);
             }
         }
 

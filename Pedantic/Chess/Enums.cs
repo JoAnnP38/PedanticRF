@@ -67,4 +67,6 @@
     public enum UciOptionType : byte { Button, Check, Combo, Spin, String }
 
     public enum Bound : byte { None, Exact, Lower, Upper }
+
+    public enum AttackBy : byte { Pawn, Knight, Bishop, Rook, Queen, King, All }
 }

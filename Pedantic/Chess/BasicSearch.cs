@@ -253,6 +253,7 @@ namespace Pedantic.Chess
                     continue;
                 }
 
+                ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
                 expandedNodes++;
                 NodesVisited++;
 
@@ -357,8 +358,6 @@ namespace Pedantic.Chess
             {
                 return Quiesce(alpha, beta, ply);
             }
-
-            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
 
             var rep = board.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)
@@ -510,6 +509,8 @@ namespace Pedantic.Chess
                     }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
                 }
+
+                ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
                 
                 if (expandedNodes == 1)
                 {
@@ -596,8 +597,6 @@ namespace Pedantic.Chess
                 return eval.Compute(board);
             }
 
-            ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
-
             var rep = board.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)
             {
@@ -656,7 +655,7 @@ namespace Pedantic.Chess
                     board.UnmakeMoveNs();
                     continue;
                 }
-
+                ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = isCheckingMove;
 
