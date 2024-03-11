@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Pedantic.Utilities;
@@ -42,14 +43,14 @@ namespace Pedantic.Chess
         {
             private ScoredMove _element0;
 
-            public ReadOnlySpan<ScoredMove> AsReadOnlySpan()
+            public ReadOnlySpan<ScoredMove> AsReadOnlySpan(int length = CAPACITY)
             {
-                return MemoryMarshal.CreateReadOnlySpan(ref _element0, CAPACITY);
+                return MemoryMarshal.CreateReadOnlySpan(ref _element0, length);
             }
 
-            public Span<ScoredMove> AsSpan()
+            public Span<ScoredMove> AsSpan(int length = CAPACITY)
             {
-                return MemoryMarshal.CreateSpan(ref _element0, CAPACITY);
+                return MemoryMarshal.CreateSpan(ref _element0, length);
             }
         }
 
@@ -181,8 +182,20 @@ namespace Pedantic.Chess
 
         public void SortAll()
         {
-            Span<ScoredMove> scoredMoves = array.AsSpan().Slice(0, insertIndex);
-            scoredMoves.Sort();
+            // use a custom selection sort over the Array.Sort or Span.Sort
+            // so that sort is stable and preserves some of the initial move
+            // ordering for moves with equal scores
+            for (int n = 1; n < insertIndex; n++)
+            {
+                ScoredMove key = array[n];
+
+                int m = n - 1;
+                for (; m >= 0 && array[m].Score < key.Score; m--)
+                {
+                    array[m + 1] = array[m];
+                }
+                array[m + 1] = key;
+            }
         }
 
         public bool Remove(Move move)
@@ -196,6 +209,14 @@ namespace Pedantic.Chess
                 }
             }
             return false;
+        }
+
+        public IEnumerable<ScoredMove> ScoredMoves
+        {
+            get
+            {
+                return array.AsSpan(insertIndex).ToArray();
+            }
         }
 
         public IEnumerator<Move> GetEnumerator()
