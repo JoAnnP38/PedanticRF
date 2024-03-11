@@ -189,6 +189,15 @@ namespace Pedantic.Tuning
                     IncrementMinorThreat(color, coefficients, threatenedPiece);
                 }
 
+                targets &= ~evalInfo[o].AttackBy[AttackBy.Pawn];
+                Bitboard rookAttacks = evalInfo[c].AttackBy[AttackBy.Rook];
+
+                foreach (SquareIndex sq in rookAttacks & targets)
+                {
+                    Piece threatenedPiece = bd.PieceBoard(sq).Piece;
+                    IncrementRookThreat(color, coefficients, threatenedPiece);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -639,6 +648,19 @@ namespace Pedantic.Tuning
         private static void IncrementMinorThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
         {
             int index = MINOR_THREAT + (int)threatenedPiece;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementRookThreat(Color color, SparseArray<short> v, Piece threatenedPiece)
+        {
+            int index = ROOK_THREAT + (int)threatenedPiece;
             if (v.ContainsKey(index))
             {
                 v[index] += Increment(color);

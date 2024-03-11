@@ -665,6 +665,9 @@ namespace Pedantic
             WriteLine("/* minor piece threats */");
             WriteWts2D(wts, MINOR_THREAT, 8, MAX_PIECES);
             WriteLine();
+            WriteLine("/* rook threats */");
+            WriteWts2D(wts, ROOK_THREAT, 8, MAX_PIECES);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");
