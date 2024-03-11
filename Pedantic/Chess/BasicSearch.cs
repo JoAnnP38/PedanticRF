@@ -138,6 +138,10 @@ namespace Pedantic.Chess
                 Move ponderMove = Move.NullMove;
                 history.SetContext(0);
                 oneLegalMove = board.OneLegalMove(list, out Move bestMove);
+                if (!oneLegalMove)
+                {
+                    bestMove = Move.NullMove;
+                }
                 startDateTime = DateTime.Now;
 
                 while (++Depth <= maxDepth && clock.CanSearchDeeper())
@@ -241,6 +245,7 @@ namespace Pedantic.Chess
 
             int score;
             Move bestMove = Move.NullMove;
+            int bestMoveIndex = -1;
             bool alphaRaised = false;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
             board.PushBoardState();
@@ -307,6 +312,7 @@ namespace Pedantic.Chess
                 {
                     bestMove = move;
                     bestScore = score;
+                    bestMoveIndex = n;
 
                     if (score > alpha)
                     {
@@ -321,6 +327,11 @@ namespace Pedantic.Chess
                         pvTable.MergeMove(0, move);
                     }
                 }
+            }
+
+            if (bestMoveIndex >= 0)
+            {
+                list.SetScore(bestMoveIndex, PV_BONUS);
             }
 
             board.PopBoardState();
@@ -452,7 +463,7 @@ namespace Pedantic.Chess
             StackList<Move> quiets = new(stackalloc Move[64]);
             board.PushBoardState();
             MoveList list = listPool.Rent();
-            IEnumerable<GenMove> moves = inCheck ?
+            IEnumerable<GenMove> moves = !inCheck ?
                 board.Moves(ply, history, ss, list, ttMove) :
                 board.EvasionMoves(ply, history, ss, list, ttMove);
 

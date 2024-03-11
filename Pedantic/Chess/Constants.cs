@@ -21,6 +21,7 @@
         public const int HISTORY_SCORE_MIN = -HISTORY_SCORE_MAX;
         public const int PROMOTE_BONUS = 50000;
         public const int CAPTURE_BONUS = 60000;
+        public const int PV_BONUS = 70000;
         public const int INFINITE_WINDOW = short.MaxValue;
         public const ulong BB_ALL = 0xfffffffffffffffful;
         public const ulong BB_NONE = 0;
