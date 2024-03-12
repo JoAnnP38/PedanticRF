@@ -366,6 +366,12 @@ namespace Pedantic.Chess.HCE
                 {
                     score += wts.PassedPawnCanAdvance(normalRank);
                 }
+
+                Direction behind = color == Color.White ? Direction.South : Direction.North;
+                if ((GetAttack(board, ppIndex, behind) & board.Pieces(color, Piece.Rook)) != 0)
+                {
+                    score += wts.RookBehindPassedPawn;
+                }
             }
 
             Bitboard ePassedPawns = evalInfo[o].PassedPawns;
@@ -531,6 +537,24 @@ namespace Pedantic.Chess.HCE
                 int o = (int)other;
                 evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].AttackBy[AttackBy.Pawn]);
             }
+        }
+
+        public static Bitboard GetAttack(Board board, SquareIndex from, Direction dir)
+        {
+            Bitboard blockers = board.All;
+            Bitboard bbRay = Board.Vectors[(int)from][dir];
+            return dir switch
+            {
+                Direction.North     => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].North),
+                Direction.NorthEast => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].NorthEast),
+                Direction.East      => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].East),
+                Direction.SouthEast => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].SouthEast),
+                Direction.South     => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].South),
+                Direction.SouthWest => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].SouthWest),
+                Direction.West      => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].West),
+                Direction.NorthWest => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].NorthWest),
+                _ => Bitboard.None
+            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
