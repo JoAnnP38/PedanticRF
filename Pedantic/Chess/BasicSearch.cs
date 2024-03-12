@@ -448,7 +448,22 @@ namespace Pedantic.Chess
                         ssItem.Eval = (short)evaluation;
                     }
 
-                    canPrune = canNull;
+                    if (canNull)
+                    {
+                        if (depth <= 1)
+                        {
+                            int threshold = alpha - depth * 200;
+                            if (evaluation <= threshold)
+                            {
+                                score = Quiesce(alpha, beta, ply);
+                                if (score <= alpha)
+                                {
+                                    return score;
+                                }
+                            }
+                        }
+                        canPrune = true;
+                    }
                 }
             }
 
