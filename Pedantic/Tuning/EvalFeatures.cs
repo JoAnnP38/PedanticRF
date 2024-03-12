@@ -236,6 +236,12 @@ namespace Pedantic.Tuning
                     {
                         IncrementPassedPawnCanAdvance(color, coefficients, normalRank);
                     }
+
+                    Direction behind = color == Color.White ? Direction.South : Direction.North;
+                    if ((HceEval.GetAttack(bd, ppIndex, behind) & bd.Pieces(color, Piece.Rook)) != 0)
+                    {
+                        IncrementRookBehindPassedPawn(color, coefficients);
+                    }
                 }
 
                 Bitboard ePassedPawns = evalInfo[o].PassedPawns;
@@ -538,6 +544,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementRookBehindPassedPawn(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(ROOK_BEHIND_PASSER))
+            {
+                v[ROOK_BEHIND_PASSER] += Increment(color);
+            }
+            else
+            {
+                v.Add(ROOK_BEHIND_PASSER, Increment(color));
             }
         }
 

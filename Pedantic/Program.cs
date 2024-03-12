@@ -634,6 +634,9 @@ namespace Pedantic
                 Console.WriteLine($"\t// blocked by {pc}");
             }
             WriteLine();
+            WriteLine("/* rook behind passed pawn */");
+            WriteWtLine(wts.RookBehindPassedPawn);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* piece evaluations */");
