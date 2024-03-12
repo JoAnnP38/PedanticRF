@@ -49,6 +49,7 @@ namespace Pedantic.Chess
         internal const string OPT_SEE_MAX_DEPTH = "UCI_T_SEE_MaxDepth";
         internal const string OPT_SEE_CAPTURE_MARGIN = "UCI_T_SEE_CaptureMargin";
         internal const string OPT_SEE_QUIET_MARGIN = "UCI_T_SEE_QuietMargin";
+        internal const string OPT_LZY_EVAL_MARGIN = "UCI_T_LZY_EvalMargin";
 
         static UciOptions()
         {
@@ -95,7 +96,8 @@ namespace Pedantic.Chess
                 { iirMinDepth.Name, iirMinDepth },
                 { seeMaxDepth.Name, seeMaxDepth },
                 { seeCaptureMargin.Name, seeCaptureMargin },
-                { seeQuietMargin.Name, seeQuietMargin }
+                { seeQuietMargin.Name, seeQuietMargin },
+                { lzyEvalMargin.Name, lzyEvalMargin }
             };
         }
 
@@ -455,6 +457,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int LzyEvalMargin
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return lzyEvalMargin.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var kvp in options)
@@ -574,5 +585,6 @@ namespace Pedantic.Chess
         private static UciOptionSpin seeMaxDepth = new UciOptionSpin(OPT_SEE_MAX_DEPTH, 7, 1, 12);
         private static UciOptionSpin seeCaptureMargin = new UciOptionSpin(OPT_SEE_CAPTURE_MARGIN, 100, 25, 200);
         private static UciOptionSpin seeQuietMargin = new UciOptionSpin(OPT_SEE_QUIET_MARGIN, 60, 25, 200);
+        private static UciOptionSpin lzyEvalMargin = new UciOptionSpin(OPT_LZY_EVAL_MARGIN, 500, 0, 1200);
     }
 }

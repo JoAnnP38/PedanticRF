@@ -363,7 +363,7 @@ namespace Pedantic.Chess
 
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board);
+                return eval.Compute(board, alpha, beta);
             }
             if (depth <= 0)
             {
@@ -412,7 +412,7 @@ namespace Pedantic.Chess
 
             if (!inCheck)
             {
-                evaluation = ssItem.Eval = eval.Compute(board);
+                evaluation = ssItem.Eval = eval.Compute(board, alpha, beta);
                 if (!isPv)
                 {
                     // static null move pruning (reverse futility pruning)
@@ -605,7 +605,7 @@ namespace Pedantic.Chess
             SelDepth = Math.Max(SelDepth, ply);
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board);
+                return eval.Compute(board, alpha, beta);
             }
 
             var rep = board.PositionRepeated();
@@ -629,7 +629,7 @@ namespace Pedantic.Chess
                 ttMove = ttItem.BestMove;
             }
 
-            int standPatScore = eval.Compute(board);
+            int standPatScore = eval.Compute(board, alpha, beta);
             if (!inCheck)
             {
                 if (standPatScore >= beta)

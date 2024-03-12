@@ -97,23 +97,31 @@ namespace Pedantic.Chess.HCE
             return ((int)color * -2) + 1;
         }
 
-        public short Compute(Board board)
+        public short Compute(Board board, int alpha = -INFINITE_WINDOW, int beta = INFINITE_WINDOW)
         {
             Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
 
             cache.PrefetchPawnCache(board.PawnHash);
             InitializeEvalInfo(board, evalInfo);
-            short score = ComputeNormal(board, evalInfo);
+            short score = ComputeNormal(board, evalInfo, alpha, beta);
             //Color winningColor = score >= 0 ? Color.White : Color.Black;
             //score = (short)((score * ScaleFactor(winningColor, board, evalInfo)) / 4);
             score = (short)(ColorToSign(board.SideToMove) * score);
             return score;
         }
 
-        public short ComputeNormal(Board board, Span<EvalInfo> evalInfo)
+        public short ComputeNormal(Board board, Span<EvalInfo> evalInfo, int alpha, int beta)
         {
             Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
             score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
+
+            int normalScore = score.NormalizeScore(board.Phase);
+            int evalScore = ColorToSign(board.SideToMove) * normalScore;
+            if (evalScore < alpha - UciOptions.LzyEvalMargin || evalScore > beta + UciOptions.LzyEvalMargin)
+            { 
+                return (short)normalScore;
+            }
+
             score += ProbePawnCache(board, evalInfo);
             score += EvalMobility(board, evalInfo, Color.White);
             score -= EvalMobility(board, evalInfo, Color.Black);
