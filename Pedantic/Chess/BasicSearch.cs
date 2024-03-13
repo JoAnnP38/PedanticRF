@@ -450,9 +450,9 @@ namespace Pedantic.Chess
 
                     if (canNull)
                     {
-                        if (depth <= 1)
+                        if (depth <= UciOptions.RzrMaxDepth)
                         {
-                            int threshold = alpha - depth * 200;
+                            int threshold = alpha - depth * UciOptions.RzrMargin;
                             if (evaluation <= threshold)
                             {
                                 score = Quiesce(alpha, beta, ply);

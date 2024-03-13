@@ -50,6 +50,8 @@ namespace Pedantic.Chess
         internal const string OPT_SEE_CAPTURE_MARGIN = "UCI_T_SEE_CaptureMargin";
         internal const string OPT_SEE_QUIET_MARGIN = "UCI_T_SEE_QuietMargin";
         internal const string OPT_LZY_EVAL_MARGIN = "UCI_T_LZY_EvalMargin";
+        internal const string OPT_RZR_MAX_DEPTH = "UCI_T_RZR_MaxDepth";
+        internal const string OPT_RZR_MARGIN = "UCI_T_RZR_Margin";
 
         static UciOptions()
         {
@@ -97,7 +99,9 @@ namespace Pedantic.Chess
                 { seeMaxDepth.Name, seeMaxDepth },
                 { seeCaptureMargin.Name, seeCaptureMargin },
                 { seeQuietMargin.Name, seeQuietMargin },
-                { lzyEvalMargin.Name, lzyEvalMargin }
+                { lzyEvalMargin.Name, lzyEvalMargin },
+                { rzrMaxDepth.Name, rzrMaxDepth },
+                { rzrMargin.Name, rzrMargin }
             };
         }
 
@@ -466,6 +470,24 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int RzrMaxDepth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return rzrMaxDepth.CurrentValue;
+            }
+        }
+
+        public static int RzrMargin
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return rzrMargin.CurrentValue;
+            }
+        }
+
         public static void WriteLine()
         {
             foreach (var kvp in options)
@@ -586,5 +608,7 @@ namespace Pedantic.Chess
         private static UciOptionSpin seeCaptureMargin = new UciOptionSpin(OPT_SEE_CAPTURE_MARGIN, 100, 25, 200);
         private static UciOptionSpin seeQuietMargin = new UciOptionSpin(OPT_SEE_QUIET_MARGIN, 60, 25, 200);
         private static UciOptionSpin lzyEvalMargin = new UciOptionSpin(OPT_LZY_EVAL_MARGIN, 500, 0, 1200);
+        private static UciOptionSpin rzrMaxDepth = new UciOptionSpin(OPT_RZR_MAX_DEPTH, 1, 0, 5);
+        private static UciOptionSpin rzrMargin = new UciOptionSpin(OPT_RZR_MARGIN, 200, 50, 400);
     }
 }
