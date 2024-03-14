@@ -1,33 +1,17 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Pedantic.Utilities;
 
 namespace Pedantic.Chess
 {
-    public unsafe class SearchStack : IDisposable
+    public unsafe class SearchStack
     {
         public const int OFFSET = 4;
-        public const nuint MEM_ALIGN = 64;
-        private SearchItem* searchStack;
-        private nuint byteCount;
+        private SearchItem[] searchStack;
 
         public SearchStack()
         {
-            byteCount = (nuint)((MAX_PLY + OFFSET) * sizeof(SearchItem));
-            searchStack = (SearchItem*)NativeMemory.AlignedAlloc(byteCount, MEM_ALIGN);
-            for (SearchItem* p = searchStack; p < searchStack + (MAX_PLY + OFFSET); p++)
-            {
-                *p = new SearchItem();
-            }
-        }
-
-        ~SearchStack()
-        {
-            if (searchStack != null)
-            {
-                NativeMemory.AlignedFree(searchStack);
-                searchStack = null;
-            }
+            searchStack = new SearchItem[MAX_PLY + OFFSET];
+            Array.Fill(searchStack, new SearchItem());
         }
 
         public ref SearchItem this[int index]
@@ -36,39 +20,25 @@ namespace Pedantic.Chess
             get
             {
                 Util.Assert(index >= -4 && index < MAX_PLY);
-                return ref *(searchStack + (index + OFFSET));
+                return ref searchStack[index + OFFSET];
             }
         }
 
         public void Initialize(Board board, History history)
         {
             Clear();
-            SearchItem* p = searchStack;
-            p->Continuation = history.NullMoveContinuation;
-            p++;
-            p->Continuation = history.NullMoveContinuation;
-            p++;
-            p->Move = board.PrevLastMove;
-            p->Continuation = history.GetContinuation(board.PrevLastMove);
-            p++;
-            p->Move = board.LastMove;
-            p->Continuation = history.GetContinuation(board.LastMove);
-            p->IsCheckingMove = board.IsChecked();
+            searchStack[0].Continuation = history.NullMoveContinuation;
+            searchStack[1].Continuation = history.NullMoveContinuation;
+            searchStack[2].Move = board.PrevLastMove;
+            searchStack[2].Continuation = history.GetContinuation(board.PrevLastMove);
+            searchStack[3].Move = board.LastMove;
+            searchStack[3].Continuation = history.GetContinuation(board.LastMove);
+            searchStack[3].IsCheckingMove = board.IsChecked();
         }
 
-        public void Clear()
+        private void Clear()
         {
-            NativeMemory.Clear(searchStack, byteCount);
-        }
-
-        public void Dispose()
-        {
-            if (searchStack != null)
-            {
-                NativeMemory.AlignedFree(searchStack);
-                searchStack = null;
-            }
-            GC.SuppressFinalize(this);
+            Array.Fill(searchStack, new SearchItem());
         }
     }
 }

@@ -119,5 +119,16 @@ namespace Pedantic.UnitTests
             Program.ParseUciCommand("go depth 4");
             Program.ParseUciCommand("wait");
         }
+
+        [TestMethod]
+        public void IndexOutOfRangeExceptionTest()
+        {
+            Program.ParseUciCommand("uci");
+            Program.ParseUciCommand("isready");
+            Program.ParseUciCommand("ucinewgame");
+            Program.ParseUciCommand("position fen 4r2k/P5p1/3p1p1p/3P4/8/6K1/6B1/5R2 b - - 0 49");
+            Program.ParseUciCommand("go depth 16");
+            Program.ParseUciCommand("wait");
+        }
     }
 }
