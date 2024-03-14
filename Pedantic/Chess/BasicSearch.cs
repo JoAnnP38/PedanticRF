@@ -16,6 +16,12 @@ namespace Pedantic.Chess
         internal const double LMR_MAX = 15.0;
         internal const int LMP_MAX_DEPTH_CUTOFF = 11;
 
+        private class FakeHistory : IHistory
+        {
+            public short this[Move move] => 0;
+            public short this[Color stm, Piece piece, SquareIndex to] => 0;
+        }
+
         #region Constructors
 
         public BasicSearch(SearchStack searchStack, Board board, GameClock clock, HceEval eval, History history,
@@ -274,6 +280,7 @@ namespace Pedantic.Chess
 
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Move = move;
+                ssItem.Continuation = history.GetContinuation(move);
                 
                 int R = 0;
                 if (!interesting)
@@ -431,6 +438,7 @@ namespace Pedantic.Chess
                             ssItem.Move = Move.NullMove;
                             ssItem.IsCheckingMove = false;
                             ssItem.Eval = NO_SCORE;
+                            ssItem.Continuation = history.NullMoveContinuation;
 
                             score = -Search(-beta, -beta + 1, Math.Max(depth - R - 1, 0), ply + 1, false);
                             board.UnmakeMove();
@@ -495,6 +503,7 @@ namespace Pedantic.Chess
                 bool isQuiet = genMove.Move.IsQuiet;
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = checkingMove;
+                ssItem.Continuation = history.GetContinuation(genMove.Move);
                 
                 bool interesting = inCheck || checkingMove || (genMove.MovePhase < MoveGenPhase.BadCapture) || expandedNodes == 1;
 
@@ -659,10 +668,11 @@ namespace Pedantic.Chess
             Move bestMove = Move.NullMove;
             board.PushBoardState();
             MoveList list = listPool.Rent();
+            //list.History = fakeHistory;
             int expandedNodes = 0;
 
             IEnumerable<GenMove> moves = !inCheck ? 
-                board.QMoves(ply, qsPly, ss, list, ttMove) :
+                board.QMoves(ply, qsPly, history, ss, list, ttMove) :
                 board.EvasionMoves(ply, history, ss, list, ttMove);
 
             foreach (GenMove genMove in moves)
@@ -684,6 +694,7 @@ namespace Pedantic.Chess
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = isCheckingMove;
+                ssItem.Continuation = history.GetContinuation(genMove.Move);
 
                 score = -Quiesce(-beta, -alpha, ply + 1, qsPly + 1);
                 board.UnmakeMoveNs();
@@ -931,6 +942,7 @@ namespace Pedantic.Chess
         private readonly PvTable pvTable = new();
         private readonly List<Move> pv = new(MAX_PLY);
         private readonly CpuStats cpuStats = new();
+        private readonly FakeHistory fakeHistory = new();
         private Uci uci = Uci.Default;
         private bool oneLegalMove = false;
         private bool wasAborted = false;

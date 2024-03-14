@@ -13,7 +13,7 @@ namespace Pedantic.Chess
             clock = null;
             eval = new(cache);
             history = new(stack);
-            listPool = new(() => new MoveList(history), (o) => o.Clear(), MAX_PLY, 32);
+            listPool = new(() => new MoveList(history), (o) => {o.History = history; o.Clear();}, MAX_PLY, 32);
         }
 
         public void Search(GameClock clock, Board board, int maxDepth, long maxNodes, CountdownEvent done)
@@ -43,7 +43,7 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SearchProc(Board board, CountdownEvent done)
         {
-            stack.Initialize(board);
+            stack.Initialize(board, history);
             search?.Search();
             done.Signal();
         }
