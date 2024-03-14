@@ -76,6 +76,15 @@ namespace Pedantic.Chess
 
         public int Count => insertIndex;
 
+        public IHistory History
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => history;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => history = value;
+        }
+
         public Move this[int index]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

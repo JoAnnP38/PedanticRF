@@ -243,8 +243,9 @@ namespace Pedantic.UnitTests
             Board board = new Board(fen);
             MoveList list = new();
             SearchStack ss = new();
+            History history = new(ss);
             int count = 0;
-            foreach (var mv in board.QMoves(0, 0, ss, list, Move.NullMove))
+            foreach (var mv in board.QMoves(0, 0, history, ss, list, Move.NullMove))
             {
                 TestContext?.WriteLine($"{mv.MovePhase}: {mv.Move.ToLongString()}");
                 ++count;

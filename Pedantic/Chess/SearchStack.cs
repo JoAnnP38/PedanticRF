@@ -40,12 +40,19 @@ namespace Pedantic.Chess
             }
         }
 
-        public void Initialize(Board board)
+        public void Initialize(Board board, History history)
         {
-            SearchItem* p = searchStack + 2;
+            Clear();
+            SearchItem* p = searchStack;
+            p->Continuation = history.NullMoveContinuation;
+            p++;
+            p->Continuation = history.NullMoveContinuation;
+            p++;
             p->Move = board.PrevLastMove;
+            p->Continuation = history.GetContinuation(board.PrevLastMove);
             p++;
             p->Move = board.LastMove;
+            p->Continuation = history.GetContinuation(board.LastMove);
             p->IsCheckingMove = board.IsChecked();
         }
 

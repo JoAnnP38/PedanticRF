@@ -42,8 +42,8 @@
         public void GetScoreSortTest()
         {
             SearchStack ss = new();
-            History hist = new(ss);
-            MoveList list = new(hist);
+            //History hist = new(ss);
+            MoveList list = new();
             list.AddQuiet(Color.White, Piece.Pawn, SquareIndex.E2, SquareIndex.E4, MoveType.DblPawnMove);
             list.AddPromote(Color.White, SquareIndex.E7, SquareIndex.E8, Piece.Queen);
             list.AddCapture(Color.White, Piece.Pawn, SquareIndex.E4, SquareIndex.D5, MoveType.Capture, Piece.Pawn);

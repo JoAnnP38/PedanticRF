@@ -7,13 +7,15 @@ namespace Pedantic.Chess
         public bool IsCheckingMove;
         public MovePair Killers;
         public short Eval;
+        public short[]? Continuation;
 
         public SearchItem()
         {
             Move = Move.NullMove;
             IsCheckingMove = false;
             Killers = new();
-            Eval = 0;
+            Eval = NO_SCORE;
+            Continuation = null;
         }
     }
 }

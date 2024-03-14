@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 using Pedantic.Collections;
 using Pedantic.Utilities;
@@ -8,23 +7,26 @@ namespace Pedantic.Chess
 {
     public unsafe sealed class History : IHistory
     {
-        internal const nuint MEM_ALIGNMENT = 64;
-        internal const nuint HISTORY_LEN = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
+        internal const int HISTORY_LEN = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
         internal const short BONUS_MAX = 920;
         internal const short BONUS_COEFF = 96;
 
         private short[] history;
         private Move[] counterMoves;
+        private short[][] contHist;
         private SearchStack ss;
         private int ply;
+        private readonly short[] nullMoveCont;
 
         public History(SearchStack searchStack)
         {
             history = new short[HISTORY_LEN];
             counterMoves = new Move[HISTORY_LEN];
+            contHist = Mem.Allocate2D<short>(HISTORY_LEN, HISTORY_LEN);
             ss = searchStack;
             ply = 0;
             Clear();
+            nullMoveCont = GetContinuation(Color.White, Piece.Pawn, SquareIndex.A1);
         }
 
         public short this[Color stm, Piece piece, SquareIndex sq]
@@ -32,7 +34,9 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return history[GetIndex(stm, piece, sq)];
+                int index = GetIndex(stm, piece, sq);
+                int value = history[index] + CH(in ss[ply - 1], index);
+                return (short)Math.Clamp(value, short.MinValue, short.MaxValue);
             }
         }
 
@@ -41,9 +45,21 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return history[GetIndex(move)];
+                int index = GetIndex(move);
+                int value = history[GetIndex(move)] + CH(in ss[ply - 1], index);
+                return (short)Math.Clamp(value, short.MinValue, short.MaxValue);
+
             }
         }
+
+	    public short[]? NullMoveContinuation
+	    {
+		    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		    get
+		    {
+			    return nullMoveCont;
+		    }
+	    }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Move CounterMove(Move lastMove)
@@ -56,13 +72,11 @@ namespace Pedantic.Chess
             return counterMoves[GetIndex(lastMove)];
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            Span<short> h = history;
-            h.Clear();
-            Span<Move> m = counterMoves;
-            m.Fill(Move.NullMove);
+            Array.Clear(history);
+            Array.Clear(counterMoves);
+            Mem.Clear(contHist);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -71,18 +85,36 @@ namespace Pedantic.Chess
             this.ply = ply;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short[] GetContinuation(Color stm, Piece piece, SquareIndex to)
+        {
+            return contHist[GetIndex(stm, piece, to)];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short[]? GetContinuation(Move move)
+        {
+            if (move == Move.NullMove)
+            {
+                return nullMoveCont;
+            }
+            return contHist[GetIndex(move)];
+        }
+
         public void UpdateCutoff(Move move, int ply, ref StackList<Move> quiets, int depth)
         {
             SetContext(ply);
             short bonus = Math.Min(BONUS_MAX, (short)(BONUS_COEFF * (depth - 1)));
             int index = GetIndex(move);
             UpdateHistory(ref history[index], bonus);
+            UpdateHistory(ref ss[ply - 1].Continuation![index], bonus);
 
             short malus = (short)-bonus;
             for (int n = 0; n < quiets.Count; n++)
             {
                 index = GetIndex(quiets[n]);
                 UpdateHistory(ref history[index], malus);
+                UpdateHistory(ref ss[ply - 1].Continuation![index], malus);
             }
 
             Move lastMove = ss[ply - 1].Move;
@@ -108,6 +140,16 @@ namespace Pedantic.Chess
         private static void UpdateHistory(ref short hist, short bonus)
         {
             hist += (short)(bonus - hist * Math.Abs(bonus) / HISTORY_SCORE_MAX);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private short CH(in SearchItem ssItem, int index)
+        {
+		    if (ssItem.Continuation != null && ssItem.Continuation != nullMoveCont)
+		    {
+			    return ssItem.Continuation[index];
+		    }
+		    return 0;        
         }
     }
 }

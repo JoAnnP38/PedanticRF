@@ -1021,6 +1021,7 @@ namespace Pedantic.Chess
             list.Clear();
             SquareIndex kingIndex = KingIndex[sideToMove];
             EvasionInfo info = new();
+            history.SetContext(ply);
             GenerateCaptures(kingIndex, list, in info);
             list.Remove(ttMove);
 
@@ -1036,6 +1037,7 @@ namespace Pedantic.Chess
             }
 
             list.Clear();
+            history.SetContext(ply);
             GeneratePromotions(list, in info);
             list.Remove(ttMove);
 
@@ -1045,6 +1047,7 @@ namespace Pedantic.Chess
             }
 
             list.Clear();
+            history.SetContext(ply);
             GenerateQuiets(kingIndex, list, in info);
             list.Remove(ttMove);
 
@@ -1077,7 +1080,7 @@ namespace Pedantic.Chess
             }
         }
 
-        public IEnumerable<GenMove> QMoves(int ply, int qsPly, SearchStack ss, MoveList list, Move ttMove)
+        public IEnumerable<GenMove> QMoves(int ply, int qsPly, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
             {
@@ -1090,6 +1093,7 @@ namespace Pedantic.Chess
             list.Clear();
             SquareIndex kingIndex = KingIndex[sideToMove];
             EvasionInfo info = new();
+            history.SetContext(ply);
 
             if (qsPly >= UciOptions.RecaptureDepth)
             {
@@ -1114,6 +1118,7 @@ namespace Pedantic.Chess
             {
                 list.Clear();
                 info = new();
+                history.SetContext(ply);
                 GeneratePromotions(list, in info);
                 list.Remove(ttMove);
 
@@ -1142,6 +1147,7 @@ namespace Pedantic.Chess
             SquareIndex kingIndex = KingIndex[sideToMove];
             GetEvasionInfo(kingIndex, out EvasionInfo info, out GenMoveHelper helper);
             list.Clear();
+            history.SetContext(ply);
             GenerateKingCaptures(kingIndex, list, in info);
             if (info.CheckerCount <= 1)
             {
@@ -1163,6 +1169,7 @@ namespace Pedantic.Chess
 
             if (info.CheckerCount <= 1)
             {
+                history.SetContext(ply);
                 list.Clear();
                 GeneratePromotions(list, in info);
                 list.Remove(ttMove);
@@ -1173,6 +1180,7 @@ namespace Pedantic.Chess
             }
 
             list.Clear();
+            history.SetContext(ply);
             GenerateKingQuiets(kingIndex, list, in info);
             if (info.CheckerCount <= 1)
             {
