@@ -210,7 +210,6 @@ namespace Pedantic.Chess
                 Uci.Usage(cpuStats.CpuLoad);
                 Uci.Debug("Incrementing hash table version.");
                 ttCache.IncrementGeneration();
-                ss.Clear();
                 Uci.BestMove(bestMove, CanPonder ? ponderMove : Move.NullMove);
             }
             catch (Exception ex)
