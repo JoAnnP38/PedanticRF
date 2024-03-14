@@ -7,7 +7,7 @@ using Pedantic.Tablebase;
 
 namespace Pedantic.Chess
 {
-    public class BasicSearch : IInitialize
+    public sealed class BasicSearch : IInitialize
     {
         internal const int CHECK_TC_NODES_MASK = 1023;
         internal const int WAIT_TIME = 50;
@@ -15,12 +15,6 @@ namespace Pedantic.Chess
         internal const double LMR_MIN = 0.0;
         internal const double LMR_MAX = 15.0;
         internal const int LMP_MAX_DEPTH_CUTOFF = 11;
-
-        private class FakeHistory : IHistory
-        {
-            public short this[Move move] => 0;
-            public short this[Color stm, Piece piece, SquareIndex to] => 0;
-        }
 
         #region Constructors
 
@@ -668,7 +662,6 @@ namespace Pedantic.Chess
             Move bestMove = Move.NullMove;
             board.PushBoardState();
             MoveList list = listPool.Rent();
-            //list.History = fakeHistory;
             int expandedNodes = 0;
 
             IEnumerable<GenMove> moves = !inCheck ? 
@@ -942,7 +935,6 @@ namespace Pedantic.Chess
         private readonly PvTable pvTable = new();
         private readonly List<Move> pv = new(MAX_PLY);
         private readonly CpuStats cpuStats = new();
-        private readonly FakeHistory fakeHistory = new();
         private Uci uci = Uci.Default;
         private bool oneLegalMove = false;
         private bool wasAborted = false;
