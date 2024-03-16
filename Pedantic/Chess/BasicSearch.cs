@@ -479,12 +479,13 @@ namespace Pedantic.Chess
             StackList<Move> quiets = new(stackalloc Move[64]);
             board.PushBoardState();
             MoveList list = listPool.Rent();
-            IEnumerable<GenMove> moves = !inCheck ?
-                board.Moves(ply, history, ss, list, ttMove) :
-                board.EvasionMoves(ply, history, ss, list, ttMove);
 
-            foreach (GenMove genMove in moves)
+            MoveGenType type = inCheck ? MoveGenType.Evasion : MoveGenType.Normal;
+            var moves = new MoveGen(type, board, ply, history, ss, list, ttMove);
+
+            while (moves.MoveNext())
             {
+                GenMove genMove = moves.Current;
                 if (!board.MakeMoveNs(genMove.Move))
                 {
                     continue;
@@ -663,12 +664,12 @@ namespace Pedantic.Chess
             MoveList list = listPool.Rent();
             int expandedNodes = 0;
 
-            IEnumerable<GenMove> moves = !inCheck ? 
-                board.QMoves(ply, qsPly, history, ss, list, ttMove) :
-                board.EvasionMoves(ply, history, ss, list, ttMove);
+            MoveGenType type = inCheck ? MoveGenType.Evasion : MoveGenType.QSearch;
+            var moves = new MoveGen(type, board, ply, history, ss, list, ttMove, qsPly);
 
-            foreach (GenMove genMove in moves)
+            while (moves.MoveNext())
             {
+                GenMove genMove = moves.Current;
                 if (!board.MakeMoveNs(genMove.Move))
                 {
                     continue;

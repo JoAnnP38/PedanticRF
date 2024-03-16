@@ -336,6 +336,7 @@ namespace Pedantic.Chess
             {
                 SetupNewGame();
                 SetupPosition(fen);
+                Uci.Default.Log($"fen: '{fen}'");
                 Go(depth, int.MaxValue, long.MaxValue, false);
                 Wait();
                 totalNodes += threads.TotalNodes;

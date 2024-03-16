@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 namespace Pedantic.UnitTests
 {
     [TestClass]
+    [TestCategory("UnitTests")]
     public unsafe class MemTests
     {
         [TestMethod]

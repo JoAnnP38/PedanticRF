@@ -262,6 +262,7 @@ namespace Pedantic.Utilities
         public void Append(int n)
         {
             Span<char> numString = stackalloc char[11];
+            numString.Clear();
             if (n.TryFormat(numString, out int charsWritten))
             {
                 int pos = _pos;

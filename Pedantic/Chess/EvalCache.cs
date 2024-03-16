@@ -77,6 +77,7 @@ namespace Pedantic.Chess
 
         public void Resize(int sizeMb)
         {
+            sizeMb = Math.Clamp(sizeMb, 1, 128);
             CalcCacheSizes(sizeMb, out pawnSize);
             byteCount = (nuint)(sizeMb * MB_SIZE);
             pPawnCache = (PawnCacheItem*)NativeMemory.AlignedRealloc(pPawnCache, byteCount, MEM_ALIGNMENT);
@@ -90,7 +91,6 @@ namespace Pedantic.Chess
 
         public static void CalcCacheSizes(int sizeMb, out int pawnSize)
         {
-            sizeMb = Math.Clamp(sizeMb, 1, 128);
             pawnSize = sizeMb * MB_SIZE / PawnCacheItem.Size;
         }
 
