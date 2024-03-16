@@ -426,7 +426,8 @@ namespace Pedantic.Chess
             if (!inCheck && !isPv)
             {
                 // static null move pruning (reverse futility pruning)
-                if (depth <= UciOptions.RfpMaxDepth && evaluation >= beta + depth * UciOptions.RfpMargin)
+                if (depth <= UciOptions.RfpMaxDepth && 
+                    evaluation >= beta + (depth / (improving ? 2 : 1)) * UciOptions.RfpMargin)
                 {
                     return evaluation;
                 }
