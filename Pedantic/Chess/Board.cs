@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using Pedantic.Collections;
 using Pedantic.Chess.HCE;
 using Pedantic.Utilities;
-using System.Buffers;
 
 namespace Pedantic.Chess
 {
@@ -1010,6 +1007,9 @@ namespace Pedantic.Chess
             return false;
         }
 
+        #region Deprecated Functionality
+
+        [Obsolete("Functionality replaced by MoveGen struct")]
         public IEnumerable<GenMove> Moves(int ply, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
@@ -1082,6 +1082,7 @@ namespace Pedantic.Chess
             }
         }
 
+        [Obsolete("Functionality replaced by MoveGen struct")]
         public IEnumerable<GenMove> QMoves(int ply, int qsPly, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
@@ -1136,6 +1137,7 @@ namespace Pedantic.Chess
             }
         }
 
+        [Obsolete("Functionality replaced by MoveGen struct")]
         public IEnumerable<GenMove> EvasionMoves(int ply, History history, SearchStack ss, MoveList list, Move ttMove)
         {
             if (ttMove != Move.NullMove)
@@ -1219,6 +1221,8 @@ namespace Pedantic.Chess
                 yield return new GenMove(list.Sort(n), MoveGenPhase.Quiet);
             }
         }
+
+        #endregion // Deprecated
 
         #endregion
 

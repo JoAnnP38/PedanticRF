@@ -100,6 +100,7 @@ namespace Pedantic.Chess
         public static void SetupNewGame()
         {
             Stop();
+            Board.LoadFen(FEN_START_POS);
             ClearHashTable();
             MovesOutOfBook = 0;
         }

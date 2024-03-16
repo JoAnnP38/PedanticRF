@@ -383,7 +383,7 @@ namespace Pedantic.Chess
             bool canPrune = false;
             ref SearchItem ssItem = ref ss[ply];
             int evaluation = ssItem.Eval = NO_SCORE;
-
+            bool improving = false;
 
             // mate distance pruning
             alpha = Math.Max(alpha, -CHECKMATE_SCORE + ply);
@@ -413,58 +413,71 @@ namespace Pedantic.Chess
             if (!inCheck)
             {
                 evaluation = ssItem.Eval = eval.Compute(board, alpha, beta);
-                if (!isPv)
+                if (ply >= 4 && ss[ply - 4].Eval != NO_SCORE)
                 {
-                    // static null move pruning (reverse futility pruning)
-                    if (depth <= UciOptions.RfpMaxDepth && evaluation >= beta + depth * UciOptions.RfpMargin)
+                    improving = evaluation > ss[ply - 4].Eval;
+                }
+                else if (ply >= 2 && ss[ply - 2].Eval != NO_SCORE)
+                {
+                    improving = evaluation > ss[ply - 2].Eval;
+                }
+            }
+
+            if (!inCheck && !isPv)
+            {
+                // static null move pruning (reverse futility pruning)
+                if (depth <= UciOptions.RfpMaxDepth && evaluation >= beta + depth * UciOptions.RfpMargin)
+                {
+                    return evaluation;
+                }
+
+                // Null Move Pruning - Prune if current evaluation looks so good that we can see what happens
+                // if we just skip our move.
+                if (canNull && depth >= UciOptions.NmpMinDepth && evaluation >= beta && board.PieceCount(board.SideToMove) > 1)
+                {
+                    int R = NMP[depth];
+                    if (improving)
                     {
-                        return evaluation;
+                        R++;
                     }
-
-                    // Null Move Pruning - Prune if current evaluation looks so good that we can see what happens
-                    // if we just skip our move.
-                    if (canNull && depth >= UciOptions.NmpMinDepth && evaluation >= beta && board.PieceCount(board.SideToMove) > 1)
+                    if (board.MakeMove(Move.NullMove))
                     {
-                        int R = NMP[depth];
-                        if (board.MakeMove(Move.NullMove))
+                        ssItem.Move = Move.NullMove;
+                        ssItem.IsCheckingMove = false;
+                        ssItem.Eval = NO_SCORE;
+                        ssItem.Continuation = history.NullMoveContinuation;
+
+                        score = -Search(-beta, -beta + 1, Math.Max(depth - R - 1, 0), ply + 1, false);
+                        board.UnmakeMove();
+                        if (wasAborted)
                         {
-                            ssItem.Move = Move.NullMove;
-                            ssItem.IsCheckingMove = false;
-                            ssItem.Eval = NO_SCORE;
-                            ssItem.Continuation = history.NullMoveContinuation;
+                            return 0;
+                        }
 
-                            score = -Search(-beta, -beta + 1, Math.Max(depth - R - 1, 0), ply + 1, false);
-                            board.UnmakeMove();
-                            if (wasAborted)
-                            {
-                                return 0;
-                            }
+                        if (score >= beta)
+                        {
+                            ttCache.Store(board.Hash, depth, ply, alpha, beta, score, Move.NullMove);
+                            return score;
+                        }
+                    }
+                    ssItem.Eval = (short)evaluation;
+                }
 
-                            if (score >= beta)
+                if (canNull)
+                {
+                    if (depth <= UciOptions.RzrMaxDepth)
+                    {
+                        int threshold = alpha - depth * UciOptions.RzrMargin;
+                        if (evaluation <= threshold)
+                        {
+                            score = Quiesce(alpha, beta, ply);
+                            if (score <= alpha)
                             {
-                                ttCache.Store(board.Hash, depth, ply, alpha, beta, score, Move.NullMove);
                                 return score;
                             }
                         }
-                        ssItem.Eval = (short)evaluation;
                     }
-
-                    if (canNull)
-                    {
-                        if (depth <= UciOptions.RzrMaxDepth)
-                        {
-                            int threshold = alpha - depth * UciOptions.RzrMargin;
-                            if (evaluation <= threshold)
-                            {
-                                score = Quiesce(alpha, beta, ply);
-                                if (score <= alpha)
-                                {
-                                    return score;
-                                }
-                            }
-                        }
-                        canPrune = true;
-                    }
+                    canPrune = true;
                 }
             }
 
