@@ -38,6 +38,9 @@ namespace Pedantic.UnitTests
         [TestMethod]
         public void PositionTest()
         {
+            Program.ParseUciCommand("uci");
+            Program.ParseUciCommand("isready");
+            Program.ParseUciCommand("ucinewgame");
             Assert.AreEqual(Constants.FEN_START_POS, Engine.Board.ToFenString());
             Program.ParseUciCommand("position startpos moves e2e4 e7e5");
             Assert.AreEqual(Engine.Board.PieceBoard(SquareIndex.E4).Color, Color.White);
