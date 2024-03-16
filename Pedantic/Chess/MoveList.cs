@@ -1,9 +1,8 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Pedantic.Utilities;
-using static Pedantic.Chess.Constants;
+
 
 namespace Pedantic.Chess
 {

@@ -653,6 +653,8 @@ namespace Pedantic.Chess
             kingIndex.Fill(SquareIndex.None);
             material.Clear();
             phase = 0;
+            moveList.Clear();
+            gameStack.Clear();
         }
 
         public void AddPiece(Color color, Piece piece, SquareIndex sq)

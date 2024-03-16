@@ -130,5 +130,29 @@ namespace Pedantic.UnitTests
             Program.ParseUciCommand("go depth 16");
             Program.ParseUciCommand("wait");
         }
+
+        [TestMethod]
+        public void HungMoveGenerationTest()
+        {
+            Program.ParseUciCommand("uci");
+            Program.ParseUciCommand("isready");
+            Program.ParseUciCommand("ucinewgame");
+            Program.ParseUciCommand("position fen r3k2r/2pb1ppp/2pp1q2/p7/1nP1B3/1P2P3/P2N1PPP/R2QK2R w KQkq a6 0 14");
+            Program.ParseUciCommand("go depth 12");
+            Program.ParseUciCommand("wait");
+        }
+
+
+        [TestMethod]
+        public void InconsistentBenchTest()
+        {
+            Program.ParseUciCommand("uci");
+
+            for (int n = 0; n < 3; n++)
+            {
+                Program.ParseUciCommand("bench depth 12");
+                Program.ParseUciCommand("wait");
+            }
+        }
     }
 }

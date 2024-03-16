@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 
@@ -72,6 +71,8 @@ namespace Pedantic.Chess
         public void Clear()
         {
             NativeMemory.Clear(pTable, byteCount);
+            used = 0;
+            generation = 1;
         }
 
         public void Resize()

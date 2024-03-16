@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Pedantic.Utilities;
 
@@ -81,8 +80,8 @@ namespace Pedantic.Collections
         {
             get
             {
-                Debug.Assert(i >= 0 && i < dim1);
-                Debug.Assert(j >= 0 && j < dim2);
+                Util.Assert(i >= 0 && i < dim1);
+                Util.Assert(j >= 0 && j < dim2);
                 return ref pArray[i * dim2 + j];
             }
         }
