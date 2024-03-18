@@ -50,7 +50,7 @@ namespace Pedantic.Chess
 
         public void ResizeEvalCache()
         {
-            int sizeMb = UciOptions.HashTableSize / 16;
+            int sizeMb = UciOptions.HashTableSize;
             foreach (var thread in threads)
             {
                 thread.EvalCache.Resize(sizeMb);

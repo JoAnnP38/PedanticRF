@@ -41,13 +41,47 @@ namespace Pedantic.Chess
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool IsValid(ulong hash) => Hash == hash;
 
-            public ulong Hash => hash ^ data;
-            public ulong Data => data;
-            public Move BestMove => (Move)(uint)BitOps.BitFieldExtract(data, 0, 29);
-            public short Score => (short)BitOps.BitFieldExtract(data, 29, 16);
-            public Bound Bound => (Bound)BitOps.BitFieldExtract(data, 45, 2);
-            public sbyte Depth => (sbyte)BitOps.BitFieldExtract(data, 47, 8);
-            public ushort Age => (ushort)BitOps.BitFieldExtract(data, 55, 9);
+            public ulong Hash 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => hash ^ data;
+            }
+
+            public ulong Data 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => data;
+            }
+
+            public Move BestMove 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (Move)(uint)BitOps.BitFieldExtract(data, 0, 29);
+            }
+
+            public short Score 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (short)BitOps.BitFieldExtract(data, 29, 16);
+            }
+
+            public Bound Bound 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (Bound)BitOps.BitFieldExtract(data, 45, 2);
+            }
+
+            public sbyte Depth 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (sbyte)BitOps.BitFieldExtract(data, 47, 8);
+            }
+
+            public ushort Age 
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => (ushort)BitOps.BitFieldExtract(data, 55, 9);
+            }
         }
 
         public TtCache()

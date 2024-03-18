@@ -505,7 +505,14 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ref Bitboard Units(Color color)
+        public Bitboard Units(Color color)
+        {
+            Util.Assert(color != Color.None);
+            return bitboards[(int)color + 1];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ref Bitboard UnitsRef(Color color)
         {
             Util.Assert(color != Color.None);
             return ref bitboards[(int)color + 1];
@@ -664,7 +671,7 @@ namespace Pedantic.Chess
             board[(int)sq] = new Square(color, piece);
             Bitboard pcMask = new Bitboard(sq);
             All |= pcMask;
-            Units(color) |= pcMask;
+            UnitsRef(color) |= pcMask;
             Pieces(piece) |= pcMask;
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
             material[color] += HceEval.Weights.PieceValue(piece);
@@ -690,7 +697,7 @@ namespace Pedantic.Chess
             board[(int)sq] = Square.Empty;
             Bitboard pcMask = ~new Bitboard(sq);
             All &= pcMask;
-            Units(color) &= pcMask;
+            UnitsRef(color) &= pcMask;
             Pieces(piece) &= pcMask;
             hash = ZobristHash.HashPiece(hash, color, piece, sq);
             material[color] -= HceEval.Weights.PieceValue(piece);
@@ -844,7 +851,7 @@ namespace Pedantic.Chess
 
         public void GenerateKingQuiets(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
-            Bitboard attacks = GetPieceMoves(Piece.King, kingIndex, All).AndNot(All | info.KingDanger);
+            Bitboard attacks = KingMoves(kingIndex).AndNot(All | info.KingDanger);
             foreach (SquareIndex to in attacks)
             {
                 list.AddQuiet(sideToMove, Piece.King, kingIndex, to);
@@ -867,7 +874,7 @@ namespace Pedantic.Chess
 
         public void GenerateKingCaptures(SquareIndex kingIndex, MoveList list, in EvasionInfo info)
         {
-            Bitboard attacks = GetPieceMoves(Piece.King, kingIndex, All) & Units(Opponent);
+            Bitboard attacks = KingMoves(kingIndex) & Units(Opponent);
             attacks = attacks.AndNot(info.KingDanger);
             foreach (SquareIndex to in attacks)
             {

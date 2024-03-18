@@ -258,6 +258,8 @@ namespace Pedantic.Chess
                 }
 
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
+                eval.Prefetch(board);
+                
                 expandedNodes++;
                 NodesVisited++;
 
@@ -394,15 +396,19 @@ namespace Pedantic.Chess
                 return alpha;
             }
 
-            Move ttMove = Move.NullMove;
             if (ttCache.Probe(board.Hash, depth, ply, alpha, beta, out int ttScore, out TtCache.TtItem ttItem) && !isPv)
             {
                 return ttScore;
             }
 
+            Move ttMove;
             if (ttItem.BestMove != Move.NullMove && board.IsPseudoLegal(ttItem.BestMove))
             {
                 ttMove = ttItem.BestMove;
+            }
+            else
+            {
+                ttMove = Move.NullMove;
             }
 
             if (ProbeTb(depth, ply, alpha, beta, out score))
@@ -436,11 +442,8 @@ namespace Pedantic.Chess
                 // if we just skip our move.
                 if (canNull && depth >= UciOptions.NmpMinDepth && evaluation >= beta && board.PieceCount(board.SideToMove) > 1)
                 {
-                    int R = NMP[depth];
-                    if (improving)
-                    {
-                        R++;
-                    }
+                    int R = NMP[depth] + (improving ? 1 : 0);
+
                     if (board.MakeMove(Move.NullMove))
                     {
                         ssItem.Move = Move.NullMove;
@@ -506,7 +509,6 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
-                NodesVisited++;
                 bool checkingMove = board.IsChecked();
                 bool isQuiet = genMove.Move.IsQuiet;
                 ssItem.Move = genMove.Move;
@@ -554,6 +556,9 @@ namespace Pedantic.Chess
                 }
 
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
+                eval.Prefetch(board);
+
+                NodesVisited++;
                 
                 if (expandedNodes == 1)
                 {
@@ -690,7 +695,6 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
-                NodesVisited++;
                 bool isCheckingMove = board.IsChecked();
 
                 if (!inCheck && !isCheckingMove && genMove.MovePhase == MoveGenPhase.BadCapture)
@@ -699,6 +703,8 @@ namespace Pedantic.Chess
                     continue;
                 }
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
+                eval.Prefetch(board);
+                NodesVisited++;
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = isCheckingMove;
                 ssItem.Continuation = history.GetContinuation(genMove.Move);

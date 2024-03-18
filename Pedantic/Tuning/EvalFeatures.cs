@@ -125,14 +125,14 @@ namespace Pedantic.Tuning
 
                 if (bd.DiagonalSliders(other) != 0)
                 {
-                    Bitboard attacks = Board.GetPieceMoves(Piece.Bishop, KI, bd.All);
+                    Bitboard attacks = Board.GetBishopMoves(KI, bd.All);
                     int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                     IncrementKsDiagonalMobility(color, coefficients, mobility);
                 }
 
                 if (bd.OrthogonalSliders(other) != 0)
                 {
-                    Bitboard attacks = Board.GetPieceMoves(Piece.Rook, KI, bd.All);
+                    Bitboard attacks = Board.GetRookMoves(KI, bd.All);
                     int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
                 }
