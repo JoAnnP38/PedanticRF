@@ -215,7 +215,7 @@ namespace Pedantic.Chess
             catch (Exception ex)
             {
                 string msg =
-                    $"Search: Unexpected exception occurred on position '{position}'.";
+                    $"[{DateTime.Now}]\nSearch: Unexpected exception occurred on position '{position}' : {ex.Message}";
                 Console.Error.WriteLine(msg);
                 Console.Error.WriteLine(ex.ToString());
                 Uci.Log(msg);

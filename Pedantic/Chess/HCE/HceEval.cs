@@ -1,6 +1,5 @@
-﻿using Pedantic.Chess;
-using Pedantic.Collections;
-using Pedantic.Utilities;
+﻿using Pedantic.Collections;
+using Pedantic.Tablebase;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -56,6 +55,7 @@ namespace Pedantic.Chess.HCE
             public short Material;
             public SquareIndex KI;
             public KingBuckets KB;
+            public bool CanWin;
             public byte CanCastle;
             public byte AttackCount;
             public AttackArray Attacks;
@@ -108,6 +108,7 @@ namespace Pedantic.Chess.HCE
             Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
             InitializeEvalInfo(board, evalInfo);
             short score = ComputeNormal(board, evalInfo, alpha, beta, ref isLazy);
+            score = AdjustDraws(board, evalInfo, score);
             score = (short)(ColorToSign(board.SideToMove) * score);
 
             if (!isLazy)
@@ -479,6 +480,45 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
+        public static short AdjustDraws(Board board, Span<EvalInfo> evalInfo, short score)
+        {
+            if (board.HalfMoveClock > 84)
+            {
+                // scale down eval score as game approaches 50mr draw
+                int movesLeft = Math.Max(100 - board.HalfMoveClock, 0);
+                score = (short)(score * movesLeft / 16);
+            }
+            else if ((score > 0 && !evalInfo[0].CanWin) || (score < 0 && !evalInfo[1].CanWin))
+            {
+                // if "winning" side cannot win scale down score
+                score /= 8;
+            }
+            else if (IsOcbEndgame(board, out int pcCount))
+            {
+                // if playing OCB endgame, scale down score
+                score = (short)((score * (pcCount == 1 ? 2 : 3)) / 4);
+            }
+            return score;
+        }
+
+        public static (sbyte Scale, sbyte Divisor) CalcDrawRatio(Board board, Span<EvalInfo> evalInfo, short score)
+        {
+            if (board.HalfMoveClock > 84)
+            {
+                return ((sbyte)Math.Max(100 - board.HalfMoveClock, 0), 16);
+            }
+            else if ((score > 0 && !evalInfo[0].CanWin) || (score < 0 && !evalInfo[1].CanWin))
+            {
+                return (1, 8);
+            }
+            else if (IsOcbEndgame(board, out int pcCount))
+            {
+                return ((sbyte)(pcCount == 1 ? 2 : 3), 4);
+            }
+
+            return (1, 1);
+        }
+
         public static bool SufficientMatingMaterial(Board board, Span<EvalInfo> evalInfo, Color side)
         {
             int numKnights = board.Pieces(side, Piece.Knight).PopCount;
@@ -486,6 +526,32 @@ namespace Pedantic.Chess.HCE
             bool case1 = (board.Pieces(side, Piece.Rook) | board.Pieces(side, Piece.Queen)) != 0;
             bool case2 = (numKnights >= 1 && numBishops >= 1) || numBishops >= 2 || numKnights >= 3;
             return case1 || case2;
+        }
+
+        public static (bool WhiteCanWin, bool BlackCanWin) CanWin(Board board, Span<EvalInfo> evalInfo)
+        {
+            bool whiteCanWin = false, blackCanWin = false;
+            int winMargin = wts.PieceValue(Piece.Pawn).NormalizeScore(board.Phase) * 4;
+
+            if (evalInfo[0].Pawns != 0)
+            {
+                whiteCanWin = true;
+            }
+            else if (evalInfo[0].Material - evalInfo[1].Material >= winMargin)
+            {
+                whiteCanWin = SufficientMatingMaterial(board, evalInfo, Color.White);
+            }
+
+            if (evalInfo[1].Pawns != 0)
+            {
+                blackCanWin = true;
+            }
+            else if (evalInfo[1].Material - evalInfo[0].Material >= winMargin)
+            {
+                blackCanWin = SufficientMatingMaterial(board, evalInfo, Color.Black);
+            }
+
+            return (whiteCanWin, blackCanWin);
         }
 
         public int ScaleFactor(Color winningColor, Board board, Span<EvalInfo> evalInfo)
@@ -498,7 +564,7 @@ namespace Pedantic.Chess.HCE
             return 4;
         }
 
-        public bool IsOcbEndgame(Board board, out int pcCount)
+        public static bool IsOcbEndgame(Board board, out int pcCount)
         {
             pcCount = 0;
             int whitePieceCount = board.Units(Color.White).AndNot(board.Pawns).PopCount - 1;
@@ -560,6 +626,10 @@ namespace Pedantic.Chess.HCE
                 int o = (int)other;
                 evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].AttackBy[AttackBy.Pawn]);
             }
+
+            var canWin = CanWin(board, evalInfo);
+            evalInfo[0].CanWin = canWin.WhiteCanWin;
+            evalInfo[1].CanWin = canWin.BlackCanWin;
         }
 
         public static Bitboard GetAttack(Board board, SquareIndex from, Direction dir)

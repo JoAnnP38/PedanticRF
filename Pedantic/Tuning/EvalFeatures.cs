@@ -12,9 +12,10 @@ namespace Pedantic.Tuning
     {
         private Color sideToMove;
         private short phase;
+        private (sbyte Scale, sbyte Divisor) drawRatio;
         private readonly SparseArray<short> coefficients = new();
 
-        public EvalFeatures(Board bd)
+        public EvalFeatures(Board bd, Weights wts)
         {
             Span<HceEval.EvalInfo> evalInfo = stackalloc HceEval.EvalInfo[2];
             HceEval.InitializeEvalInfo(bd, evalInfo);
@@ -262,12 +263,20 @@ namespace Pedantic.Tuning
                     IncrementBlockedPassedPawn(color, coefficients, blocker, normalRank - 1);
                 }            
             }
+            short score = ComputeImpl(wts);
+            drawRatio = HceEval.CalcDrawRatio(bd, evalInfo, score);
         }
 
         public IDictionary<int, short> Coefficients
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => coefficients;
+        }
+
+        public (sbyte Scale, sbyte Divisor) DrawRatio
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => drawRatio;
         }
 
         public Color SideToMove
@@ -282,17 +291,15 @@ namespace Pedantic.Tuning
             get => phase;
         }
 
-        public short Compute(Weights weights, int start = PIECE_VALUES, int end = MAX_WEIGHTS)
+        public short Compute(Weights weights, int start = PIECE_VALUES, int end = MAX_WEIGHTS, bool egScaling = true)
         {
             try
             {
-                Score computeScore = Score.Zero;
-                IEnumerable<KeyValuePair<int, short>> coeffs = coefficients.Where(kvp => kvp.Key >= start && kvp.Key < end);
-                foreach (var coeff in coeffs)
+                short score = ComputeImpl(weights, start, end);
+                if (egScaling)
                 {
-                    computeScore += coeff.Value * weights[coeff.Key];
+                    score = (short)(score * drawRatio.Scale / drawRatio.Divisor);
                 }
-                short score = computeScore.NormalizeScore(phase);
                 return sideToMove == Color.White ? score : (short)-score;
             }
             catch (Exception ex)
@@ -300,6 +307,17 @@ namespace Pedantic.Tuning
                 Util.TraceError(ex.ToString());
                 throw new Exception("EvalFeatures.Compute error occurred.", ex);
             }
+        }
+
+        private short ComputeImpl(Weights weights, int start = PIECE_VALUES, int end = MAX_WEIGHTS)
+        {
+            Score computeScore = Score.Zero;
+            IEnumerable<KeyValuePair<int, short>> coeffs = coefficients.Where(kvp => kvp.Key >= start && kvp.Key < end);
+            foreach (var coeff in coeffs)
+            {
+                computeScore += coeff.Value * weights[coeff.Key];
+            }
+            return computeScore.NormalizeScore(phase);        
         }
 
         public short Compute(Weights weights, int[] keys)

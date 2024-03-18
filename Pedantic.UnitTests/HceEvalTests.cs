@@ -60,7 +60,7 @@ namespace Pedantic.UnitTests
         public void ComputeTests(string fen)
         {
             Board bd = new Board(fen);
-            EvalFeatures features = new(bd);
+            EvalFeatures features = new(bd, HceEval.Weights);
             short expected = features.Compute(HceEval.Weights);
             EvalCache cache = new();
             HceEval eval = new(cache);
@@ -122,9 +122,9 @@ namespace Pedantic.UnitTests
         public void EvalComponentTests(string fen)
         {
             Board bd = new Board(fen);
-            EvalFeatures features = new(bd);
+            EvalFeatures features = new(bd, HceEval.Weights);
             
-            short expected = features.Compute(HceEval.Weights, Weights.PIECE_VALUES, Weights.KNIGHT_MOBILITY);
+            short expected = features.Compute(HceEval.Weights, Weights.PIECE_VALUES, Weights.KNIGHT_MOBILITY, false);
 
             EvalCache cache = new();
             HceEval eval = new(cache);
@@ -138,19 +138,19 @@ namespace Pedantic.UnitTests
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
             Assert.AreEqual(expected, actual, "Material+PST");
 
-            expected = features.Compute(HceEval.Weights, Weights.PASSED_PAWN, Weights.KING_ATTACK);
+            expected = features.Compute(HceEval.Weights, Weights.PASSED_PAWN, Weights.KING_ATTACK, false);
             score = eval.ProbePawnCache(bd, evalInfo);
             actual = score.NormalizeScore(bd.Phase);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
             Assert.AreEqual(expected, actual, "Pawn Structure");
 
-            expected = features.Compute(HceEval.Weights, Weights.KNIGHT_MOBILITY, Weights.PASSED_PAWN);
+            expected = features.Compute(HceEval.Weights, Weights.KNIGHT_MOBILITY, Weights.PASSED_PAWN, false);
             score = HceEval.EvalMobility(bd, evalInfo, Color.White);
             score -= HceEval.EvalMobility(bd, evalInfo, Color.Black);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
             Assert.AreEqual(expected, actual, "Piece Mobility");
 
-            expected = features.Compute(HceEval.Weights, Weights.KING_ATTACK, Weights.KING_OUTSIDE_PP_SQUARE);
+            expected = features.Compute(HceEval.Weights, Weights.KING_ATTACK, Weights.KING_OUTSIDE_PP_SQUARE, false);
             score = HceEval.EvalKingSafety(bd, evalInfo, Color.White);
             score -= HceEval.EvalKingSafety(bd, evalInfo, Color.Black);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
