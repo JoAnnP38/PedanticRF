@@ -259,7 +259,8 @@ namespace Pedantic.Tuning
             }
 
             double phase = p.Features.Phase;
-            return (opening * phase + endgame * (Constants.MAX_PHASE - phase)) / Constants.MAX_PHASE;
+            double eval = (opening * phase + endgame * (MAX_PHASE - phase)) / MAX_PHASE;
+            return eval * p.Features.DrawRatio.Scale / p.Features.DrawRatio.Divisor;
         }
 
         private readonly WeightPair[] weights;

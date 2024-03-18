@@ -24,7 +24,7 @@ namespace Pedantic.Tuning
         {
             progress = ply * 1000 / gamePly;
             Eval = eval;
-            Features = new EvalFeatures(new Board(fen));
+            Features = new EvalFeatures(new Board(fen), Engine.Weights);
             result = fResult switch
             {
                 WDL_WIN => 2,
@@ -38,7 +38,7 @@ namespace Pedantic.Tuning
         {
             progress = (ply * 1000) / gamePly;
             Eval = eval;
-            Features = new EvalFeatures(new Board(fen));
+            Features = new EvalFeatures(new Board(fen), Engine.Weights);
             result = fResult switch
             {
                 WDL_WIN => 2,
