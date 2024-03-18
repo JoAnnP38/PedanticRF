@@ -99,18 +99,26 @@ namespace Pedantic.Chess.HCE
 
         public short Compute(Board board, int alpha = -INFINITE_WINDOW, int beta = INFINITE_WINDOW)
         {
-            Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
+            if (cache.ProbeEvalCache(board.Hash, board.SideToMove, out EvalCache.EvalCacheItem item))
+            {
+                return item.EvalScore;
+            }
 
-            cache.PrefetchPawnCache(board.PawnHash);
+            bool isLazy = false;
+            Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
             InitializeEvalInfo(board, evalInfo);
-            short score = ComputeNormal(board, evalInfo, alpha, beta);
-            //Color winningColor = score >= 0 ? Color.White : Color.Black;
-            //score = (short)((score * ScaleFactor(winningColor, board, evalInfo)) / 4);
+            short score = ComputeNormal(board, evalInfo, alpha, beta, ref isLazy);
             score = (short)(ColorToSign(board.SideToMove) * score);
+
+            if (!isLazy)
+            {
+                cache.SaveEval(board.Hash, score, board.SideToMove);
+            }
+
             return score;
         }
 
-        public short ComputeNormal(Board board, Span<EvalInfo> evalInfo, int alpha, int beta)
+        public short ComputeNormal(Board board, Span<EvalInfo> evalInfo, int alpha, int beta, ref bool isLazy)
         {
             Score score = EvalMaterialAndPst(board, evalInfo, Color.White);
             score -= EvalMaterialAndPst(board, evalInfo, Color.Black);
@@ -119,6 +127,7 @@ namespace Pedantic.Chess.HCE
             int evalScore = ColorToSign(board.SideToMove) * normalScore;
             if (evalScore < alpha - UciOptions.LzyEvalMargin || evalScore > beta + UciOptions.LzyEvalMargin)
             { 
+                isLazy = true;
                 return (short)normalScore;
             }
 
@@ -157,7 +166,13 @@ namespace Pedantic.Chess.HCE
             return pawnScore;
         }
 
-        private Score EvalMaterialAndPst(Board board, Span<EvalInfo> evalInfo, Color color)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Prefetch(Board board)
+        {
+            cache.PrefetchEvalCache(board.Hash, board.PawnHash);
+        }
+
+        public Score EvalMaterialAndPst(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             // material remains up to date via incremental updates
             Score score = board.Material[color];
@@ -174,7 +189,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalPawns(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalPawns(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Color other = color.Flip();
             int c = (int)color;
@@ -228,7 +243,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalMobility(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalMobility(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Color other = color.Flip();
             int c = (int)color;
@@ -253,7 +268,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalKingSafety(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalKingSafety(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Score score = Score.Zero;
             Color other = color.Flip();
@@ -285,14 +300,14 @@ namespace Pedantic.Chess.HCE
             SquareIndex KI = evalInfo[c].KI;
             if (board.DiagonalSliders(other) != 0)
             {
-                Bitboard attacks = Board.GetPieceMoves(Piece.Bishop, KI, board.All);
+                Bitboard attacks = Board.GetBishopMoves(KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsDiagonalMobility(mobility);
             }
 
             if (board.OrthogonalSliders(other) != 0)
             {
-                Bitboard attacks = Board.GetPieceMoves(Piece.Rook, KI, board.All);
+                Bitboard attacks = Board.GetRookMoves(KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsOrthogonalMobility(mobility);
             }
@@ -300,7 +315,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalPieces(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Score score = Score.Zero;
             Color other = color.Flip();
@@ -342,7 +357,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalPassedPawns(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalPassedPawns(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Score score = Score.Zero;
             Color other = color.Flip();
@@ -403,7 +418,7 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        private static Score EvalThreats(Board board, Span<EvalInfo> evalInfo, Color color)
+        public static Score EvalThreats(Board board, Span<EvalInfo> evalInfo, Color color)
         {
             Score score = Score.Zero;
             Color other = color.Flip();
@@ -514,7 +529,7 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].Material = board.Material[color].NormalizeScore(board.Phase);
                 evalInfo[c].KI = board.KingIndex[color];
                 evalInfo[c].KB = new KingBuckets(color, board.KingIndex[color], board.KingIndex[color.Flip()]);
-                Bitboard attacks = Board.GetPieceMoves(Piece.King, evalInfo[c].KI, board.All);
+                Bitboard attacks = Board.KingMoves(evalInfo[c].KI);
                 evalInfo[c].AttackBy[AttackBy.King] = attacks;
                 evalInfo[c].AttackBy[AttackBy.All] = attacks;
 

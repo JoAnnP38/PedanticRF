@@ -4,7 +4,7 @@ setoption name SyzygyPath value c:/tb/syzygy/3-4-5-6/
 ucinewgame
 isready
 position startpos
-go depth 18
+go depth 24
 wait
 quit
 

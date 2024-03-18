@@ -68,17 +68,20 @@ namespace Pedantic.Chess
 
         public GenMove Current
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => current;
         }
 
         object IEnumerator.Current
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => Current;
         }
 
         public void Dispose()
         { }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<GenMove> GetEnumerator()
         {
             return this;
