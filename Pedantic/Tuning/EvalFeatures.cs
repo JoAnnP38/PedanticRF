@@ -62,11 +62,13 @@ namespace Pedantic.Tuning
                     {
                         Ray ray = Board.Vectors[(int)from];
                         Bitboard friendMask = color == Color.White ? ray.North : ray.South;
+                        bool canBeBackward = true;
                         
                         if ((otherPawns & HceEval.PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                         {
                             IncrementPassedPawn(color, coefficients, normalFrom);
                             evalInfo[c].PassedPawns |= sqMask;
+                            canBeBackward = false;
                         }
 
                         if ((pawns & HceEval.AdjacentPawnMasks[(int)from]) != 0)
@@ -87,6 +89,12 @@ namespace Pedantic.Tuning
                         if ((pawns & HceEval.IsolatedPawnMasks[(int)from]) == 0)
                         {
                             IncrementIsolatedPawn(color, coefficients, normalFrom);
+                            canBeBackward = false;
+                        }
+
+                        if (canBeBackward && (pawns & HceEval.BackwardPawnMasks[c, (int)from]) == 0)
+                        {
+                            IncrementBackwardPawn(color, coefficients);
                         }
                     }
                     else if (piece == Piece.Rook)
@@ -451,6 +459,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementBackwardPawn(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(BACKWARD_PAWN))
+            {
+                v[BACKWARD_PAWN] += Increment(color);
+            }
+            else
+            {
+                v.Add(BACKWARD_PAWN, Increment(color));
             }
         }
 
