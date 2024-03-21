@@ -263,7 +263,7 @@ namespace Pedantic.Tuning
                     IncrementBlockedPassedPawn(color, coefficients, blocker, normalRank - 1);
                 }            
             }
-            short score = ComputeImpl(wts);
+            Score score = ComputeImpl(wts);
             drawRatio = HceEval.CalcDrawRatio(bd, evalInfo, score);
         }
 
@@ -295,12 +295,12 @@ namespace Pedantic.Tuning
         {
             try
             {
-                short score = ComputeImpl(weights, start, end);
-                if (egScaling)
-                {
-                    score = (short)(score * drawRatio.Scale / drawRatio.Divisor);
-                }
-                return sideToMove == Color.White ? score : (short)-score;
+                Score score = ComputeImpl(weights, start, end);
+                short normScore = egScaling ? 
+                    score.NormalizeScore(phase, drawRatio.Scale, drawRatio.Divisor) :
+                    score.NormalizeScore(phase);
+
+                return sideToMove == Color.White ? normScore : (short)-normScore;
             }
             catch (Exception ex)
             {
@@ -309,7 +309,7 @@ namespace Pedantic.Tuning
             }
         }
 
-        private short ComputeImpl(Weights weights, int start = PIECE_VALUES, int end = MAX_WEIGHTS)
+        private Score ComputeImpl(Weights weights, int start = PIECE_VALUES, int end = MAX_WEIGHTS)
         {
             Score computeScore = Score.Zero;
             IEnumerable<KeyValuePair<int, short>> coeffs = coefficients.Where(kvp => kvp.Key >= start && kvp.Key < end);
@@ -317,7 +317,7 @@ namespace Pedantic.Tuning
             {
                 computeScore += coeff.Value * weights[coeff.Key];
             }
-            return computeScore.NormalizeScore(phase);        
+            return computeScore;        
         }
 
         public short Compute(Weights weights, int[] keys)

@@ -19,12 +19,29 @@ namespace Pedantic.Chess
             score = scoreValue;
         }
 
-        public short MgScore => (short)score;
-        public short EgScore => (short)((uint)(score + 0x8000) >> 16);
+        public short MgScore
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (short)score;
+        }
 
+        public short EgScore 
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (short)((uint)(score + 0x8000) >> 16);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short NormalizeScore(int phase)
         {
             return (short)((MgScore * phase + EgScore * (MAX_PHASE - phase)) / MAX_PHASE);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short NormalizeScore(int phase, int scale, int divisor)
+        {
+            int egScaled = EgScore * scale / divisor;
+            return (short)((MgScore * phase + egScaled * (MAX_PHASE - phase)) / MAX_PHASE);
         }
 
         public bool Equals(Score other)

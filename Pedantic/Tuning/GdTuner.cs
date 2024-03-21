@@ -162,13 +162,14 @@ namespace Pedantic.Tuning
         {
             double sig = Sigmoid(k, ComputeEval(pos));
             double res = (pos.CombinedResult(k) - sig) * sig * (1.0 - sig);
-            double mgBase = res * pos.Features.Phase / Constants.MAX_PHASE;
+            double mgBase = res * pos.Features.Phase / MAX_PHASE;
             double egBase = res - mgBase;
+            double egScale = pos.Features.DrawRatio.Scale / pos.Features.DrawRatio.Divisor;
 
             foreach (var kvp in pos.Features.Coefficients)
             {
                 grad[kvp.Key].MG += mgBase * kvp.Value;
-                grad[kvp.Key].EG += egBase * kvp.Value;
+                grad[kvp.Key].EG += egBase * kvp.Value * egScale;
             }
         }
 
@@ -259,8 +260,9 @@ namespace Pedantic.Tuning
             }
 
             double phase = p.Features.Phase;
-            double eval = (opening * phase + endgame * (MAX_PHASE - phase)) / MAX_PHASE;
-            return eval * p.Features.DrawRatio.Scale / p.Features.DrawRatio.Divisor;
+            double egScaled = endgame * p.Features.DrawRatio.Scale / p.Features.DrawRatio.Divisor;
+            double eval = (opening * phase + egScaled * (MAX_PHASE - phase)) / MAX_PHASE;
+            return eval;
         }
 
         private readonly WeightPair[] weights;

@@ -108,7 +108,6 @@ namespace Pedantic.Chess.HCE
             Span<EvalInfo> evalInfo = stackalloc EvalInfo[2];
             InitializeEvalInfo(board, evalInfo);
             short score = ComputeNormal(board, evalInfo, alpha, beta, ref isLazy);
-            score = AdjustDraws(board, evalInfo, score);
             score = (short)(ColorToSign(board.SideToMove) * score);
 
             if (!isLazy)
@@ -145,7 +144,9 @@ namespace Pedantic.Chess.HCE
             score -= EvalThreats(board, evalInfo, Color.Black);
             score += ColorToSign(board.SideToMove) * wts.TempoBonus;
 
-            return score.NormalizeScore(board.Phase);
+            var egScale = CalcDrawRatio(board, evalInfo, score);
+
+            return score.NormalizeScore(board.Phase, egScale.Scale, egScale.Divisor);
         }
 
         public Score ProbePawnCache(Board board, Span<EvalInfo> evalInfo)
@@ -501,13 +502,14 @@ namespace Pedantic.Chess.HCE
             return score;
         }
 
-        public static (sbyte Scale, sbyte Divisor) CalcDrawRatio(Board board, Span<EvalInfo> evalInfo, short score)
+        public static (sbyte Scale, sbyte Divisor) CalcDrawRatio(Board board, Span<EvalInfo> evalInfo, Score score)
         {
+            short normScore = score.NormalizeScore(board.Phase);
             if (board.HalfMoveClock > 84)
             {
                 return ((sbyte)Math.Max(100 - board.HalfMoveClock, 0), 16);
             }
-            else if ((score > 0 && !evalInfo[0].CanWin) || (score < 0 && !evalInfo[1].CanWin))
+            else if ((normScore > 0 && !evalInfo[0].CanWin) || (normScore < 0 && !evalInfo[1].CanWin))
             {
                 return (1, 8);
             }
@@ -519,7 +521,7 @@ namespace Pedantic.Chess.HCE
             return (1, 1);
         }
 
-        public static bool SufficientMatingMaterial(Board board, Span<EvalInfo> evalInfo, Color side)
+        public static bool SufficientMatingMaterial(Board board, Color side)
         {
             int numKnights = board.Pieces(side, Piece.Knight).PopCount;
             int numBishops = board.Pieces(side, Piece.Bishop).PopCount;
@@ -539,7 +541,7 @@ namespace Pedantic.Chess.HCE
             }
             else if (evalInfo[0].Material - evalInfo[1].Material >= winMargin)
             {
-                whiteCanWin = SufficientMatingMaterial(board, evalInfo, Color.White);
+                whiteCanWin = SufficientMatingMaterial(board, Color.White);
             }
 
             if (evalInfo[1].Pawns != 0)
@@ -548,7 +550,7 @@ namespace Pedantic.Chess.HCE
             }
             else if (evalInfo[1].Material - evalInfo[0].Material >= winMargin)
             {
-                blackCanWin = SufficientMatingMaterial(board, evalInfo, Color.Black);
+                blackCanWin = SufficientMatingMaterial(board, Color.Black);
             }
 
             return (whiteCanWin, blackCanWin);
