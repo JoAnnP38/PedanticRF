@@ -214,11 +214,13 @@ namespace Pedantic.Chess.HCE
                 Bitboard friendMask = color == Color.White ? ray.North : ray.South;
                 SquareIndex normalFrom = from.Normalize(color);
                 Bitboard sqMask = new Bitboard(from);
+                bool canBeBackward = true;
 
                 if ((otherPawns & PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                 {
                     score += wts.PassedPawn(normalFrom);
                     evalInfo[c].PassedPawns |= sqMask;
+                    canBeBackward = false;
                 }
 
                 if ((pawns & AdjacentPawnMasks[(int)from]) != 0)
@@ -239,6 +241,12 @@ namespace Pedantic.Chess.HCE
                 if ((pawns & IsolatedPawnMasks[(int)from]) == 0)
                 {
                     score += wts.IsolatedPawn(normalFrom);
+                    canBeBackward = false;
+                }
+
+                if (canBeBackward && (pawns & BackwardPawnMasks[c, (int)from]) == 0)
+                {
+                    score += wts.BackwardPawn;
                 }
             }
 
@@ -754,6 +762,47 @@ namespace Pedantic.Chess.HCE
             0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul, 0x0000000000000000ul
 
             #endregion AdjacentPawnMasks data
+        };
+
+        public static readonly FixedArray2D<ulong> BackwardPawnMasks = new (MAX_COLORS, MAX_SQUARES)
+        {
+            #region BackwardPawnMasks data
+
+            0x0000000000000002ul, 0x0000000000000005ul, 0x000000000000000Aul, 0x0000000000000014ul,
+            0x0000000000000028ul, 0x0000000000000050ul, 0x00000000000000A0ul, 0x0000000000000040ul,
+            0x0000000000000202ul, 0x0000000000000505ul, 0x0000000000000A0Aul, 0x0000000000001414ul,
+            0x0000000000002828ul, 0x0000000000005050ul, 0x000000000000A0A0ul, 0x0000000000004040ul,
+            0x0000000000020202ul, 0x0000000000050505ul, 0x00000000000A0A0Aul, 0x0000000000141414ul,
+            0x0000000000282828ul, 0x0000000000505050ul, 0x0000000000A0A0A0ul, 0x0000000000404040ul,
+            0x0000000002020202ul, 0x0000000005050505ul, 0x000000000A0A0A0Aul, 0x0000000014141414ul,
+            0x0000000028282828ul, 0x0000000050505050ul, 0x00000000A0A0A0A0ul, 0x0000000040404040ul,
+            0x0000000202020202ul, 0x0000000505050505ul, 0x0000000A0A0A0A0Aul, 0x0000001414141414ul,
+            0x0000002828282828ul, 0x0000005050505050ul, 0x000000A0A0A0A0A0ul, 0x0000004040404040ul,
+            0x0000020202020202ul, 0x0000050505050505ul, 0x00000A0A0A0A0A0Aul, 0x0000141414141414ul,
+            0x0000282828282828ul, 0x0000505050505050ul, 0x0000A0A0A0A0A0A0ul, 0x0000404040404040ul,
+            0x0002020202020202ul, 0x0005050505050505ul, 0x000A0A0A0A0A0A0Aul, 0x0014141414141414ul,
+            0x0028282828282828ul, 0x0050505050505050ul, 0x00A0A0A0A0A0A0A0ul, 0x0040404040404040ul,
+            0x0202020202020202ul, 0x0505050505050505ul, 0x0A0A0A0A0A0A0A0Aul, 0x1414141414141414ul,
+            0x2828282828282828ul, 0x5050505050505050ul, 0xA0A0A0A0A0A0A0A0ul, 0x4040404040404040ul,
+
+            0x0202020202020202ul, 0x0505050505050505ul, 0x0A0A0A0A0A0A0A0Aul, 0x1414141414141414ul,
+            0x2828282828282828ul, 0x5050505050505050ul, 0xA0A0A0A0A0A0A0A0ul, 0x4040404040404040ul,
+            0x0202020202020200ul, 0x0505050505050500ul, 0x0A0A0A0A0A0A0A00ul, 0x1414141414141400ul,
+            0x2828282828282800ul, 0x5050505050505000ul, 0xA0A0A0A0A0A0A000ul, 0x4040404040404000ul,
+            0x0202020202020000ul, 0x0505050505050000ul, 0x0A0A0A0A0A0A0000ul, 0x1414141414140000ul,
+            0x2828282828280000ul, 0x5050505050500000ul, 0xA0A0A0A0A0A00000ul, 0x4040404040400000ul,
+            0x0202020202000000ul, 0x0505050505000000ul, 0x0A0A0A0A0A000000ul, 0x1414141414000000ul,
+            0x2828282828000000ul, 0x5050505050000000ul, 0xA0A0A0A0A0000000ul, 0x4040404040000000ul,
+            0x0202020200000000ul, 0x0505050500000000ul, 0x0A0A0A0A00000000ul, 0x1414141400000000ul,
+            0x2828282800000000ul, 0x5050505000000000ul, 0xA0A0A0A000000000ul, 0x4040404000000000ul,
+            0x0202020000000000ul, 0x0505050000000000ul, 0x0A0A0A0000000000ul, 0x1414140000000000ul,
+            0x2828280000000000ul, 0x5050500000000000ul, 0xA0A0A00000000000ul, 0x4040400000000000ul,
+            0x0202000000000000ul, 0x0505000000000000ul, 0x0A0A000000000000ul, 0x1414000000000000ul,
+            0x2828000000000000ul, 0x5050000000000000ul, 0xA0A0000000000000ul, 0x4040000000000000ul,
+            0x0200000000000000ul, 0x0500000000000000ul, 0x0A00000000000000ul, 0x1400000000000000ul,
+            0x2800000000000000ul, 0x5000000000000000ul, 0xA000000000000000ul, 0x4000000000000000ul,
+
+            #endregion BackwardPawnMasks data
         };
 
         public static readonly FixedArray2D<ulong> KingProximity = new (2, MAX_SQUARES)

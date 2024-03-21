@@ -587,6 +587,9 @@ namespace Pedantic
             WriteLine("/* isolated pawn */");
             WriteWts2D(wts, ISOLATED_PAWN, 8, MAX_SQUARES);
             WriteLine();
+            WriteLine("/* backward pawn */");
+            WriteWtLine(wts.BackwardPawn);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* king safety */");
