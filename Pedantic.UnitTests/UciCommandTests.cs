@@ -52,8 +52,8 @@ namespace Pedantic.UnitTests
         [TestMethod]
         public void SetOptionTest()
         {
-            Assert.AreEqual(2, UciOptions.PromotionDepth);
-            Program.ParseUciCommand("setoption name UCI_T_QS_PromotionDepth value 3");
+            Assert.AreEqual(1, UciOptions.PromotionDepth);
+            Program.ParseUciCommand("setoption name T_QS_PromotionDepth value 3");
             Assert.AreEqual(3, UciOptions.PromotionDepth);
         }
 
