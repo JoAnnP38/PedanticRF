@@ -33,6 +33,12 @@ namespace Pedantic
             }
             Console.WriteLine();
 
+            var uciSpsaOption = new Option<bool>
+            (
+                name: "--spsa",
+                description: "SPSA optimization currently being run.",
+                getDefaultValue: () => false
+            );
             var learnDataOption = new Option<string?>
             (
                 name: "--data",
@@ -76,7 +82,10 @@ namespace Pedantic
                 getDefaultValue: () => 25
             );
 
-            var uciCmd = new Command("uci", "Start the pedantic application in UCI mode (default).");
+            var uciCmd = new Command("uci", "Start the pedantic application in UCI mode (default).")
+            {
+                uciSpsaOption
+            };
 
             var learnCmd = new Command("learn", "Optimize evaluation function using training data.")
             {
@@ -88,16 +97,22 @@ namespace Pedantic
                 learnResetOption,
                 learnEvalPctOption
             };
+
+            var wfCmd = new Command("wf", "Create configuration files for weather-factory");
+
             var rootCmd = new RootCommand("The pedantic chess engine.")
             {
                 uciCmd,
-                learnCmd
+                learnCmd,
+                wfCmd,
+                uciSpsaOption
             };
 
-            uciCmd.SetHandler(RunUci);
+            uciCmd.SetHandler(RunUci, uciSpsaOption);
             learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
                 learnSaveOption, learnResetOption, learnEvalPctOption);
-            rootCmd.SetHandler(RunUci);
+            wfCmd.SetHandler(RunWf);
+            rootCmd.SetHandler(RunUci, uciSpsaOption);
             await rootCmd.InvokeAsync(args);
         }
 
@@ -111,10 +126,15 @@ namespace Pedantic
             Engine.SetupPosition(FEN_START_POS);
         }
 
-        private static async Task RunUci()
+        private static async Task RunUci(bool spsa)
         {
             try
             {
+                if (spsa)
+                {
+                    UciOptions.Optimizing = true;
+                }
+
                 Engine.Start();
 
                 while (Engine.IsRunning)
@@ -689,6 +709,11 @@ namespace Pedantic
         {
             WriteIndent();
             Console.WriteLine(text);
+        }
+
+        private static void RunWf()
+        {
+            UciOptions.WriteOptions();
         }
 
         private static int indentLevel = 0;

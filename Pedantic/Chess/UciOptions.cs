@@ -22,39 +22,42 @@ namespace Pedantic.Chess
         internal const string OPT_ANALYSE_MODE = "UCI_AnalyseMode";
         internal const string OPT_ENGINE_ABOUT = "UCI_EngineAbout";
         internal const string OPT_OPPONENT = "UCI_Opponent";
-        internal const string OPT_TM_BRANCH_FACTOR = "UCI_T_TM_BranchFactor";
-        internal const string OPT_TM_DEF_MOVES_TO_GO = "UCI_T_TM_DefaultMovesToGo";
-        internal const string OPT_TM_DEF_MOVES_TO_GO_PONDER = "UCI_T_TM_DefaultMovesToGo_Ponder";
-        internal const string OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH = "UCI_T_TM_DefaultMovesToGo_SuddenDeath";
-        internal const string OPT_TM_ABSOLUTE_LIMIT = "UCI_T_TM_AbsoluteLimit";
-        internal const string OPT_TM_DIFFICULTY_MIN = "UCI_T_TM_DifficultyMin";
-        internal const string OPT_TM_DIFFICULTY_MAX = "UCI_T_TM_DifficultyMax";
-        internal const string OPT_ASP_MIN_DEPTH = "UCI_T_ASP_MinDepth";
-        internal const string OPT_ONE_MOVE_MAX_DEPTH = "UCI_T_OneMoveMaxDepth";
-        internal const string OPT_QS_RECAPTURE_DEPTH = "UCI_T_QS_RecaptureDepth";
-        internal const string OPT_QS_PROMOTION_DEPTH = "UCI_T_QS_PromotionDepth";
-        internal const string OPT_NMP_MIN_DEPTH = "UCI_T_NMP_MinDepth";
-        internal const string OPT_NMP_BASE_REDUCTION = "UCI_T_NMP_BaseReduction";
-        internal const string OPT_NMP_INC_DIVISOR = "UCI_T_NMP_IncDivisor";
-        internal const string OPT_LMR_DEPTH_FACTOR = "UCI_T_LMR_DepthFactor";
-        internal const string OPT_LMR_MOVE_FACTOR = "UCI_T_LMR_MoveFactor";
-        internal const string OPT_LMR_SCALE_FACTOR = "UCI_T_LMR_ScaleFactor";
-        internal const string OPT_RFP_MAX_DEPTH = "UCI_T_RFP_MaxDepth";
-        internal const string OPT_RFP_MARGIN = "UCI_T_RFP_Margin";
-        internal const string OPT_LMP_MAX_DEPTH = "UCI_T_LMP_MaxDepth";
-        internal const string OPT_LMP_DEPTH_INCREMENT = "UCI_T_LMP_DepthIncrement";
-        internal const string OPT_FUT_MAX_DEPTH = "UCI_T_FUT_MaxDepth";
-        internal const string OPT_FUT_MARGIN = "UCI_T_FUT_Margin";
-        internal const string OPT_IIR_MIN_DEPTH = "UCI_T_IIR_MinDepth";
-        internal const string OPT_SEE_MAX_DEPTH = "UCI_T_SEE_MaxDepth";
-        internal const string OPT_SEE_CAPTURE_MARGIN = "UCI_T_SEE_CaptureMargin";
-        internal const string OPT_SEE_QUIET_MARGIN = "UCI_T_SEE_QuietMargin";
-        internal const string OPT_LZY_EVAL_MARGIN = "UCI_T_LZY_EvalMargin";
-        internal const string OPT_RZR_MAX_DEPTH = "UCI_T_RZR_MaxDepth";
-        internal const string OPT_RZR_MARGIN = "UCI_T_RZR_Margin";
+        internal const string OPT_TM_BRANCH_FACTOR = "T_TM_BranchFactor";
+        internal const string OPT_TM_DEF_MOVES_TO_GO = "T_TM_DefaultMovesToGo";
+        internal const string OPT_TM_DEF_MOVES_TO_GO_PONDER = "T_TM_DefaultMovesToGo_Ponder";
+        internal const string OPT_TM_DEF_MOVES_TO_GO_SUDDEN_DEATH = "T_TM_DefaultMovesToGo_SuddenDeath";
+        internal const string OPT_TM_ABSOLUTE_LIMIT = "T_TM_AbsoluteLimit";
+        internal const string OPT_TM_DIFFICULTY_MIN = "T_TM_DifficultyMin";
+        internal const string OPT_TM_DIFFICULTY_MAX = "T_TM_DifficultyMax";
+        internal const string OPT_ASP_MIN_DEPTH = "T_ASP_MinDepth";
+        internal const string OPT_ONE_MOVE_MAX_DEPTH = "T_OneMoveMaxDepth";
+        internal const string OPT_QS_RECAPTURE_DEPTH = "T_QS_RecaptureDepth";
+        internal const string OPT_QS_PROMOTION_DEPTH = "T_QS_PromotionDepth";
+        internal const string OPT_NMP_MIN_DEPTH = "T_NMP_MinDepth";
+        internal const string OPT_NMP_BASE_REDUCTION = "T_NMP_BaseReduction";
+        internal const string OPT_NMP_INC_DIVISOR = "T_NMP_IncDivisor";
+        internal const string OPT_LMR_DEPTH_FACTOR = "T_LMR_DepthFactor";
+        internal const string OPT_LMR_MOVE_FACTOR = "T_LMR_MoveFactor";
+        internal const string OPT_LMR_SCALE_FACTOR = "T_LMR_ScaleFactor";
+        internal const string OPT_RFP_MAX_DEPTH = "T_RFP_MaxDepth";
+        internal const string OPT_RFP_MARGIN = "T_RFP_Margin";
+        internal const string OPT_LMP_MAX_DEPTH = "T_LMP_MaxDepth";
+        internal const string OPT_LMP_DEPTH_INCREMENT = "T_LMP_DepthIncrement";
+        internal const string OPT_FUT_MAX_DEPTH = "T_FUT_MaxDepth";
+        internal const string OPT_FUT_MARGIN = "T_FUT_Margin";
+        internal const string OPT_IIR_MIN_DEPTH = "T_IIR_MinDepth";
+        internal const string OPT_SEE_MAX_DEPTH = "T_SEE_MaxDepth";
+        internal const string OPT_SEE_CAPTURE_MARGIN = "T_SEE_CaptureMargin";
+        internal const string OPT_SEE_QUIET_MARGIN = "T_SEE_QuietMargin";
+        internal const string OPT_LZY_EVAL_MARGIN = "T_LZY_EvalMargin";
+        internal const string OPT_RZR_MAX_DEPTH = "T_RZR_MaxDepth";
+        internal const string OPT_RZR_MARGIN = "T_RZR_Margin";
+        internal const string OPT_HIS_MAX_BONUS = "T_HIS_MaxBonus";
+        internal const string OPT_HIS_BONUS_COEFF = "T_HIS_BonusCoefficient";
 
         static UciOptions()
         {
+            Optimizing = true;
             options = new(StringComparer.InvariantCultureIgnoreCase)
             {
                 { clearHash.Name, clearHash },
@@ -101,8 +104,35 @@ namespace Pedantic.Chess
                 { seeQuietMargin.Name, seeQuietMargin },
                 { lzyEvalMargin.Name, lzyEvalMargin },
                 { rzrMaxDepth.Name, rzrMaxDepth },
-                { rzrMargin.Name, rzrMargin }
+                { rzrMargin.Name, rzrMargin },
+                { hisMaxBonus.Name, hisMaxBonus },
+                { hisBonusCoefficient.Name, hisBonusCoefficient },
             };
+        }
+
+        public static void WriteOptions()
+        {
+            using StreamWriter sw = System.IO.File.CreateText("./config.json");
+            sw.WriteLine("{");
+
+            foreach (var kvp in options)
+            {
+                UciOptionBase opt = kvp.Value;
+                if (opt.Name.StartsWith("T_", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    UciOptionSpin spin = (UciOptionSpin)opt;
+                    sw.WriteLine($"    \"{spin.Name}\": {{");
+                    sw.WriteLine($"        \"value\": {spin.CurrentValue},");
+                    sw.WriteLine($"        \"min_value\": {spin.MinValue},");
+                    sw.WriteLine($"        \"max_value\": {spin.MaxValue},");
+                    int step = Math.Max((spin.MaxValue - spin.MinValue) / 10, 1);
+                    sw.WriteLine($"        \"step\": {step}");
+                    sw.WriteLine("    },");
+                }
+            }
+
+            sw.WriteLine("}");
+            sw.Close();
         }
 
         public static int Contempt
@@ -488,12 +518,39 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int HisMaxBonus
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return hisMaxBonus.CurrentValue;
+            }
+        }
+
+        public static int HisBonusCoefficient
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return hisBonusCoefficient.CurrentValue;
+            }
+        }
+
+        public static bool Optimizing
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set;
+        }
+
         public static void WriteLine()
         {
             foreach (var kvp in options)
             {
                 UciOptionBase opt = kvp.Value;
-                if (!opt.Name.StartsWith("UCI_T_", StringComparison.InvariantCultureIgnoreCase))
+                if (Optimizing || !opt.Name.StartsWith("T_", StringComparison.InvariantCultureIgnoreCase))
                 {
                     Console.WriteLine(opt);
                 }
@@ -587,28 +644,30 @@ namespace Pedantic.Chess
         private static UciOptionSpin tmAbsoluteLimit = new UciOptionSpin(OPT_TM_ABSOLUTE_LIMIT, 5, 2, 8);
         private static UciOptionSpin tmDifficultyMin = new UciOptionSpin(OPT_TM_DIFFICULTY_MIN, 60, 0, 60);
         private static UciOptionSpin tmDifficultyMax = new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300);
-        private static UciOptionSpin aspMinDepth = new UciOptionSpin(OPT_ASP_MIN_DEPTH, 6, 1, 10);
-        private static UciOptionSpin oneMoveMaxDepth = new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 10, 1, 20);
+        private static UciOptionSpin aspMinDepth = new UciOptionSpin(OPT_ASP_MIN_DEPTH, 4, 1, 10);
+        private static UciOptionSpin oneMoveMaxDepth = new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 13, 1, 20);
         private static UciOptionSpin recaptureDepth = new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8);
-        private static UciOptionSpin promotionDepth = new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8);
+        private static UciOptionSpin promotionDepth = new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 1, 0, 8);
         private static UciOptionSpin nmpMinDepth = new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6);
-        private static UciOptionSpin nmpBaseReduction = new UciOptionSpin(OPT_NMP_BASE_REDUCTION, 3, 1, 8);
-        private static UciOptionSpin nmpIncDivisor = new UciOptionSpin(OPT_NMP_INC_DIVISOR, 4, 2, 8);
-        private static UciOptionSpin lmrDepthFactor = new UciOptionSpin(OPT_LMR_DEPTH_FACTOR, 18, 10, 30);
+        private static UciOptionSpin nmpBaseReduction = new UciOptionSpin(OPT_NMP_BASE_REDUCTION, 4, 1, 8);
+        private static UciOptionSpin nmpIncDivisor = new UciOptionSpin(OPT_NMP_INC_DIVISOR, 5, 2, 8);
+        private static UciOptionSpin lmrDepthFactor = new UciOptionSpin(OPT_LMR_DEPTH_FACTOR, 19, 10, 30);
         private static UciOptionSpin lmrMoveFactor = new UciOptionSpin(OPT_LMR_MOVE_FACTOR, 10, 5, 20);
-        private static UciOptionSpin lmrScaleFactor = new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 20, 10, 30);
-        private static UciOptionSpin rfpMaxDepth = new UciOptionSpin(OPT_RFP_MAX_DEPTH, 6, 4, 12);
-        private static UciOptionSpin rfpMargin = new UciOptionSpin(OPT_RFP_MARGIN, 85, 25, 250);
+        private static UciOptionSpin lmrScaleFactor = new UciOptionSpin(OPT_LMR_SCALE_FACTOR, 19, 10, 30);
+        private static UciOptionSpin rfpMaxDepth = new UciOptionSpin(OPT_RFP_MAX_DEPTH, 8, 4, 12);
+        private static UciOptionSpin rfpMargin = new UciOptionSpin(OPT_RFP_MARGIN, 128, 25, 250);
         private static UciOptionSpin lmpMaxDepth = new UciOptionSpin(OPT_LMP_MAX_DEPTH, 6, 1, 10);
-        private static UciOptionSpin lmpDepthIncrement = new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 1, 0, 5);
+        private static UciOptionSpin lmpDepthIncrement = new UciOptionSpin(OPT_LMP_DEPTH_INCREMENT, 5, 0, 10);
         private static UciOptionSpin futMaxDepth = new UciOptionSpin(OPT_FUT_MAX_DEPTH, 7, 1, 10);
-        private static UciOptionSpin futMargin = new UciOptionSpin(OPT_FUT_MARGIN, 70, 35, 200);
-        private static UciOptionSpin iirMinDepth = new UciOptionSpin(OPT_IIR_MIN_DEPTH, 5, 1, 10);
-        private static UciOptionSpin seeMaxDepth = new UciOptionSpin(OPT_SEE_MAX_DEPTH, 7, 1, 12);
-        private static UciOptionSpin seeCaptureMargin = new UciOptionSpin(OPT_SEE_CAPTURE_MARGIN, 100, 25, 200);
-        private static UciOptionSpin seeQuietMargin = new UciOptionSpin(OPT_SEE_QUIET_MARGIN, 60, 25, 200);
-        private static UciOptionSpin lzyEvalMargin = new UciOptionSpin(OPT_LZY_EVAL_MARGIN, 500, 0, 1200);
-        private static UciOptionSpin rzrMaxDepth = new UciOptionSpin(OPT_RZR_MAX_DEPTH, 1, 0, 5);
-        private static UciOptionSpin rzrMargin = new UciOptionSpin(OPT_RZR_MARGIN, 200, 50, 400);
+        private static UciOptionSpin futMargin = new UciOptionSpin(OPT_FUT_MARGIN, 79, 35, 200);
+        private static UciOptionSpin iirMinDepth = new UciOptionSpin(OPT_IIR_MIN_DEPTH, 4, 1, 10);
+        private static UciOptionSpin seeMaxDepth = new UciOptionSpin(OPT_SEE_MAX_DEPTH, 8, 1, 12);
+        private static UciOptionSpin seeCaptureMargin = new UciOptionSpin(OPT_SEE_CAPTURE_MARGIN, 89, 25, 200);
+        private static UciOptionSpin seeQuietMargin = new UciOptionSpin(OPT_SEE_QUIET_MARGIN, 27, 25, 200);
+        private static UciOptionSpin lzyEvalMargin = new UciOptionSpin(OPT_LZY_EVAL_MARGIN, 477, 0, 1200);
+        private static UciOptionSpin rzrMaxDepth = new UciOptionSpin(OPT_RZR_MAX_DEPTH, 2, 0, 5);
+        private static UciOptionSpin rzrMargin = new UciOptionSpin(OPT_RZR_MARGIN, 114, 50, 400);
+        private static UciOptionSpin hisMaxBonus = new UciOptionSpin(OPT_HIS_MAX_BONUS, 919, 500, 2500);
+        private static UciOptionSpin hisBonusCoefficient = new UciOptionSpin(OPT_HIS_BONUS_COEFF, 108, 50, 250);
     }
 }

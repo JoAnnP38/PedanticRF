@@ -102,6 +102,7 @@ namespace Pedantic.Chess
             Stop();
             Board.LoadFen(FEN_START_POS);
             ClearHashTable();
+            BasicSearch.Initialize();
             MovesOutOfBook = 0;
         }
 

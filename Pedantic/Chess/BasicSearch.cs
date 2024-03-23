@@ -936,7 +936,8 @@ namespace Pedantic.Chess
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static sbyte NmpReduction(int depth)
         {
-            return (sbyte)(depth < 3 ? 0 : UciOptions.NmpBaseReduction + Math.Max(depth - 3, 0) / UciOptions.NmpIncDivisor);
+            return (sbyte)(depth < UciOptions.NmpMinDepth ? 0 : 
+                UciOptions.NmpBaseReduction + Math.Max(depth - 3, 0) / UciOptions.NmpIncDivisor);
         }
 
         #endregion

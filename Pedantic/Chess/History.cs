@@ -8,8 +8,6 @@ namespace Pedantic.Chess
     public unsafe sealed class History : IHistory
     {
         internal const int HISTORY_LEN = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
-        internal const short BONUS_MAX = 920;
-        internal const short BONUS_COEFF = 96;
 
         private short[] history;
         private Move[] counterMoves;
@@ -108,7 +106,7 @@ namespace Pedantic.Chess
         public void UpdateCutoff(Move move, int ply, ref StackList<Move> quiets, int depth)
         {
             SetContext(ply);
-            short bonus = Math.Min(BONUS_MAX, (short)(BONUS_COEFF * (depth - 1)));
+            short bonus = (short)Math.Min(UciOptions.HisMaxBonus, (short)(UciOptions.HisBonusCoefficient * (depth - 1)));
             int index = GetIndex(move);
             UpdateHistory(ref history[index], bonus);
             UpdateHistory(ref ss[ply - 1].Continuation![index], bonus);
