@@ -158,6 +158,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public readonly bool IsNull
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return move == NullMove.move;
+            }
+        }
+
         public readonly bool Equals(Move other)
         {
             return move == other.move;

@@ -207,6 +207,26 @@ namespace Pedantic.Chess
                     }
                 }
 
+                if (bestMove.IsNull)
+                {
+                    // somehow we arrived here without a best move to report. log some information
+                    // to help us diagnose the problem and set the bestMove to the firstMove in the move
+                    // list.
+                    TextWriter err = Console.Error;
+                    err.WriteLine($"[{DateTime.Now}]\nIllegal null move result on position: {board.ToFenString()}");
+                    err.WriteLine($"Search.Depth = {Depth}");
+                    err.WriteLine(clock.ToString());
+                    if (list.Count > 0)
+                    {
+                        bestMove = list.Sort(0);
+                        ponderMove = Move.NullMove;
+                    }
+                    else
+                    {
+                        throw new Exception("Engine could not generate a legal move.");
+                    }
+
+                }
                 Uci.Usage(cpuStats.CpuLoad);
                 Uci.Debug("Incrementing hash table version.");
                 ttCache.IncrementGeneration();

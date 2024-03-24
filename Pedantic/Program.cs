@@ -89,7 +89,7 @@ namespace Pedantic
 
             var learnCmd = new Command("learn", "Optimize evaluation function using training data.")
             {
-                learnDataOption,
+               learnDataOption,
                 learnSampleOption,
                 learnMaxEpochOption,
                 learnMaxTimeOption,
@@ -104,15 +104,14 @@ namespace Pedantic
             {
                 uciCmd,
                 learnCmd,
-                wfCmd,
-                uciSpsaOption
+                wfCmd
             };
 
             uciCmd.SetHandler(RunUci, uciSpsaOption);
             learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
                 learnSaveOption, learnResetOption, learnEvalPctOption);
             wfCmd.SetHandler(RunWf);
-            rootCmd.SetHandler(RunUci, uciSpsaOption);
+            rootCmd.SetHandler(() => RunUci(false));
             await rootCmd.InvokeAsync(args);
         }
 
@@ -130,11 +129,7 @@ namespace Pedantic
         {
             try
             {
-                if (spsa)
-                {
-                    UciOptions.Optimizing = true;
-                }
-
+                UciOptions.Optimizing = spsa;
                 Engine.Start();
 
                 while (Engine.IsRunning)
