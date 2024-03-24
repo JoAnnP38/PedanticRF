@@ -274,6 +274,7 @@ namespace Pedantic.Chess
                 Move move = list[n];
                 if (!board.MakeMoveNs(move))
                 {
+                    list.SetScore(n, int.MinValue);
                     continue;
                 }
 

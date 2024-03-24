@@ -204,6 +204,21 @@ namespace Pedantic.Chess
                 }
                 array[m + 1] = key;
             }
+
+            // remove any illegal moves in the list (their score will be set to int.MinValue)
+            int i = insertIndex - 1;
+            while (array[i--].Score == int.MinValue)
+            {
+                --insertIndex;
+            }
+        }
+
+        public void RemoveIllegals()
+        {
+            for (int n = insertIndex - 1; n >= 0 && array[n].Score == int.MinValue; n--)
+            {
+                --insertIndex;
+            }
         }
 
         public bool Remove(Move move)
