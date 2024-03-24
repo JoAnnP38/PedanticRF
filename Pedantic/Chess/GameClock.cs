@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Pedantic.Chess
 {
@@ -249,6 +250,20 @@ namespace Pedantic.Chess
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new();
+            sb.AppendLine($"GameClock.t0 = {t0}");
+            sb.AppendLine($"GameClock.tN = {tN}");
+            sb.AppendLine($"GameClock.timeBudget = {timeBudget}");
+            sb.AppendLine($"GameClock.adjustedBudget = {adjustedBudget}");
+            sb.AppendLine($"GameClock.timeLimit = {timeLimit}");
+            sb.AppendLine($"GameClock.absoluteLimit = {absoluteLimit}");
+            sb.AppendLine($"GameClock.difficulty = {difficulty}");
+            sb.AppendLine($"GameClock.remaining = {remaining}");
+            return sb.ToString();
         }
 
         private const int branch_factor_divisor = 16;
