@@ -130,5 +130,25 @@
             Assert.AreEqual(SquareIndex.D4, list[1].To);
             Assert.AreEqual(SquareIndex.E4, list[2].To);
         }
+
+        [TestMethod]
+        public void SortAllRemoveIllegalsTest()
+        {
+            MoveList list = new();
+            list.AddQuiet(Color.White, Piece.Pawn, SquareIndex.E2, SquareIndex.E4, MoveType.DblPawnMove);
+            list.AddQuiet(Color.White, Piece.Pawn, SquareIndex.D2, SquareIndex.D4, MoveType.DblPawnMove);
+            list.AddQuiet(Color.White, Piece.Pawn, SquareIndex.G2, SquareIndex.G3, MoveType.PawnMove);
+
+            list.SetScore(0, 1);
+            list.SetScore(1, 2);
+            list.SetScore(2, int.MinValue);
+
+            list.SortAll();
+
+            Assert.AreEqual(2, list.Count);
+            Assert.AreEqual(SquareIndex.D4, list[0].To);
+            Assert.AreEqual(SquareIndex.E4, list[1].To);
+
+        }
     }
 }
