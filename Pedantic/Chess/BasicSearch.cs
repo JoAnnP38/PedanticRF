@@ -214,11 +214,25 @@ namespace Pedantic.Chess
                     // list.
                     TextWriter err = Console.Error;
                     err.WriteLine($"[{DateTime.Now}]\nIllegal null move result on position: {board.ToFenString()}");
+                    err.WriteLine($"Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                     err.WriteLine($"Search.Depth = {Depth}");
                     err.WriteLine(clock.ToString());
+
                     if (list.Count > 0)
                     {
-                        bestMove = list.Sort(0);
+                        // since search was aborted before search count find a best move
+                        // just return the first legal move in the move list
+                        for (int n = 0; n < list.Count; n++)
+                        {
+                            Move move = list.Sort(n);
+                            if (!board.MakeMove(move))
+                            {
+                                continue;
+                            }
+                            board.UnmakeMove();
+                            bestMove = move;
+                            break;
+                        }
                         ponderMove = Move.NullMove;
                     }
                     else
@@ -485,7 +499,6 @@ namespace Pedantic.Chess
                             return score;
                         }
                     }
-                    ssItem.Eval = (short)evaluation;
                 }
 
                 if (canNull)
@@ -506,7 +519,8 @@ namespace Pedantic.Chess
                 }
             }
 
-            if (!inCheck && depth >= UciOptions.IirMinDepth && ttMove == Move.NullMove)
+            // IIR 
+            if (ttMove == Move.NullMove && !inCheck && depth >= UciOptions.IirMinDepth)
             {
                 depth--;
             }
@@ -543,6 +557,7 @@ namespace Pedantic.Chess
                 {
                     if (canPrune)
                     { 
+                        // futility pruning
                         if (depth <= UciOptions.FutMaxDepth && !genMove.Move.IsPawnMove && 
                             evaluation + depth * UciOptions.FutMargin < alpha)
                         {
@@ -550,12 +565,14 @@ namespace Pedantic.Chess
                             continue;
                         }
 
+                        // LMP pruning
                         if (depth <= UciOptions.LmpMaxDepth && expandedNodes > LMP[depth])
                         {
                             board.UnmakeMoveNs();
                             continue;                    
                         }
 
+                        // SEE-based pruning
                         if (depth <= UciOptions.SeeMaxDepth)
                         {
                             int captureValue = genMove.Move.Capture.Value();

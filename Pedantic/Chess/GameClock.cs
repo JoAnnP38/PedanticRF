@@ -263,6 +263,7 @@ namespace Pedantic.Chess
             sb.AppendLine($"GameClock.absoluteLimit = {absoluteLimit}");
             sb.AppendLine($"GameClock.difficulty = {difficulty}");
             sb.AppendLine($"GameClock.remaining = {remaining}");
+            sb.AppendLine($"GameClock.elapsed = {Elapsed}");
             return sb.ToString();
         }
 
