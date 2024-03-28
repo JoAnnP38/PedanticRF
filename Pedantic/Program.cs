@@ -689,6 +689,9 @@ namespace Pedantic
             WriteLine("/* rook threats */");
             WriteWts2D(wts, ROOK_THREAT, 8, MAX_PIECES);
             WriteLine();
+            WriteLine("/* check threats */");
+            WriteWts2D(wts, CHECK_THREAT, 8, MAX_PIECES);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* tempo bonus for side to move */");

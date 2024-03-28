@@ -207,6 +207,40 @@ namespace Pedantic.Tuning
                     IncrementRookThreat(color, coefficients, threatenedPiece);
                 }
 
+                Bitboard toSquares = (~bd.Units(color)).AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+                
+                // check threats from knights
+                Bitboard checkThreats = Board.KnightMoves(enemyKI) & toSquares;
+                foreach (SquareIndex from in bd.Pieces(color, Piece.Knight))
+                {
+                    int count = (Board.KnightMoves(from) & checkThreats).PopCount;
+                    IncrementCheckThreat(color, coefficients, Piece.Knight, count);
+                }
+
+                // check threats from bishops
+                checkThreats = Board.GetBishopMoves(enemyKI, bd.All) & toSquares;
+                foreach (SquareIndex from in bd.Pieces(color, Piece.Bishop))
+                {
+                    int count = (Board.GetBishopMoves(from, bd.All) & checkThreats).PopCount;
+                    IncrementCheckThreat(color, coefficients, Piece.Bishop, count);
+                }
+
+                // check threats from rooks
+                checkThreats = Board.GetRookMoves(enemyKI, bd.All) & toSquares;
+                foreach (SquareIndex from in bd.Pieces(color, Piece.Rook))
+                {
+                    int count = (Board.GetRookMoves(from, bd.All) & checkThreats).PopCount;
+                    IncrementCheckThreat(color, coefficients, Piece.Rook, count);
+                }
+
+                // check threats from queens
+                checkThreats = Board.GetQueenMoves(enemyKI, bd.All) & toSquares;
+                foreach (SquareIndex from in bd.Pieces(color, Piece.Queen))
+                {
+                    int count = (Board.GetQueenMoves(from, bd.All) & checkThreats).PopCount;
+                    IncrementCheckThreat(color, coefficients, Piece.Queen, count);
+                }
+
                 if (color == bd.SideToMove)
                 {
                     SetTempoBonus(color, coefficients);
@@ -724,6 +758,25 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementCheckThreat(Color color, SparseArray<short> v, Piece checker, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            int index = CHECK_THREAT + (int)checker;
+
+            if (v.ContainsKey(index))
+            {
+                v[index] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v.Add(index, (short)(count * Increment(color)));
             }
         }
 

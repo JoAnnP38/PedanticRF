@@ -486,6 +486,38 @@ namespace Pedantic.Chess.HCE
                 score += wts.RookThreat(threatenedPiece);
             }
 
+            // check threats
+            SquareIndex enemyKI = evalInfo[o].KI;
+            Bitboard toSquares = (~board.Units(color)).AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+
+            // check threats from knights
+            Bitboard checkThreats = Board.KnightMoves(enemyKI) & toSquares;
+            foreach (SquareIndex from in board.Pieces(color, Piece.Knight))
+            {
+                score += (Board.KnightMoves(from) & checkThreats).PopCount * wts.CheckThreat(Piece.Knight);
+            }
+
+            // check threats from bishops
+            checkThreats = Board.GetBishopMoves(enemyKI, board.All) & toSquares;
+            foreach (SquareIndex from in board.Pieces(color, Piece.Bishop))
+            {
+                score += (Board.GetBishopMoves(from, board.All) & checkThreats).PopCount * wts.CheckThreat(Piece.Bishop);
+            }
+
+            // check threats from rook
+            checkThreats = Board.GetRookMoves(enemyKI, board.All) & toSquares;
+            foreach (SquareIndex from in board.Pieces(color, Piece.Rook))
+            {
+                score += (Board.GetRookMoves(from, board.All) & checkThreats).PopCount * wts.CheckThreat(Piece.Rook);
+            }
+
+            // check threats from queen
+            checkThreats = Board.GetQueenMoves(enemyKI, board.All) & toSquares;
+            foreach (SquareIndex from in board.Pieces(color, Piece.Queen))
+            {
+                score += (Board.GetQueenMoves(from, board.All) & checkThreats).PopCount * wts.CheckThreat(Piece.Queen);
+            }
+
             return score;
         }
 
