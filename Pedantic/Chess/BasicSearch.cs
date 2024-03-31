@@ -555,7 +555,7 @@ namespace Pedantic.Chess
                 int R = 0;
                 if (!interesting)
                 {
-                    if (canPrune)
+                    if (canPrune && bestScore > MAX_TABLEBASE_LOSS)
                     { 
                         // futility pruning
                         if (depth <= UciOptions.FutMaxDepth && !genMove.Move.IsPawnMove && 
