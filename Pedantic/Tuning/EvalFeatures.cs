@@ -114,6 +114,10 @@ namespace Pedantic.Tuning
                     }
                 }
 
+                Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8);
+                Bitboard minorPieces = bd.Pieces(color, Piece.Knight) | bd.Pieces(color, Piece.Bishop);
+                IncrementPawnShieldsMinor(color, coefficients, (shieldPawns & minorPieces).PopCount);
+
                 SquareIndex enemyKI = evalInfo[o].KI;
                 for (int n = 0; n < evalInfo[c].AttackCount; n++)
                 {
@@ -683,6 +687,23 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(ROOK_ON_HALF_OPEN_FILE, Increment(color));
+            }
+        }
+
+        private static void IncrementPawnShieldsMinor(Color color, SparseArray<short> v, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            if (v.ContainsKey(PAWN_SHIELDS_MINOR))
+            {
+                v[PAWN_SHIELDS_MINOR] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v.Add(PAWN_SHIELDS_MINOR, (short)(count * Increment(color)));
             }
         }
 

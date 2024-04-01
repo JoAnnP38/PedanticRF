@@ -365,6 +365,10 @@ namespace Pedantic.Chess.HCE
                 }
             }
 
+            Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8); 
+            Bitboard minorPieces = board.Pieces(color, Piece.Knight) | board.Pieces(color, Piece.Bishop);
+            score += (shieldPawns & minorPieces).PopCount * wts.PawnShieldsMinor;
+
             return score;
         }
 
