@@ -55,7 +55,9 @@ namespace Pedantic.Tuning
                             evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
                         }
                     }
-                    int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
+
+                    bool _ = bd.IsPinned(from, out Bitboard pinMask);
+                    int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
                     IncrementPieceMobility(color, coefficients, piece, mobility);
 
                     if (piece == Piece.Pawn)
@@ -281,7 +283,7 @@ namespace Pedantic.Tuning
                     }
 
                     Direction behind = color == Color.White ? Direction.South : Direction.North;
-                    if ((HceEval.GetAttack(bd, ppIndex, behind) & bd.Pieces(color, Piece.Rook)) != 0)
+                    if ((Board.GetAttack(ppIndex, behind, bd.All) & bd.Pieces(color, Piece.Rook)) != 0)
                     {
                         IncrementRookBehindPassedPawn(color, coefficients);
                     }

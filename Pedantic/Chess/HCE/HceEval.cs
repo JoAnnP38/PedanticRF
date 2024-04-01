@@ -271,7 +271,8 @@ namespace Pedantic.Chess.HCE
                 {
                     evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
                 }
-                int mobility = (pieceAttacks & evalInfo[c].MobilityArea).PopCount;
+                bool _ = board.IsPinned(from, out Bitboard pinMask);
+                int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
                 score += wts.PieceMobility(piece, mobility);
             }
 
@@ -401,7 +402,7 @@ namespace Pedantic.Chess.HCE
                 }
 
                 Direction behind = color == Color.White ? Direction.South : Direction.North;
-                if ((GetAttack(board, ppIndex, behind) & board.Pieces(color, Piece.Rook)) != 0)
+                if ((Board.GetAttack(ppIndex, behind, board.All) & board.Pieces(color, Piece.Rook)) != 0)
                 {
                     score += wts.RookBehindPassedPawn;
                 }
@@ -672,24 +673,6 @@ namespace Pedantic.Chess.HCE
             var canWin = CanWin(board, evalInfo);
             evalInfo[0].CanWin = canWin.WhiteCanWin;
             evalInfo[1].CanWin = canWin.BlackCanWin;
-        }
-
-        public static Bitboard GetAttack(Board board, SquareIndex from, Direction dir)
-        {
-            Bitboard blockers = board.All;
-            Bitboard bbRay = Board.Vectors[(int)from][dir];
-            return dir switch
-            {
-                Direction.North     => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].North),
-                Direction.NorthEast => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].NorthEast),
-                Direction.East      => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].East),
-                Direction.SouthEast => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].SouthEast),
-                Direction.South     => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].South),
-                Direction.SouthWest => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].SouthWest),
-                Direction.West      => bbRay.AndNot(Board.RevVectors[(bbRay & blockers).LzCount].West),
-                Direction.NorthWest => bbRay.AndNot(Board.Vectors[(bbRay & blockers).TzCount].NorthWest),
-                _ => Bitboard.None
-            };
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
