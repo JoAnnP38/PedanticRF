@@ -672,6 +672,9 @@ namespace Pedantic
             WriteLine("/* rook on half-open file */");
             WriteWtLine(wts.RookOnHalfOpenFile);
             WriteLine();
+            WriteLine("/* pawn shields minor piece */");
+            WriteWtLine(wts.PawnShieldsMinor);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* threats */");
