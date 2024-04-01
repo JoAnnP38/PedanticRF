@@ -1014,6 +1014,64 @@ namespace Pedantic.Chess
             return false;
         }
 
+        public static Bitboard GetAttack(SquareIndex from, Direction dir, Bitboard blockers)
+        {
+            Bitboard bbRay = Vectors[(int)from][dir];
+            return dir switch
+            {
+                Direction.North     => bbRay.AndNot(Vectors[(bbRay & blockers).TzCount].North),
+                Direction.NorthEast => bbRay.AndNot(Vectors[(bbRay & blockers).TzCount].NorthEast),
+                Direction.East      => bbRay.AndNot(Vectors[(bbRay & blockers).TzCount].East),
+                Direction.SouthEast => bbRay.AndNot(RevVectors[(bbRay & blockers).LzCount].SouthEast),
+                Direction.South     => bbRay.AndNot(RevVectors[(bbRay & blockers).LzCount].South),
+                Direction.SouthWest => bbRay.AndNot(RevVectors[(bbRay & blockers).LzCount].SouthWest),
+                Direction.West      => bbRay.AndNot(RevVectors[(bbRay & blockers).LzCount].West),
+                Direction.NorthWest => bbRay.AndNot(Vectors[(bbRay & blockers).TzCount].NorthWest),
+                _ => Bitboard.None
+            };
+        }
+
+        public bool IsPinned(SquareIndex sq, out Bitboard pinMask)
+        {
+            pinMask = Bitboard.All;
+            Square square = PieceBoard(sq);
+
+            if (square.IsEmpty)
+            {
+                return false;
+            }
+
+            Color kingColor = square.Color;
+            Color pinnerColor = square.Color.Flip();
+            SquareIndex ki = KingIndex[kingColor];
+
+            if (!ChessMath.GetDirection(ki, sq, out Direction pinDir))
+            {
+                return false;
+            }
+
+            Bitboard blockers = All.ResetBit(sq);
+            Bitboard pinAttack = GetAttack(ki, pinDir, blockers);
+            Bitboard pinner = pinAttack & Units(pinnerColor);
+
+            if (pinner == 0)
+            {
+                return false;
+            }
+
+            SquareIndex pinnerFrom = (SquareIndex)pinner.TzCount;
+            Square pinnerSquare = PieceBoard(pinnerFrom);
+
+            if (pinnerSquare.Color != pinnerColor || 
+                (pinDir.IsDiagonal() ? !pinnerSquare.Piece.IsDiagonalSlider() : !pinnerSquare.Piece.IsOrthogonalSlider()))
+            {
+                return false;
+            }
+
+            pinMask = pinAttack;
+            return true;
+        }
+
         #region Deprecated Functionality
 
         [Obsolete("Functionality replaced by MoveGen struct")]
