@@ -597,10 +597,12 @@ namespace Pedantic.Chess
                             }
                         }
                     }
-                    R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
-                    if (R > 0 && checkingMove)
+                    if (depth >= 3)
                     {
-                        R--;
+                        R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
+                        R += !improving ? 1 : 0;
+                        R -= checkingMove ? 1 : 0;
+                        R = Math.Clamp(R, 0, depth - 1);
                     }
                 }
 
