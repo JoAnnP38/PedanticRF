@@ -279,7 +279,6 @@ namespace Pedantic.Chess
             int score;
             Move bestMove = Move.NullMove;
             int bestMoveIndex = -1;
-            bool alphaRaised = false;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
             board.PushBoardState();
 
@@ -306,7 +305,7 @@ namespace Pedantic.Chess
 
                 bool checkingMove = board.IsChecked();
                 bool isQuiet = move.IsQuiet;
-                bool interesting = inCheck || checkingMove || !isQuiet || !alphaRaised;
+                bool interesting = inCheck || !isQuiet;
 
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Move = move;
@@ -316,24 +315,31 @@ namespace Pedantic.Chess
                 if (!interesting)
                 {
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
+
+                    if (checkingMove && R > 0)
+                    {
+                        R--;
+                    }
                 }
 
-                if (!alphaRaised)
+                int newDepth = depth - 1;
+
+                if (expandedNodes == 1)
                 {
-                    score = -Search(-beta, -alpha, depth - 1, 1);
+                    score = -Search(-beta, -alpha, newDepth, 1, false);
                 }
                 else
                 {
-                    score = -Search(-alpha - 1, -alpha, Math.Max(depth - R - 1, 0), 1);
+                    score = -Search(-alpha - 1, -alpha, Math.Max(newDepth - R, 0), 1, true);
 
                     if (score > alpha && R > 0)
                     {
-                        score = -Search(-alpha - 1, -alpha, depth - 1, 1);
+                        score = -Search(-alpha - 1, -alpha, newDepth, 1, true);
                     }
 
                     if (score > alpha)
                     {
-                        score = -Search(-beta, -alpha, depth - 1, 1);
+                        score = -Search(-beta, -alpha, newDepth, 1, false);
                     }
                 }
 
@@ -353,7 +359,6 @@ namespace Pedantic.Chess
 
                     if (score > alpha)
                     {
-                        alphaRaised = true;
                         alpha = score;
 
                         if (score >= beta)
@@ -387,7 +392,7 @@ namespace Pedantic.Chess
             return bestScore;
         }
 
-        private int Search(int alpha, int beta, int depth, int ply, bool canNull = true)
+        private int Search(int alpha, int beta, int depth, int ply, bool cutNode, bool canNull = true)
         {
             pvTable.InitPly(ply);
             SelDepth = Math.Max(SelDepth, ply);
@@ -416,6 +421,7 @@ namespace Pedantic.Chess
             int score;
             int originalAlpha = alpha;
             bool isPv = beta - alpha > 1;
+            bool allNode = !isPv && !cutNode;
             bool inCheck = ss[ply - 1].IsCheckingMove;
             bool canPrune = false;
             ref SearchItem ssItem = ref ss[ply];
@@ -520,10 +526,11 @@ namespace Pedantic.Chess
             }
 
             // IIR 
-            if (ttMove == Move.NullMove && !inCheck && depth >= UciOptions.IirMinDepth)
+            if (ttMove.IsNull && !inCheck && depth >= UciOptions.IirMinDepth)
             {
                 depth--;
             }
+
 
             Move bestMove = Move.NullMove;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
@@ -550,7 +557,7 @@ namespace Pedantic.Chess
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Continuation = history.GetContinuation(genMove.Move);
                 
-                bool interesting = inCheck || checkingMove || (genMove.MovePhase < MoveGenPhase.BadCapture) || expandedNodes == 1;
+                bool interesting = inCheck || (genMove.MovePhase < MoveGenPhase.BadCapture) || expandedNodes == 1;
 
                 int R = 0;
                 if (!interesting)
@@ -591,6 +598,10 @@ namespace Pedantic.Chess
                         }
                     }
                     R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
+                    if (R > 0 && checkingMove)
+                    {
+                        R--;
+                    }
                 }
 
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
@@ -600,20 +611,20 @@ namespace Pedantic.Chess
                 
                 if (expandedNodes == 1)
                 {
-                    score = -Search(-beta, -alpha, depth - 1, ply + 1);
+                    score = -Search(-beta, -alpha, depth - 1, ply + 1, false);
                 }
                 else
                 {
-                    score = -Search(-alpha - 1, -alpha, Math.Max(depth - R - 1, 0), ply + 1);
+                    score = -Search(-alpha - 1, -alpha, Math.Max(depth - R - 1, 0), ply + 1, true);
 
                     if (score > alpha && R > 0)
                     {
-                        score = -Search(-alpha - 1, -alpha, depth - 1, ply + 1);
+                        score = -Search(-alpha - 1, -alpha, depth - 1, ply + 1, !cutNode);
                     }
 
                     if (score > alpha)
                     {
-                        score = -Search(-beta, -alpha, depth - 1, ply + 1);
+                        score = -Search(-beta, -alpha, depth - 1, ply + 1, false);
                     }
                 }
 
