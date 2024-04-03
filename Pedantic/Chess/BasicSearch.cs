@@ -396,6 +396,7 @@ namespace Pedantic.Chess
         {
             pvTable.InitPly(ply);
             SelDepth = Math.Max(SelDepth, ply);
+            bool inCheck = ss[ply - 1].IsCheckingMove;
 
             if (wasAborted || MustAbort)
             {
@@ -403,10 +404,16 @@ namespace Pedantic.Chess
                 return 0;
             }
 
+            if (inCheck)
+            {
+                depth++;
+            }
+
             if (ply >= MAX_PLY - 1)
             {
                 return eval.Compute(board, alpha, beta);
             }
+
             if (depth <= 0)
             {
                 return Quiesce(alpha, beta, ply);
@@ -422,7 +429,6 @@ namespace Pedantic.Chess
             int originalAlpha = alpha;
             bool isPv = beta - alpha > 1;
             bool allNode = !isPv && !cutNode;
-            bool inCheck = ss[ply - 1].IsCheckingMove;
             bool canPrune = false;
             ref SearchItem ssItem = ref ss[ply];
             int evaluation = ssItem.Eval = NO_SCORE;
