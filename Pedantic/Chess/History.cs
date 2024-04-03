@@ -50,7 +50,6 @@ namespace Pedantic.Chess
                           + CH(in ss[ply - 1], index)
                           + CH(in ss[ply - 2], index);
                 return (short)Math.Clamp(value, short.MinValue, short.MaxValue);
-
             }
         }
 
