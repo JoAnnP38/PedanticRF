@@ -507,6 +507,8 @@ namespace Pedantic.Chess
 
                         if (score >= beta)
                         {
+                            // don't trust mate scores
+                            score = Math.Abs(score) > TABLEBASE_WIN ? beta : score;
                             ttCache.Store(board.Hash, depth, ply, alpha, beta, score, Move.NullMove);
                             return score;
                         }
