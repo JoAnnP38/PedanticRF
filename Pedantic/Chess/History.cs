@@ -53,6 +53,12 @@ namespace Pedantic.Chess
             }
         }
 
+        public short GetHistory(int ply, Move move)
+        {
+            SetContext(ply);
+            return this[move];
+        }
+
 	    public short[]? NullMoveContinuation
 	    {
 		    [MethodImpl(MethodImplOptions.AggressiveInlining)]

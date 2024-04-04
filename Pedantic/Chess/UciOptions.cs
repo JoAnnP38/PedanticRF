@@ -39,6 +39,7 @@ namespace Pedantic.Chess
         internal const string OPT_LMR_DEPTH_FACTOR = "T_LMR_DepthFactor";
         internal const string OPT_LMR_MOVE_FACTOR = "T_LMR_MoveFactor";
         internal const string OPT_LMR_SCALE_FACTOR = "T_LMR_ScaleFactor";
+        internal const string OPT_LMR_HISTORY_DIV = "T_LMR_HistoryDiv";
         internal const string OPT_RFP_MAX_DEPTH = "T_RFP_MaxDepth";
         internal const string OPT_RFP_MARGIN = "T_RFP_Margin";
         internal const string OPT_LMP_MAX_DEPTH = "T_LMP_MaxDepth";
@@ -92,6 +93,7 @@ namespace Pedantic.Chess
                 { lmrDepthFactor.Name, lmrDepthFactor },
                 { lmrMoveFactor.Name, lmrMoveFactor },
                 { lmrScaleFactor.Name, lmrScaleFactor },
+                { lmrHistoryDiv.Name, lmrHistoryDiv },
                 { rfpMaxDepth.Name, rfpMaxDepth },
                 { rfpMargin.Name, rfpMargin },
                 { lmpMaxDepth.Name, lmpMaxDepth },
@@ -401,6 +403,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int LmrHistoryDiv
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return lmrHistoryDiv.CurrentValue;
+            }
+        }
+
         public static int RfpMaxDepth
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -669,5 +680,6 @@ namespace Pedantic.Chess
         private static UciOptionSpin rzrMargin = new UciOptionSpin(OPT_RZR_MARGIN, 114, 50, 400);
         private static UciOptionSpin hisMaxBonus = new UciOptionSpin(OPT_HIS_MAX_BONUS, 919, 500, 2500);
         private static UciOptionSpin hisBonusCoefficient = new UciOptionSpin(OPT_HIS_BONUS_COEFF, 108, 50, 250);
+        private static UciOptionSpin lmrHistoryDiv = new UciOptionSpin(OPT_LMR_HISTORY_DIV, 8192, 2048, 16384);
     }
 }

@@ -559,6 +559,7 @@ namespace Pedantic.Chess
                 expandedNodes++;
                 bool checkingMove = board.IsChecked();
                 bool isQuiet = genMove.Move.IsQuiet;
+                int hist = history.GetHistory(ply, genMove.Move);
                 ssItem.Move = genMove.Move;
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Continuation = history.GetContinuation(genMove.Move);
@@ -609,6 +610,7 @@ namespace Pedantic.Chess
                         R += !improving ? 1 : 0;
                         R -= checkingMove ? 1 : 0;
                         R -= isPv ? 1 : 0;
+                        R -= hist / UciOptions.LmrHistoryDiv;
                         R = Math.Clamp(R, 0, depth - 1);
                     }
                 }
