@@ -35,7 +35,8 @@ namespace Pedantic.Chess
                 int index = GetIndex(stm, piece, sq);
                 int value = history[index] 
                           + CH(in ss[ply - 1], index)
-                          + CH(in ss[ply - 2], index);
+                          + CH(in ss[ply - 2], index)
+                          + CH(in ss[ply - 4], index);
                 return (short)Math.Clamp(value, short.MinValue, short.MaxValue);
             }
         }
@@ -48,7 +49,8 @@ namespace Pedantic.Chess
                 int index = GetIndex(move);
                 int value = history[GetIndex(move)] 
                           + CH(in ss[ply - 1], index)
-                          + CH(in ss[ply - 2], index);
+                          + CH(in ss[ply - 2], index)
+                          + CH(in ss[ply - 4], index);
                 return (short)Math.Clamp(value, short.MinValue, short.MaxValue);
             }
         }
@@ -116,6 +118,7 @@ namespace Pedantic.Chess
             UpdateHistory(ref history[index], bonus);
             UpdateHistory(ref ss[ply - 1].Continuation![index], bonus);
             UpdateHistory(ref ss[ply - 2].Continuation![index], bonus);
+            UpdateHistory(ref ss[ply - 4].Continuation![index], bonus);
 
             short malus = (short)-bonus;
             for (int n = 0; n < quiets.Count; n++)
@@ -124,6 +127,7 @@ namespace Pedantic.Chess
                 UpdateHistory(ref history[index], malus);
                 UpdateHistory(ref ss[ply - 1].Continuation![index], malus);
                 UpdateHistory(ref ss[ply - 2].Continuation![index], malus);
+                UpdateHistory(ref ss[ply - 4].Continuation![index], malus);
             }
 
             Move lastMove = ss[ply - 1].Move;
