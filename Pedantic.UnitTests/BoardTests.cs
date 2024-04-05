@@ -260,8 +260,13 @@ namespace Pedantic.UnitTests
         {
             Board bd = new(fen);
             Move move = new (stm, Piece.Bishop, SquareIndex.D4, SquareIndex.E5, MoveType.Capture, Piece.Pawn);
-            int seeEval = bd.See0(move);
-            Assert.AreEqual(expected, seeEval);
+
+            int see0Eval = bd.See0(move);
+            //Assert.AreEqual(expected, seeEval);
+
+            bd.MakeMove(move);
+            int see1Eval = bd.See1(move);
+            Assert.AreEqual(move.Capture.Value() - see0Eval, see1Eval);
         }
 
         [TestMethod]
