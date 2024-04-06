@@ -744,8 +744,7 @@ namespace Pedantic.Chess
             MoveList list = listPool.Rent();
             int expandedNodes = 0;
 
-            MoveGenType type = inCheck ? MoveGenType.Evasion : MoveGenType.QSearch;
-            var moves = new MoveGen(type, board, ply, history, ss, list, ttMove, qsPly);
+            var moves = new MoveGen(MoveGenType.QSearch, board, ply, history, ss, list, ttMove, qsPly);
 
             while (moves.MoveNext())
             {
@@ -801,6 +800,11 @@ namespace Pedantic.Chess
             if (wasAborted)
             {
                 return 0;
+            }
+
+            if (expandedNodes == 0 && inCheck)
+            {
+                return -CHECKMATE_SCORE + ply;
             }
 
             ttCache.Store(board.Hash, -qsPly, ply, originalAlpha, beta, bestScore, bestMove);
