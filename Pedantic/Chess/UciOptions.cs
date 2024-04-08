@@ -127,7 +127,7 @@ namespace Pedantic.Chess
                     sw.WriteLine($"        \"value\": {spin.CurrentValue},");
                     sw.WriteLine($"        \"min_value\": {spin.MinValue},");
                     sw.WriteLine($"        \"max_value\": {spin.MaxValue},");
-                    int step = Math.Max((spin.MaxValue - spin.MinValue) / 10, 1);
+                    int step = Math.Max((spin.MaxValue - spin.MinValue) / 8, 1);
                     sw.WriteLine($"        \"step\": {step}");
                     sw.WriteLine("    },");
                 }
@@ -657,8 +657,8 @@ namespace Pedantic.Chess
         private static UciOptionSpin tmDifficultyMax = new UciOptionSpin(OPT_TM_DIFFICULTY_MAX, 200, 100, 300);
         private static UciOptionSpin aspMinDepth = new UciOptionSpin(OPT_ASP_MIN_DEPTH, 4, 1, 10);
         private static UciOptionSpin oneMoveMaxDepth = new UciOptionSpin(OPT_ONE_MOVE_MAX_DEPTH, 13, 1, 20);
-        private static UciOptionSpin recaptureDepth = new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 6, 4, 8);
-        private static UciOptionSpin promotionDepth = new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 1, 0, 8);
+        private static UciOptionSpin recaptureDepth = new UciOptionSpin(OPT_QS_RECAPTURE_DEPTH, 8, 4, 10);
+        private static UciOptionSpin promotionDepth = new UciOptionSpin(OPT_QS_PROMOTION_DEPTH, 2, 0, 8);
         private static UciOptionSpin nmpMinDepth = new UciOptionSpin(OPT_NMP_MIN_DEPTH, 3, 3, 6);
         private static UciOptionSpin nmpBaseReduction = new UciOptionSpin(OPT_NMP_BASE_REDUCTION, 4, 1, 8);
         private static UciOptionSpin nmpIncDivisor = new UciOptionSpin(OPT_NMP_INC_DIVISOR, 5, 2, 8);
