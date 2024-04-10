@@ -37,7 +37,7 @@ namespace Pedantic
             (
                 name: "--spsa",
                 description: "SPSA optimization currently being run.",
-                getDefaultValue: () => false
+                getDefaultValue: () => true
             );
             var learnDataOption = new Option<string?>
             (

@@ -871,7 +871,7 @@ namespace Pedantic.Chess
         {
             if (Depth >= UciOptions.AspMinDepth)
             {
-                Uci.Info(Depth, SelDepth, score, NodesVisited, clock.Elapsed, PV, ttCache.Usage, tbHits, bound);
+                Uci.Info(Depth, SelDepth, ScaleCpScore(score), NodesVisited, clock.Elapsed, PV, ttCache.Usage, tbHits, bound);
             }
             if (bound == Bound.Lower)
             {
@@ -944,8 +944,13 @@ namespace Pedantic.Chess
             }
             else
             {
-                Uci.Info(Depth, SelDepth, Score, NodesVisited, Elapsed, pv, ttCache.Usage, tbHits);
+                Uci.Info(Depth, SelDepth, ScaleCpScore(Score), NodesVisited, Elapsed, pv, ttCache.Usage, tbHits);
             }
+        }
+
+        public int ScaleCpScore(int score)
+        {
+            return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board.Phase);
         }
 
         #endregion
