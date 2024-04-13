@@ -50,7 +50,7 @@ namespace Pedantic.Tuning
                 get
                 {
                     int maxDraws = Math.Max(TotalWins, TotalLosses) + 1;
-                    maxDraws += maxDraws / 8;
+                    //maxDraws += maxDraws / 8;
                     return TotalDraws < maxDraws;
                 }
             }

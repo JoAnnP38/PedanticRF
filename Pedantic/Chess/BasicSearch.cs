@@ -815,7 +815,6 @@ namespace Pedantic.Chess
         {
             score = 0;
             if (Syzygy.IsInitialized && depth >= UciOptions.SyzygyProbeDepth && 
-                /*board.HalfMoveClock == 0 && board.Castling == CastlingRights.None &&*/
                 BitOps.PopCount(board.All) <= Syzygy.TbLargest)
             {
                 TbResult result = Syzygy.ProbeWdl(board.WhitePieces, board.BlackPieces, 

@@ -9,6 +9,10 @@ namespace Pedantic.Tuning
 {
     public class GdTuner : Tuner
     {
+        public const double initial_learning_rate = 1.0;
+        public const double lr_decay = 0.5;
+        public const double lr_step = 1000;
+
         public struct WeightPair
         {
             public WeightPair(Score s)
@@ -47,6 +51,7 @@ namespace Pedantic.Tuning
             {
                 k = DEFAULT_K;
             }
+            lRate = initial_learning_rate;
         }
 
         public GdTuner(List<PosRecord> positions)
@@ -55,6 +60,7 @@ namespace Pedantic.Tuning
             weights = ZeroWeights();
             gradient = new WeightPair[MAX_WEIGHTS];
             k = DEFAULT_K;
+            lRate = initial_learning_rate;
         }
 
         public override (double Error, double Accuracy, Chess.HCE.Weights Weights, double K) Train(int maxEpoch, TimeSpan? maxTime, 
@@ -100,11 +106,14 @@ namespace Pedantic.Tuning
                     TimeSpan elapsed = DateTime.Now - start;
                     double epochsPerSec = epoch / elapsed.TotalSeconds;
                     Console.WriteLine($"Epoch {epoch, 5} - \u03B5: {currError:F6}, Accuracy {accuracy:F4}, Epoch/sec {epochsPerSec:F3}, elapsed: {elapsed:d\\.hh\\:mm\\:ss}");
+
+                    //lRate = initial_learning_rate * Math.Pow(lr_decay, Math.Floor((1.0 + epoch) / lr_step));
                 }
             }
 
             currError = MeanSquaredError(k);
             accuracy = Accuracy();
+            k = SolveK(k);
             Chess.HCE.Weights nWeights = new();
             CopyWeights(weights, nWeights);
             return (currError, accuracy, nWeights, k);
@@ -267,7 +276,7 @@ namespace Pedantic.Tuning
 
         private readonly WeightPair[] weights;
         private readonly WeightPair[] gradient;
-        private readonly double lRate = 1.0;
+        private double lRate = 1.0;
     }
 }
 
