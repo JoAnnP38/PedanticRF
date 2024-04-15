@@ -45,7 +45,17 @@ namespace Pedantic.Tuning
 
                     IncrementPieceCount(color, coefficients, piece);
                     IncrementPieceSquare(color, coefficients, piece, kb, normalFrom);
-                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, bd.All);
+                    Bitboard occupied = bd.All;
+                    if (piece == Piece.Bishop)
+                    {
+                        occupied ^= bd.DiagonalSliders(color);
+                    }
+                    else if (piece == Piece.Rook)
+                    {
+                        occupied ^= bd.OrthogonalSliders(color);
+                    }
+
+                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, occupied);
                     if (piece != Piece.Pawn && piece != Piece.King)
                     {
                         evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
