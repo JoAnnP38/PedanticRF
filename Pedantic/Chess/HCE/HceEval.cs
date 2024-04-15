@@ -258,22 +258,64 @@ namespace Pedantic.Chess.HCE
             Color other = color.Flip();
             int c = (int)color;
             int o = (int)other;
-
             Score score = Score.Zero;
-            Bitboard exclude = board.Pawns | board.Kings;
-            foreach (SquareIndex from in board.Units(color).AndNot(exclude))
+
+            foreach (SquareIndex from in board.Pieces(color, Piece.Knight))
             {
-                Piece piece = board.PieceBoard(from).Piece;
-                Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, board.All);
-                evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
+                Bitboard pieceAttacks = Board.KnightMoves(from);
+                evalInfo[c].AttackBy[AttackBy.Knight] |= pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
                 {
                     evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
                 }
-                bool _ = board.IsPinned(from, out Bitboard pinMask);
+                board.IsPinned(from, out Bitboard pinMask);
                 int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
-                score += wts.PieceMobility(piece, mobility);
+                score += wts.KnightMobility(mobility);
+            }
+
+            Bitboard occupied = board.All ^ board.DiagonalSliders(color);
+            foreach (SquareIndex from in board.Pieces(color, Piece.Bishop))
+            {
+                Bitboard pieceAttacks = Board.GetBishopMoves(from, occupied);
+                evalInfo[c].AttackBy[AttackBy.Bishop] |= pieceAttacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
+                if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
+                {
+                    evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
+                }
+                board.IsPinned(from, out Bitboard pinMask);
+                int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
+                score += wts.BishopMobility(mobility);
+            }
+
+            occupied = board.All ^ board.OrthogonalSliders(color);
+            foreach (SquareIndex from in board.Pieces(color, Piece.Rook))
+            {
+                Bitboard pieceAttacks = Board.GetRookMoves(from, occupied);
+                evalInfo[c].AttackBy[AttackBy.Rook] |= pieceAttacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
+                if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
+                {
+                    evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
+                }
+                board.IsPinned(from, out Bitboard pinMask);
+                int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
+                score += wts.RookMobility(mobility);
+            }
+
+            foreach (SquareIndex from in board.Pieces(color, Piece.Queen))
+            {
+                Bitboard pieceAttacks = Board.GetQueenMoves(from, board.All);
+                evalInfo[c].AttackBy[AttackBy.Queen] |= pieceAttacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
+                if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
+                {
+                    evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
+                }
+                board.IsPinned(from, out Bitboard pinMask);
+                int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
+                score += wts.QueenMobility(mobility);
             }
 
             return score;
@@ -671,7 +713,7 @@ namespace Pedantic.Chess.HCE
                 Color other = color.Flip();
                 int c = (int)color;
                 int o = (int)other;
-                evalInfo[c].MobilityArea = ~(board.Units(color) | evalInfo[o].AttackBy[AttackBy.Pawn]);
+                evalInfo[c].MobilityArea = ~(board.Pieces(color, Piece.King) | board.Pieces(color, Piece.Queen) | evalInfo[o].AttackBy[AttackBy.Pawn]);
             }
 
             var canWin = CanWin(board, evalInfo);
