@@ -149,7 +149,7 @@ namespace Pedantic.Tuning
             ConcurrentBag<WeightPair[]> gradients = new();
             Array.Clear(gradient);
 
-            Parallel.For(0, positions.Count, () => new WeightPair[gradient.Length], 
+            Parallel.For(0, positions.Count, () => new WeightPair[MAX_WEIGHTS],
                 (j, loop, grad) =>
                 {
                     UpdateSingleGradient(grad, positions[j]);
@@ -160,7 +160,7 @@ namespace Pedantic.Tuning
 
             foreach (var grad in gradients)
             {
-                for (int n = 0; n < grad.Length; n++)
+                for (int n = 0; n < MAX_WEIGHTS; n++)
                 {
                     gradient[n] += grad[n];
                 }
@@ -207,9 +207,9 @@ namespace Pedantic.Tuning
                 double normalized = Sigmoid(k, ComputeEval(positions[j]));
                 float predicted = normalized switch
                 {
-                    >= 0.00 and <= 0.33 => 0.0f,    // white loses
-                    > 0.33 and < 0.67 => 0.5f,      // draw
-                    >= 0.67 and <= 1.00 => 1.0f,    // white wins
+                    >= 0.00 and <= 0.25 => 0.0f,    // white loses
+                    > 0.25 and < 0.75 => 0.5f,      // draw
+                    >= 0.75 and <= 1.00 => 1.0f,    // white wins
                     _ => -1.0f
                 };
                 if (predicted == positions[j].Result)
