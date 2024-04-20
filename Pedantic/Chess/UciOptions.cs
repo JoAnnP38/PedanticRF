@@ -33,6 +33,7 @@ namespace Pedantic.Chess
         internal const string OPT_ONE_MOVE_MAX_DEPTH = "T_OneMoveMaxDepth";
         internal const string OPT_QS_RECAPTURE_DEPTH = "T_QS_RecaptureDepth";
         internal const string OPT_QS_PROMOTION_DEPTH = "T_QS_PromotionDepth";
+        internal const string OPT_QS_FUTILITY_MARGIN = "T_QS_FutilityMargin";
         internal const string OPT_NMP_MIN_DEPTH = "T_NMP_MinDepth";
         internal const string OPT_NMP_BASE_REDUCTION = "T_NMP_BaseReduction";
         internal const string OPT_NMP_INC_DIVISOR = "T_NMP_IncDivisor";
@@ -109,6 +110,7 @@ namespace Pedantic.Chess
                 { rzrMargin.Name, rzrMargin },
                 { hisMaxBonus.Name, hisMaxBonus },
                 { hisBonusCoefficient.Name, hisBonusCoefficient },
+                { qsFutilityMargin.Name, qsFutilityMargin },
             };
         }
 
@@ -547,6 +549,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public static int QsFutilityMargin
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return qsFutilityMargin.CurrentValue;
+            }
+        }
+
         public static bool Optimizing
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -681,5 +692,6 @@ namespace Pedantic.Chess
         private static UciOptionSpin hisMaxBonus = new UciOptionSpin(OPT_HIS_MAX_BONUS, 745, 500, 2500);
         private static UciOptionSpin hisBonusCoefficient = new UciOptionSpin(OPT_HIS_BONUS_COEFF, 158, 50, 250);
         private static UciOptionSpin lmrHistoryDiv = new UciOptionSpin(OPT_LMR_HISTORY_DIV, 5815, 2048, 16384);
+        private static UciOptionSpin qsFutilityMargin = new UciOptionSpin(OPT_QS_FUTILITY_MARGIN, 150, 25, 225);
     }
 }

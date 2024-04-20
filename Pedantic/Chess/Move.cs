@@ -167,6 +167,15 @@ namespace Pedantic.Chess
             }
         }
 
+        public readonly bool IsPromotionThreat
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return IsPromote || (IsPawnMove && To.Normalize(Stm).Rank() == Rank.Rank7);
+            }
+        }
+
         public readonly bool Equals(Move other)
         {
             return move == other.move;
