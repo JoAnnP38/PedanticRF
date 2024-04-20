@@ -739,6 +739,7 @@ namespace Pedantic.Chess
 
             int score;
             int bestScore = standPatScore;
+            int futility = standPatScore + UciOptions.QsFutilityMargin;
             Move bestMove = Move.NullMove;
             board.PushBoardState();
             MoveList list = listPool.Rent();
@@ -757,11 +758,22 @@ namespace Pedantic.Chess
                 expandedNodes++;
                 bool isCheckingMove = board.IsChecked();
 
-                if (!inCheck && !isCheckingMove && genMove.MovePhase == MoveGenPhase.BadCapture)
+                if (!inCheck && bestScore > MAX_TABLEBASE_LOSS)
                 {
-                    board.UnmakeMoveNs();
-                    continue;
+                    if (genMove.MovePhase >= MoveGenPhase.BadCapture)
+                    {
+                        board.UnmakeMoveNs();
+                        continue;
+                    }
+
+                    //if (!genMove.Move.IsPromotionThreat && 
+                    //    futility + HceEval.Weights.PieceValue(genMove.Move.Piece).NormalizeScore(board.Phase) <= alpha)
+                    //{
+                    //    board.UnmakeMoveNs();
+                    //    continue;
+                    //}
                 }
+
                 ttCache.Prefetch(board.Hash); // do prefetch before we need the ttItem
                 eval.Prefetch(board);
                 NodesVisited++;
