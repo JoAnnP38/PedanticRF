@@ -177,6 +177,14 @@ namespace Pedantic.Tuning
                     IncrementBadBishopPawn(color, coefficients, badPawnCount);
                 }
 
+                foreach (SquareIndex sq in bishops)
+                {
+                    if ((Board.GetBishopMoves(sq, bd.Pawns) & (Bitboard)HceEval.CENTER_MASK).PopCount == 2)
+                    {
+                        IncrementBishopLongDiagonal(color, coefficients);
+                    }
+                }
+
                 Bitboard targets = bd.Units(other).AndNot(otherPawns);
                 Bitboard pushAttacks;
                 
@@ -810,6 +818,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, (short)(count * Increment(color)));
+            }
+        }
+
+        private static void IncrementBishopLongDiagonal(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(BISHOP_LONG_DIAG))
+            {
+                v[BISHOP_LONG_DIAG] += Increment(color);
+            }
+            else
+            {
+                v.Add(BISHOP_LONG_DIAG, Increment(color));
             }
         }
 
