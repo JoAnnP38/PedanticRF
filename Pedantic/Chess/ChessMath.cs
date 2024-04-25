@@ -153,6 +153,29 @@ namespace Pedantic.Chess
             return sq >= 0 && sq < MAX_SQUARES;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rank Min(Rank r1, Rank r2)
+        {
+            return r1 < r2 ? r1 : r2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Rank Max(Rank r1, Rank r2)
+        {
+            return r1 > r2 ? r1 : r2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static File Min(File f1, File f2)
+        {
+            return f1 < f2 ? f1 : f2;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static File Max(File f1, File f2)
+        {
+            return f1 > f2 ? f1 : f2;
+        }
         private static Direction[] directionBetween = new Direction[ MAX_SQUARES * MAX_SQUARES ];
     }
 }

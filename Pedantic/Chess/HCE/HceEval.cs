@@ -66,6 +66,15 @@ namespace Pedantic.Chess.HCE
         static HceEval()
         {
             wts = Engine.Weights;
+
+            FlankMask[0] = new Bitboard(File.FileA) | new Bitboard(File.FileB) | new Bitboard(File.FileC);
+            FlankMask[1] = FlankMask[0] | new Bitboard(File.FileD);
+            FlankMask[2] = FlankMask[1];
+            FlankMask[3] = new Bitboard(File.FileC) | new Bitboard(File.FileD) | new Bitboard(File.FileE) | new Bitboard(File.FileF);
+            FlankMask[4] = FlankMask[3];
+            FlankMask[5] = new Bitboard(File.FileE) | new Bitboard(File.FileF) | new Bitboard(File.FileG) | new Bitboard(File.FileH);
+            FlankMask[6] = FlankMask[5];
+            FlankMask[7] = new Bitboard(File.FileF) | new Bitboard(File.FileG) | new Bitboard(File.FileH);
         }
 
         public HceEval(EvalCache evalCache)
@@ -364,6 +373,13 @@ namespace Pedantic.Chess.HCE
                 Bitboard attacks = Board.GetRookMoves(KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsOrthogonalMobility(mobility);
+            }
+
+            // penalize king for being on pawnless flank
+            Bitboard pawns = evalInfo[c].Pawns;
+            if ((pawns & FlankMask[(int)KI.File()]).PopCount == 0)
+            {
+                score += wts.PawnlessFlank;
             }
 
             return score;
@@ -1006,5 +1022,7 @@ namespace Pedantic.Chess.HCE
 
             #endregion
         };
+
+        public static readonly Bitboard[] FlankMask = new Bitboard[MAX_COORDS];
     }
 }
