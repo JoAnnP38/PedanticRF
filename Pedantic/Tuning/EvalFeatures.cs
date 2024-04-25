@@ -4,7 +4,8 @@ using Pedantic.Collections;
 using Pedantic.Utilities;
 using System.Runtime.CompilerServices;
 using static Pedantic.Chess.HCE.Weights;
-using static System.Formats.Asn1.AsnWriter;
+
+using File = Pedantic.Chess.File;
 
 namespace Pedantic.Tuning
 {
@@ -160,6 +161,11 @@ namespace Pedantic.Tuning
                     Bitboard attacks = Board.GetRookMoves(KI, bd.All);
                     int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                     IncrementKsOrthogonalMobility(color, coefficients, mobility);
+                }
+
+                if ((pawns & HceEval.FlankMask[(int)KI.File()]).PopCount == 0)
+                {
+                    IncrementPawnlessFlank(color, coefficients);
                 }
 
                 Bitboard bishops = bd.Pieces(color, Piece.Bishop);
@@ -602,6 +608,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementPawnlessFlank(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(PAWNLESS_FLANK))
+            {
+                v[PAWNLESS_FLANK] += Increment(color);
+            }
+            else
+            {
+                v.Add(PAWNLESS_FLANK, Increment(color));
             }
         }
 

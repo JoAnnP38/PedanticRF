@@ -629,6 +629,9 @@ namespace Pedantic
             WriteLine("/* orthogonal lines */");
             WriteWts2D(wts, KS_ORTH_MOBILITY, 8, 14);
             WriteLine();
+            WriteLine("/* pawnless flank */");
+            WriteWtLine(wts.PawnlessFlank);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* passed pawns */");
