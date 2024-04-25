@@ -675,6 +675,9 @@ namespace Pedantic
             WriteLine("/* pawn shields minor piece */");
             WriteWtLine(wts.PawnShieldsMinor);
             WriteLine();
+            WriteLine("/* bishop on long diagonal */");
+            WriteWtLine(wts.BishopLongDiagonal);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* threats */");

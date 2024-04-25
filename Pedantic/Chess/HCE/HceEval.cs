@@ -10,6 +10,7 @@ namespace Pedantic.Chess.HCE
         public const int MAX_ATTACK_LEN = 8;
         public const ulong DARK_SQUARES_MASK = 0xAA55AA55AA55AA55ul;
         public const ulong LITE_SQUARES_MASK = 0x55AA55AA55AA55AAul;
+        public const ulong CENTER_MASK = 0x0000001818000000ul;
 
 
         [InlineArray(MAX_ATTACK_LEN)]
@@ -389,14 +390,21 @@ namespace Pedantic.Chess.HCE
                 score += badPawnCount * wts.BadBishopPawn;
             }
 
+            foreach (SquareIndex from in bishops)
+            {
+                if ((Board.GetBishopMoves(from, board.Pawns) & (Bitboard)CENTER_MASK).PopCount == 2)
+                {
+                    score += wts.BishopLongDiagonal;
+                }
+            }
+
             Bitboard pawns = evalInfo[c].Pawns;
             Bitboard otherPawns = evalInfo[o].Pawns;
-            Bitboard allPawns = pawns | otherPawns;
 
             foreach (SquareIndex sq in board.Pieces(color, Piece.Rook))
             {
                 Bitboard fileMask = new Bitboard(sq.File());
-                if ((allPawns & fileMask) == 0)
+                if ((board.Pawns & fileMask) == 0)
                 {
                     score += wts.RookOnOpenFile;
                 }
