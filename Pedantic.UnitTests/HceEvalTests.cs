@@ -129,30 +129,29 @@ namespace Pedantic.UnitTests
             EvalCache cache = new();
             HceEval eval = new(cache);
 
-            Span<HceEval.EvalInfo> evalInfo = stackalloc HceEval.EvalInfo[2];
-            HceEval.InitializeEvalInfo(bd, evalInfo);
+            eval.InitializeEvalInfo(bd);
 
-            Score score = eval.EvalMaterialAndPst(bd, evalInfo, Color.White);
-            score -= eval.EvalMaterialAndPst(bd, evalInfo, Color.Black);
+            Score score = eval.EvalMaterialAndPst(bd, Color.White);
+            score -= eval.EvalMaterialAndPst(bd, Color.Black);
             short actual = score.NormalizeScore(bd.Phase);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
             Assert.AreEqual(expected, actual, "Material+PST");
 
             expected = features.Compute(HceEval.Weights, Weights.PASSED_PAWN, Weights.KING_ATTACK, false);
-            score = eval.ProbePawnCache(bd, evalInfo);
+            score = eval.ProbePawnCache(bd);
             actual = score.NormalizeScore(bd.Phase);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
             Assert.AreEqual(expected, actual, "Pawn Structure");
 
             expected = features.Compute(HceEval.Weights, Weights.KNIGHT_MOBILITY, Weights.PASSED_PAWN, false);
-            score = HceEval.EvalMobility(bd, evalInfo, Color.White);
-            score -= HceEval.EvalMobility(bd, evalInfo, Color.Black);
+            score = eval.EvalMobility(bd, Color.White);
+            score -= eval.EvalMobility(bd, Color.Black);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
             Assert.AreEqual(expected, actual, "Piece Mobility");
 
             expected = features.Compute(HceEval.Weights, Weights.KING_ATTACK, Weights.KING_OUTSIDE_PP_SQUARE, false);
-            score = HceEval.EvalKingSafety(bd, evalInfo, Color.White);
-            score -= HceEval.EvalKingSafety(bd, evalInfo, Color.Black);
+            score = eval.EvalKingSafety(bd, Color.White);
+            score -= eval.EvalKingSafety(bd, Color.Black);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
             Assert.AreEqual(expected, actual, "King Safety");
         }

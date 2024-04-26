@@ -1467,6 +1467,17 @@ namespace Pedantic.Chess
                     ((GetRookMoves(sq, All) & OrthogonalSliders(color)) != 0);
         }
 
+        public int AttackCount(SquareIndex sq, Color attacker)
+        {
+            int attackCount = (PawnDefends(attacker, sq) & Pieces(attacker, Piece.Pawn)).PopCount
+                            + (KnightMoves(sq) & Pieces(attacker, Piece.Knight)).PopCount
+                            + (KingMoves(sq) & Pieces(attacker, Piece.King)).PopCount
+                            + (GetBishopMoves(sq, All) & DiagonalSliders(attacker)).PopCount
+                            + (GetRookMoves(sq, All) & OrthogonalSliders(attacker)).PopCount;
+
+            return attackCount;
+        }
+
         public void GetEvasionInfo(SquareIndex kingIndex, out EvasionInfo info, out GenMoveHelper helper)
         {
             helper = helpers[sideToMove];

@@ -18,8 +18,8 @@ namespace Pedantic.Tuning
 
         public EvalFeatures(Board bd, Weights wts)
         {
-            Span<HceEval.EvalInfo> evalInfo = stackalloc HceEval.EvalInfo[2];
-            HceEval.InitializeEvalInfo(bd, evalInfo);
+            ByColor<HceEval.EvalInfo> evalInfo = new();
+            HceEval.InitializeEvalInfo(bd, ref evalInfo);
 
             sideToMove = bd.SideToMove;
             phase = 0;
@@ -336,7 +336,7 @@ namespace Pedantic.Tuning
                 }            
             }
             Score score = ComputeImpl(wts);
-            drawRatio = HceEval.CalcDrawRatio(bd, evalInfo, score);
+            drawRatio = HceEval.CalcDrawRatio(bd, in evalInfo, score);
         }
 
         public IDictionary<int, short> Coefficients
