@@ -117,6 +117,12 @@ namespace Pedantic.Chess.HCE
             bool isLazy = false;
             InitializeEvalInfo(board, ref evalInfo);
             short score = ComputeNormal(board, alpha, beta, ref isLazy);
+
+            if (UciOptions.RandomSearch)
+            {
+                score += (short)rand.Next(-8, 9);
+            }
+
             score = (short)(ColorToSign(board.SideToMove) * score);
 
             if (!isLazy)
@@ -775,6 +781,7 @@ namespace Pedantic.Chess.HCE
 
         private ByColor<EvalInfo> evalInfo;
         private readonly EvalCache cache;
+        private readonly Random rand = new Random();
         private static Weights wts;
 
 

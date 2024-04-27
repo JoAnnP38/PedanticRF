@@ -330,7 +330,7 @@ namespace Pedantic
             {
                 ReadOnlySpan<char> moves = tokens[tokenRanges[1]];
                 int firstMove = moves.IndexOf("moves");
-                if (firstMove != -1)
+                if (firstMove != -1 && moves.Length > 6)
                 {
                     firstMove += 6;
                     moves = moves[firstMove..];

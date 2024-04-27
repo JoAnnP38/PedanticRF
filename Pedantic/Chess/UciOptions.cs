@@ -12,7 +12,6 @@ namespace Pedantic.Chess
         internal const string OPT_EVAL_FILE = "EvalFile";
         internal const string OPT_HASH_TABLE_SIZE = "Hash";
         internal const string OPT_MOVE_OVERHEAD = "Move Overhead";
-        internal const string OPT_OWN_BOOK = "OwnBook";
         internal const string OPT_PONDER = "Ponder";
         internal const string OPT_RANDOM_SEARCH = "RandomSearch";
         internal const string OPT_SYZYGY_PATH = "SyzygyPath";
@@ -21,7 +20,6 @@ namespace Pedantic.Chess
         internal const string OPT_THREADS = "Threads";
         internal const string OPT_ANALYSE_MODE = "UCI_AnalyseMode";
         internal const string OPT_ENGINE_ABOUT = "UCI_EngineAbout";
-        internal const string OPT_OPPONENT = "UCI_Opponent";
         internal const string OPT_TM_BRANCH_FACTOR = "T_TM_BranchFactor";
         internal const string OPT_TM_DEF_MOVES_TO_GO = "T_TM_DefaultMovesToGo";
         internal const string OPT_TM_DEF_MOVES_TO_GO_PONDER = "T_TM_DefaultMovesToGo_Ponder";
@@ -63,12 +61,10 @@ namespace Pedantic.Chess
             {
                 { clearHash.Name, clearHash },
                 { engineAbout.Name, engineAbout },
-                { opponent.Name, opponent },
                 { contempt.Name, contempt },
                 { evalFile.Name, evalFile },
                 { hashTableSize.Name, hashTableSize },
                 { moveOverhead.Name, moveOverhead },
-                { ownBook.Name, ownBook },
                 { ponder.Name, ponder },
                 { randomSearch.Name, randomSearch },
                 { syzygyPath.Name, syzygyPath },
@@ -176,15 +172,6 @@ namespace Pedantic.Chess
             get
             {
                 return moveOverhead.CurrentValue;
-            }
-        }
-
-        public static bool OwnBook
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return ownBook.CurrentValue;
             }
         }
 
@@ -635,12 +622,10 @@ namespace Pedantic.Chess
         // UCI Options
         private static UciOptionButton clearHash = new UciOptionButton(OPT_CLEAR_HASH);
         private static UciOptionString engineAbout = new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}");
-        private static UciOptionString opponent = new UciOptionString(OPT_OPPONENT, "none none computer generic engine");
         private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
         private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048);
         private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000);
-        private static UciOptionCheck ownBook = new UciOptionCheck(OPT_OWN_BOOK, false);
         private static UciOptionCheck ponder = new UciOptionCheck(OPT_PONDER, false);
         private static UciOptionCheck randomSearch = new UciOptionCheck(OPT_RANDOM_SEARCH, false);
         private static UciOptionString syzygyPath = new UciOptionString(OPT_SYZYGY_PATH, string.Empty);
