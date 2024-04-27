@@ -738,13 +738,13 @@ namespace Pedantic.Chess
             }
 
             int score;
-            int bestScore = standPatScore;
+            int bestScore = inCheck ? -INFINITE_WINDOW : alpha;
             Move bestMove = Move.NullMove;
             board.PushBoardState();
             MoveList list = listPool.Rent();
             int expandedNodes = 0;
 
-            var moves = new MoveGen(MoveGenType.QSearch, board, ply, history, ss, list, ttMove, qsPly);
+            var moves = new MoveGen(inCheck ? MoveGenType.Evasion : MoveGenType.QSearch, board, ply, history, ss, list, ttMove, qsPly);
 
             while (moves.MoveNext())
             {
@@ -755,7 +755,6 @@ namespace Pedantic.Chess
                 }
 
                 expandedNodes++;
-                bool isCheckingMove = board.IsChecked();
 
                 if (!inCheck && bestScore > MAX_TABLEBASE_LOSS && genMove.MovePhase >= MoveGenPhase.BadCapture)
                 {
@@ -767,7 +766,7 @@ namespace Pedantic.Chess
                 eval.Prefetch(board);
                 NodesVisited++;
                 ssItem.Move = genMove.Move;
-                ssItem.IsCheckingMove = isCheckingMove;
+                ssItem.IsCheckingMove = board.IsChecked();
                 ssItem.Continuation = history.GetContinuation(genMove.Move);
 
                 score = -Quiesce(-beta, -alpha, ply + 1, qsPly + 1);
