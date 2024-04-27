@@ -20,7 +20,6 @@ namespace Pedantic.Chess
         internal const string OPT_THREADS = "Threads";
         internal const string OPT_ANALYSE_MODE = "UCI_AnalyseMode";
         internal const string OPT_ENGINE_ABOUT = "UCI_EngineAbout";
-        internal const string OPT_OPPONENT = "UCI_Opponent";
         internal const string OPT_TM_BRANCH_FACTOR = "T_TM_BranchFactor";
         internal const string OPT_TM_DEF_MOVES_TO_GO = "T_TM_DefaultMovesToGo";
         internal const string OPT_TM_DEF_MOVES_TO_GO_PONDER = "T_TM_DefaultMovesToGo_Ponder";
@@ -62,7 +61,6 @@ namespace Pedantic.Chess
             {
                 { clearHash.Name, clearHash },
                 { engineAbout.Name, engineAbout },
-                { opponent.Name, opponent },
                 { contempt.Name, contempt },
                 { evalFile.Name, evalFile },
                 { hashTableSize.Name, hashTableSize },
@@ -624,7 +622,6 @@ namespace Pedantic.Chess
         // UCI Options
         private static UciOptionButton clearHash = new UciOptionButton(OPT_CLEAR_HASH);
         private static UciOptionString engineAbout = new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}");
-        private static UciOptionString opponent = new UciOptionString(OPT_OPPONENT, "none none computer generic engine");
         private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
         private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048);
