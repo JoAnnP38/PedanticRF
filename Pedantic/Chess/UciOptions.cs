@@ -12,7 +12,6 @@ namespace Pedantic.Chess
         internal const string OPT_EVAL_FILE = "EvalFile";
         internal const string OPT_HASH_TABLE_SIZE = "Hash";
         internal const string OPT_MOVE_OVERHEAD = "Move Overhead";
-        internal const string OPT_OWN_BOOK = "OwnBook";
         internal const string OPT_PONDER = "Ponder";
         internal const string OPT_RANDOM_SEARCH = "RandomSearch";
         internal const string OPT_SYZYGY_PATH = "SyzygyPath";
@@ -68,7 +67,6 @@ namespace Pedantic.Chess
                 { evalFile.Name, evalFile },
                 { hashTableSize.Name, hashTableSize },
                 { moveOverhead.Name, moveOverhead },
-                { ownBook.Name, ownBook },
                 { ponder.Name, ponder },
                 { randomSearch.Name, randomSearch },
                 { syzygyPath.Name, syzygyPath },
@@ -176,15 +174,6 @@ namespace Pedantic.Chess
             get
             {
                 return moveOverhead.CurrentValue;
-            }
-        }
-
-        public static bool OwnBook
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return ownBook.CurrentValue;
             }
         }
 
@@ -640,7 +629,6 @@ namespace Pedantic.Chess
         private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 2048);
         private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000);
-        private static UciOptionCheck ownBook = new UciOptionCheck(OPT_OWN_BOOK, false);
         private static UciOptionCheck ponder = new UciOptionCheck(OPT_PONDER, false);
         private static UciOptionCheck randomSearch = new UciOptionCheck(OPT_RANDOM_SEARCH, false);
         private static UciOptionString syzygyPath = new UciOptionString(OPT_SYZYGY_PATH, string.Empty);
