@@ -1,8 +1,15 @@
-﻿using Pedantic.Utilities;
-using System.Text;
+﻿// <copyright file="UciOption.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Text;
+    using Pedantic.Utilities;
+
     public class UciOptionBase
     {
         public UciOptionBase(string name, UciOptionType type)

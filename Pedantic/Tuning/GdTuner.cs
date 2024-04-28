@@ -1,12 +1,17 @@
-﻿using System.Collections.Concurrent;
-
-using Pedantic.Chess;
-using Pedantic.Utilities;
-
-using static Pedantic.Chess.HCE.Weights;
+﻿// <copyright file="GdTuner.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Tuning
 {
+    using System.Collections.Concurrent;
+    using Pedantic.Chess;
+    using Pedantic.Utilities;
+    using static Pedantic.Chess.HCE.Weights;
+
     public class GdTuner : Tuner
     {
         public const double initial_learning_rate = 1.0;

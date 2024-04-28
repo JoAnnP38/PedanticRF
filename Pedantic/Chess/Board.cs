@@ -1,12 +1,19 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using Pedantic.Collections;
-using Pedantic.Chess.HCE;
-using Pedantic.Utilities;
+﻿// <copyright file="Board.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using Pedantic.Chess.HCE;
+    using Pedantic.Collections;
+    using Pedantic.Utilities;
+
     public sealed partial class Board : ICloneable, IInitialize
     {
         #region Board Constants

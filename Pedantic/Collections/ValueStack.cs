@@ -1,8 +1,15 @@
-﻿using System.Collections;
-using Pedantic.Utilities;
+﻿// <copyright file="ValueStack.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Collections
 {
+    using System.Collections;
+    using Pedantic.Utilities;
+
     public sealed class ValueStack<T> : IStack<T> where T : unmanaged
 
     {

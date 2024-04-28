@@ -1,10 +1,16 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Pedantic.Utilities;
+﻿// <copyright file="Weights.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess.HCE
 {
+    using System.Runtime.CompilerServices;
+    using System.Text;
+    using Pedantic.Utilities;
+
     // Coefficients or weights for the HCE evaluation function
     public sealed class Weights : IInitialize
     {

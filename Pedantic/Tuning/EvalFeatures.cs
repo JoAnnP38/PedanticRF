@@ -1,14 +1,19 @@
-﻿using Pedantic.Chess;
-using Pedantic.Chess.HCE;
-using Pedantic.Collections;
-using Pedantic.Utilities;
-using System.Runtime.CompilerServices;
-using static Pedantic.Chess.HCE.Weights;
-
-using File = Pedantic.Chess.File;
+﻿// <copyright file="EvalFeatures.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Tuning
 {
+    using System.Runtime.CompilerServices;
+    using Pedantic.Chess;
+    using Pedantic.Chess.HCE;
+    using Pedantic.Collections;
+    using Pedantic.Utilities;
+    using static Pedantic.Chess.HCE.Weights;
+
     public unsafe sealed class EvalFeatures
     {
         private Color sideToMove;
@@ -76,7 +81,7 @@ namespace Pedantic.Tuning
                         Ray ray = Board.Vectors[(int)from];
                         Bitboard friendMask = color == Color.White ? ray.North : ray.South;
                         bool canBeBackward = true;
-                        
+
                         if ((otherPawns & HceEval.PassedPawnMasks[c, (int)from]) == 0 && (pawns & friendMask) == 0)
                         {
                             IncrementPassedPawn(color, coefficients, normalFrom);

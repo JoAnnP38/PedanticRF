@@ -1,13 +1,18 @@
-﻿using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Text;
-
-using Pedantic.Chess;
-using Pedantic.Utilities;
+﻿// <copyright file="TrainingDataFile.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Tuning
 {
+    using System.Diagnostics;
+    using System.Runtime.CompilerServices;
+    using System.Text;
+    using Pedantic.Chess;
+    using Pedantic.Utilities;
+
     public class TrainingDataFile : IDisposable
     {
         public const int BUFFER_LENGTH = 4096;

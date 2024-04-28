@@ -1,8 +1,14 @@
-﻿using System.Runtime.CompilerServices;
-using Pedantic.Chess;
+﻿// <copyright file="Tuner.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Tuning
 {
+    using System.Runtime.CompilerServices;
+
     public abstract class Tuner
     {
         public const double GOLDEN_RATIO = 1.618033988749894;

@@ -1,11 +1,17 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Pedantic.Utilities;
-
+﻿// <copyright file="MoveList.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Collections;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using Pedantic.Utilities;
+
     public sealed class MoveList : IEnumerable<Move>, IEnumerable, IPooledObject<MoveList>
     {
         #region Nested Types
@@ -19,6 +25,7 @@ namespace Pedantic.Chess
 
                 init; 
             }
+
             public int Score 
             { 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -36,7 +43,7 @@ namespace Pedantic.Chess
         }
 
         public const int CAPACITY = 218;
-        
+
         [InlineArray(CAPACITY)]
         public struct ScoredMoveArray
         {
@@ -56,6 +63,7 @@ namespace Pedantic.Chess
         private class FakeHistory : IHistory
         {
             public short this[Move move] => 0;
+
             public short this[Color stm, Piece piece, SquareIndex to] => 0;
         }
 

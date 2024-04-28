@@ -1,9 +1,16 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using Pedantic.Utilities;
+﻿// <copyright file="Notation.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+    using System.Text.RegularExpressions;
+    using Pedantic.Utilities;
+
     public static partial class Notation
     {
         public const string REGEX_FEN = @"^\s*([rnbqkpRNBQKP1-8]+/){7}[rnbqkpRNBQKP1-8]+\s[bw]\s(-|K?Q?k?q?)\s(-|[a-h][36])\s\d+\s\d+\s*$";

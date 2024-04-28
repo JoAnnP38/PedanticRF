@@ -1,8 +1,14 @@
-﻿using Pedantic.Collections;
-using System.Collections.Concurrent;
+﻿// <copyright file="ObjectPool.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Utilities
 {
+    using Pedantic.Collections;
+
     public class ObjectPool<T> where T : class, new()
     {
         private readonly Bag<T> objects;

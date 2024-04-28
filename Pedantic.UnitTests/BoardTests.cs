@@ -1,8 +1,4 @@
-﻿
-
-using Pedantic.Chess;
-
-namespace Pedantic.UnitTests
+﻿namespace Pedantic.UnitTests
 {
     [TestClass]
     [TestCategory("UnitTests")]

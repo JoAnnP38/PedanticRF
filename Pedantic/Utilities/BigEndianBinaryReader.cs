@@ -1,7 +1,14 @@
-﻿using System.Text;
+﻿// <copyright file="BigEndianBinaryReader.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Utilities
 {
+    using System.Text;
+
     public class BigEndianBinaryReader : BinaryReader
     {
         public BigEndianBinaryReader(Stream stream)
