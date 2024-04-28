@@ -1,8 +1,15 @@
-﻿using System.Collections;
-using System.Runtime.CompilerServices;
+﻿// <copyright file="MoveGen.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Collections;
+    using System.Runtime.CompilerServices;
+
     public struct MoveGen : IEnumerable<GenMove>, IEnumerator<GenMove>
     {
         public const int MAX_BAD_CAPTURES = Board.MAX_BAD_CAPTURES;

@@ -20,6 +20,9 @@ csharp_style_expression_bodied_lambdas = true:silent
 csharp_style_expression_bodied_local_functions = false:silent
 csharp_space_around_binary_operators = before_and_after
 
+# SA1310: Field names should not contain underscore
+dotnet_diagnostic.SA1310.severity = none
+
 [*.{cs,vb}]
 #### Naming styles ####
 

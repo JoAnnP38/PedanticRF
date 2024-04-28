@@ -1,9 +1,14 @@
-﻿using System.Collections.Frozen;
-using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
+﻿// <copyright file="UciOptions.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+
     public static class UciOptions
     {
         // Prefix UCI_T_ is for tunable paramters

@@ -1,9 +1,16 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
+﻿// <copyright file="BitOps.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Utilities
 {
+    using System.Numerics;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.Intrinsics.X86;
+
     public static class BitOps
     {
         public const int ULONG_BITS = 64;

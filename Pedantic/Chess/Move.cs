@@ -1,11 +1,17 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using Pedantic.Utilities;
-
-using static Pedantic.Chess.ChessMath;
+﻿// <copyright file="Move.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Diagnostics.CodeAnalysis;
+    using System.Runtime.CompilerServices;
+    using Pedantic.Utilities;
+    using static Pedantic.Chess.ChessMath;
+
     public readonly struct Move : IEquatable<Move>
     {
         private readonly uint move;

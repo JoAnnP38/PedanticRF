@@ -1,10 +1,16 @@
-﻿using Pedantic.Collections;
-using Pedantic.Tablebase;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+﻿// <copyright file="HceEval.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess.HCE
 {
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+    using Pedantic.Collections;
+
     public sealed class HceEval : IInitialize
     {
         public const int MAX_ATTACK_LEN = 8;

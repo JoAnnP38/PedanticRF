@@ -1,9 +1,16 @@
-﻿using Pedantic.Utilities;
-using System.Runtime.CompilerServices;
-using System.Text;
+﻿// <copyright file="Uci.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+    using System.Text;
+    using Pedantic.Utilities;
+
     public class Uci
     {
         static Uci()

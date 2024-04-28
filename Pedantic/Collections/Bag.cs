@@ -1,7 +1,14 @@
-﻿using System.Collections;
+﻿// <copyright file="Bag.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Collections
 {
+    using System.Collections;
+
     public class Bag<T> : ICollection<T> where T : class
     {
         private T[] array;

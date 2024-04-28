@@ -1,7 +1,14 @@
-﻿using System.Diagnostics;
+﻿// <copyright file="Util.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Utilities
 {
+    using System.Diagnostics;
+
     public static class Util
     {
         public sealed class AssertionException : Exception

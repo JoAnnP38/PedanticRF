@@ -1,15 +1,21 @@
-﻿using System.CommandLine;
-using System.Globalization;
-using System.Text;
-using Pedantic.Chess;
-using Pedantic.Tuning;
-using Pedantic.Tablebase;
-using Pedantic.Chess.HCE;
-
-using static Pedantic.Chess.HCE.Weights;
+﻿// <copyright file="Program.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic
 {
+    using System.CommandLine;
+    using System.Globalization;
+    using System.Text;
+    using Pedantic.Chess;
+    using Pedantic.Chess.HCE;
+    using Pedantic.Tablebase;
+    using Pedantic.Tuning;
+    using static Pedantic.Chess.HCE.Weights;
+
     public class Program
     {
         const int BUFFER_SIZE = 8192;

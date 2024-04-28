@@ -1,15 +1,22 @@
-﻿using System.Runtime.CompilerServices;
+﻿// <copyright file="Ray.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+
     public readonly struct Ray
     {
         [InlineArray(MAX_DIRECTIONS)]
         private struct DirArray
         {
             public Bitboard _element0;
-        };
-        
+        }
+
         private readonly DirArray rays;
 
         public Ray(ulong north, ulong northEast, ulong east, ulong southEast, ulong south, ulong southWest, ulong west, ulong northWest)

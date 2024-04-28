@@ -1,9 +1,16 @@
-﻿using Pedantic.Chess.HCE;
-using Pedantic.Tablebase;
-using Pedantic.Utilities;
+﻿// <copyright file="Engine.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using Pedantic.Chess.HCE;
+    using Pedantic.Tablebase;
+    using Pedantic.Utilities;
+
     public static class Engine
     {
         public static bool IsRunning { get; private set; } = false;

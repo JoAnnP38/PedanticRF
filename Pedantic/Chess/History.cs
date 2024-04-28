@@ -1,10 +1,16 @@
-﻿using System.Runtime.CompilerServices;
-
-using Pedantic.Collections;
-using Pedantic.Utilities;
+﻿// <copyright file="History.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+    using Pedantic.Collections;
+    using Pedantic.Utilities;
+
     public unsafe sealed class History : IHistory
     {
         internal const int HISTORY_LEN = MAX_COLORS * MAX_PIECES * MAX_SQUARES;

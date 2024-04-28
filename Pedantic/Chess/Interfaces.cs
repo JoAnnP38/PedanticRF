@@ -1,20 +1,31 @@
-﻿namespace Pedantic.Chess
+﻿// <copyright file="Interfaces.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
+
+namespace Pedantic.Chess
 {
     public interface IHistory
     {
         public short this[Color stm, Piece piece, SquareIndex to] { get; }
+
         public short this[Move move] { get; }
     }
 
     public interface IInitialize
     {
-        public static void Initialize() { }
+        public static void Initialize()
+        { }
     }
 
     public interface IEvaluate
     {
         public void AddPiece(Color color, Piece Piece, SquareIndex sq);
+
         public void RemovePiece(Color color, Piece Piece, SquareIndex sq);
+
         public short Compute(short alpha, short beta);
     }
 

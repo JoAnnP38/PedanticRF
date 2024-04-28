@@ -1,10 +1,16 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-
+﻿// <copyright file="ValueStringBuilder.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Utilities
 {
+    using System.Buffers;
+    using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
+
     public ref struct ValueStringBuilder
     {
         private char[]? _arrayToReturnToPool;

@@ -1,7 +1,14 @@
-﻿using System.Runtime.CompilerServices;
+﻿// <copyright file="MovePair.cs" company="JoAnn D. Peeler">
+// Copyright (c) JoAnn D. Peeler. All rights reserved.
+//
+// Licensed under the MIT license. See LICENSE file in the project root for full
+// license information.
+// </copyright>
 
 namespace Pedantic.Chess
 {
+    using System.Runtime.CompilerServices;
+
     public struct MovePair
     {
         private Move move1;
