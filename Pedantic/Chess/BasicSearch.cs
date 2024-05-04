@@ -580,12 +580,12 @@ namespace Pedantic.Chess
                 ssItem.IsCheckingMove = checkingMove;
                 ssItem.Continuation = history.GetContinuation(genMove.Move);
                 
-                bool interesting = inCheck || (genMove.MovePhase < MoveGenPhase.BadCapture) || expandedNodes == 1;
+                bool interesting = inCheck || (genMove.MovePhase < MoveGenPhase.Killers) || expandedNodes == 1;
 
                 int R = 0;
                 if (!interesting)
                 {
-                    if (canPrune && bestScore > MAX_TABLEBASE_LOSS)
+                    if (canPrune && genMove.MovePhase >= MoveGenPhase.BadCapture && bestScore > MAX_TABLEBASE_LOSS)
                     { 
                         // futility pruning
                         if (depth <= UciOptions.FutMaxDepth && !genMove.Move.IsPawnMove && 
@@ -627,6 +627,7 @@ namespace Pedantic.Chess
                         R -= checkingMove ? 1 : 0;
                         R -= isPv ? 1 : 0;
                         R -= hist / UciOptions.LmrHistoryDiv;
+                        R -= genMove.MovePhase == MoveGenPhase.Killers || genMove.MovePhase == MoveGenPhase.Counter ? 1 : 0;
                         R = Math.Clamp(R, 0, depth - 1);
                     }
                 }
