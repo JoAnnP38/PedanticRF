@@ -125,20 +125,20 @@ namespace Pedantic.Chess
             remaining = time;
             timeBudget = (time + movesToGo * increment) / movesToGo;
 
-            int timeImbalance = 0;
-            // if opponent is using significant less time (less than 30%) than we are then reduce time budget
-            if ((opponentTime - time) * 10 / time >= 3)
-            {
-                // reduce time budget by 20%
-                timeImbalance = (timeBudget * 2) / 10;
-            }
+            int timeDiff = (opponentTime - time) * 10 / time;
+            int sign = Math.Sign(timeDiff);
 
-            // if opponent is using significantly more time (more than 30%) than we are then increase time budget
-            if ((time - opponentTime) * 10 / time >= 3)
+            // if opponent is using significantly less/more time than we are then reduce/increase time budget
+            int timeImbalance = Math.Abs(timeDiff) switch
             {
-                // increase time budget by 20%
-                timeImbalance = -(timeBudget * 2) / 10;
-            }
+                >= 9 => timeBudget * 8 / 10,
+                >= 7 and < 9 => timeBudget * 6 / 10,
+                >= 5 and < 7 => timeBudget * 4 / 10,
+                >= 3 and < 5 => timeBudget * 2 / 10,
+                _ => 0
+            };
+
+            timeImbalance *= sign;
 
             // give a bonus to move time for the first few moves following the conclusion of book moves
             int factor = 10;
