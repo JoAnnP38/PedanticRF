@@ -135,10 +135,12 @@ namespace Pedantic.Tuning
                 Bitboard minorPieces = bd.Pieces(color, Piece.Knight) | bd.Pieces(color, Piece.Bishop);
                 IncrementPawnShieldsMinor(color, coefficients, (shieldPawns & minorPieces).PopCount);
 
+                Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
                 SquareIndex enemyKI = evalInfo[o].KI;
+
                 for (int n = 0; n < evalInfo[c].AttackCount; n++)
                 {
-                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
                     int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
                     IncrementKingAttack(color, coefficients, 0, count);
                     count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
