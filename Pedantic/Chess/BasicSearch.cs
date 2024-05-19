@@ -257,8 +257,6 @@ namespace Pedantic.Chess
 
                 }
                 Uci.Usage(cpuStats.CpuLoad);
-                Uci.Debug("Incrementing hash table version.");
-                ttCache.IncrementGeneration();
                 Uci.BestMove(bestMove, CanPonder ? ponderMove : Move.NullMove);
             }
             catch (Exception ex)
@@ -315,7 +313,7 @@ namespace Pedantic.Chess
                 if (startReporting || (DateTime.Now - startDateTime).TotalMilliseconds >= 1000)
                 {
                     startReporting = true;
-                    Uci.CurrentMove(depth, move, expandedNodes, NodesVisited, ttCache.Usage);
+                    Uci.CurrentMove(depth, move, expandedNodes, NodesVisited);
                 }
 
                 bool checkingMove = board.IsChecked();
@@ -886,7 +884,7 @@ namespace Pedantic.Chess
         {
             if (Depth >= UciOptions.AspMinDepth)
             {
-                Uci.Info(Depth, SelDepth, ScaleCpScore(score), NodesVisited, clock.Elapsed, PV, ttCache.Usage, tbHits, bound);
+                Uci.Info(Depth, SelDepth, ScaleCpScore(score), NodesVisited, clock.Elapsed, PV, 0, tbHits, bound);
             }
             if (bound == Bound.Lower)
             {

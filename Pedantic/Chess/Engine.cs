@@ -52,6 +52,13 @@ namespace Pedantic.Chess
             threads.Wait();     
         }
 
+        public static void StopSearch()
+        {
+            Stop();
+            Uci.Default.Debug("Incrementing hash table version.");
+            TtCache.Default.IncrementGeneration();
+        }
+
         public static void Quit()
         {
             Stop();
