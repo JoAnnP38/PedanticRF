@@ -53,6 +53,11 @@ namespace Pedantic.Chess
             stack.Initialize(board, history);
             search?.Search();
             done.Signal();
+
+            if (IsPrimary)
+            {
+                Engine.StopSearch();
+            }
         }
 
         public long TotalNodes => search?.NodesVisited ?? 0;

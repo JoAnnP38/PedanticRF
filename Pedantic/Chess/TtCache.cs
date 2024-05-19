@@ -105,13 +105,33 @@ namespace Pedantic.Chess
             }
         }
 
-        public int Usage => (int)((used * 1000L) / capacity);
+        public int Usage
+        {
+            get
+            {
+                if (capacity < 125)
+                {
+                    return 1000;
+                }
+
+                int usage = 0;
+                TtItem* p = pTable;
+                for (int n = 0; n < 125; n++)
+                {
+                    if (p->Age == generation)
+                    {
+                        ++p;
+                        ++usage;
+                    }
+                }
+                return usage * 8;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             NativeMemory.Clear(pTable, byteCount);
-            used = 0;
             generation = 1;
         }
 
@@ -129,7 +149,6 @@ namespace Pedantic.Chess
             pTable = (TtItem*)NativeMemory.AlignedRealloc(pTable, byteCount, MEM_ALIGNMENT);
             mask = (uint)(capacity - 1);
             generation = 1;
-            Clear();
         }
 
         public bool Probe(ulong hash, int depth, int ply, int alpha, int beta, out int ttScore, out TtItem ttItem)
@@ -166,11 +185,6 @@ namespace Pedantic.Chess
                 bestMove = ttItem.BestMove;
             }
 
-            if (ttItem.Age != generation)
-            {
-                used++;
-            }
-
             if (score >= TABLEBASE_WIN)
             {
                 score += ply;
@@ -190,14 +204,13 @@ namespace Pedantic.Chess
                 bound = Bound.Lower;
             }
 
-            pTable[index] = new TtItem(hash, (short)score, bound, (sbyte)depth, generation, bestMove);
+            pTable[index] = new TtItem(hash, (short)score, bound, (sbyte)depth, (ushort)generation, bestMove);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementGeneration()
         {
-            generation++;
-            used = 0;
+            ++generation;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -291,8 +304,7 @@ namespace Pedantic.Chess
         private TtItem* pTable;
         private nuint byteCount;
         private int capacity;
-        private int used;
         private uint mask;
-        private ushort generation;
+        private volatile uint generation;
     }
 }
