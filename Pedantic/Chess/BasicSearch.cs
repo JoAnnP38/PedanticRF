@@ -622,6 +622,7 @@ namespace Pedantic.Chess
                     {
                         R = LMR[Math.Min(depth, MAX_PLY - 1), Math.Min(expandedNodes - 1, LMR_MAX_MOVES - 1)];
                         R += !improving ? 1 : 0;
+                        R += board.PieceCount(board.SideToMove.Flip()) <= 2 ? 1 : 0;
                         R -= checkingMove ? 1 : 0;
                         R -= isPv ? 1 : 0;
                         R -= hist / UciOptions.LmrHistoryDiv;
