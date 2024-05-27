@@ -546,7 +546,7 @@ namespace Pedantic.Chess
             }
 
             // IIR 
-            if (ttMove.IsNull && !inCheck && depth >= UciOptions.IirMinDepth)
+            if (ttMove.IsNull && depth >= UciOptions.IirMinDepth)
             {
                 depth--;
             }
