@@ -59,7 +59,6 @@ namespace Pedantic.Chess.HCE
             public Bitboard Pawns;
             public Bitboard MobilityArea;
             public Bitboard PassedPawns;
-            public Bitboard AttackByTwo;
             public short Material;
             public SquareIndex KI;
             public KingBuckets KB;
@@ -284,7 +283,6 @@ namespace Pedantic.Chess.HCE
             foreach (SquareIndex from in board.Pieces(color, Piece.Knight))
             {
                 Bitboard pieceAttacks = Board.KnightMoves(from);
-                evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.Knight] |= pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
@@ -300,7 +298,6 @@ namespace Pedantic.Chess.HCE
             foreach (SquareIndex from in board.Pieces(color, Piece.Bishop))
             {
                 Bitboard pieceAttacks = Board.GetBishopMoves(from, occupied);
-                evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.Bishop] |= pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
@@ -316,7 +313,6 @@ namespace Pedantic.Chess.HCE
             foreach (SquareIndex from in board.Pieces(color, Piece.Rook))
             {
                 Bitboard pieceAttacks = Board.GetRookMoves(from, occupied);
-                evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.Rook] |= pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
@@ -331,7 +327,6 @@ namespace Pedantic.Chess.HCE
             foreach (SquareIndex from in board.Pieces(color, Piece.Queen))
             {
                 Bitboard pieceAttacks = Board.GetQueenMoves(from, board.All);
-                evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.Queen] |= pieceAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                 if (evalInfo[c].AttackCount < MAX_ATTACK_LEN)
@@ -713,31 +708,27 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].Material = board.Material[color].NormalizeScore(board.Phase);
                 evalInfo[c].KI = board.KingIndex[color];
                 evalInfo[c].KB = new KingBuckets(color, board.KingIndex[color], board.KingIndex[color.Flip()]);
-                Bitboard kingAttacks = Board.KingMoves(evalInfo[c].KI);
-                evalInfo[c].AttackBy[AttackBy.King] = kingAttacks;
-                evalInfo[c].AttackBy[AttackBy.All] = kingAttacks;
-                Bitboard dblPawnAttack = Bitboard.None;
-                Bitboard pawnAttacks;
+                Bitboard attacks = Board.KingMoves(evalInfo[c].KI);
+                evalInfo[c].AttackBy[AttackBy.King] = attacks;
+                evalInfo[c].AttackBy[AttackBy.All] = attacks;
+
                 if (color == Color.White)
                 {
-                    Bitboard left = pawns.AndNot(Bitboard.BbFileA) << 7;
-                    Bitboard right = pawns.AndNot(Bitboard.BbFileH) << 9;
-                    pawnAttacks = left | right;
-                    dblPawnAttack = left & right;
+                    attacks = (pawns.AndNot(Bitboard.BbFileA) << 7) 
+                            | (pawns.AndNot(Bitboard.BbFileH) << 9);
+
                     evalInfo[c].CanCastle = (byte)(board.Castling & CastlingRights.WhiteRights);
                 }
                 else
                 {
-                    Bitboard left = pawns.AndNot(Bitboard.BbFileA) >> 9;
-                    Bitboard right = pawns.AndNot(Bitboard.BbFileH) >> 7;
-                    pawnAttacks = left | right;
-                    dblPawnAttack = left & right;
+                    attacks = (pawns.AndNot(Bitboard.BbFileH) >> 7)
+                            | (pawns.AndNot(Bitboard.BbFileA) >> 9);
+
                     evalInfo[c].CanCastle = (byte)((int)(board.Castling & CastlingRights.BlackRights) >> 2);
                 }
 
-                evalInfo[c].AttackByTwo = dblPawnAttack | (pawnAttacks & kingAttacks);
-                evalInfo[c].AttackBy[AttackBy.Pawn] = pawnAttacks;
-                evalInfo[c].AttackBy[AttackBy.All] |= pawnAttacks;
+                evalInfo[c].AttackBy[AttackBy.Pawn] = attacks;
+                evalInfo[c].AttackBy[AttackBy.All] |= attacks;
             }
 
             /* two pass init */
@@ -746,20 +737,7 @@ namespace Pedantic.Chess.HCE
                 Color other = color.Flip();
                 int c = (int)color;
                 int o = (int)other;
-                Bitboard blockers, lowRanks;
-                if (color == Color.White)
-                {
-                    lowRanks = new Bitboard(Rank.Rank2) | new Bitboard(Rank.Rank3);
-                    blockers = board.All >> 8;
-                }
-                else
-                {
-                    lowRanks = new Bitboard(Rank.Rank6) | new Bitboard(Rank.Rank7);
-                    blockers = board.All << 8;
-                }
-                Bitboard bb = board.Pieces(color, Piece.Pawn) & (blockers | lowRanks);
-                Bitboard royalty = board.Pieces(color, Piece.Queen) | board.Pieces(color, Piece.King);
-                evalInfo[c].MobilityArea = ~(bb | royalty | evalInfo[o].AttackBy[AttackBy.Pawn]);
+                evalInfo[c].MobilityArea = ~(board.Pieces(color, Piece.King) | board.Pieces(color, Piece.Queen) | evalInfo[o].AttackBy[AttackBy.Pawn]);
             }
 
             var canWin = CanWin(board, in evalInfo);
