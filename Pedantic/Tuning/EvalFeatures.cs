@@ -61,21 +61,20 @@ namespace Pedantic.Tuning
                         occupied ^= bd.OrthogonalSliders(color);
                     }
 
+                    Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, occupied);
                     if (piece != Piece.Pawn && piece != Piece.King)
                     {
-                        Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, occupied);
-                        evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                         evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
                         evalInfo[c].AttackBy[AttackBy.All] |= pieceAttacks;
                         if (pieceAttacks != 0 && evalInfo[c].AttackCount < HceEval.MAX_ATTACK_LEN)
                         {
                             evalInfo[c].Attacks[evalInfo[c].AttackCount++] = pieceAttacks;
                         }
-                        bool _ = bd.IsPinned(from, out Bitboard pinMask);
-                        int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
-                        IncrementPieceMobility(color, coefficients, piece, mobility);
                     }
 
+                    bool _ = bd.IsPinned(from, out Bitboard pinMask);
+                    int mobility = (pieceAttacks & pinMask & evalInfo[c].MobilityArea).PopCount;
+                    IncrementPieceMobility(color, coefficients, piece, mobility);
 
                     if (piece == Piece.Pawn)
                     {

@@ -9,7 +9,7 @@
     },
     "Learn": {
       "commandName": "Project",
-      "commandLineArgs": "learn --data \"n:/chess/training/master_training_data_ver7.0d.csv\" --sample 600000 --epochs 1000 --time 0:30:00 --reset"
+      "commandLineArgs": "learn --data \"e:/pgn files/training/master_training_data_ver7.0d.csv\" --sample 600000 --epochs 1000 --time 0:30:00 --reset"
     },
     "Search": {
       "commandName": "Project",
