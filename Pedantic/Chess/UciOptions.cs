@@ -627,7 +627,7 @@ namespace Pedantic.Chess
         // UCI Options
         private static UciOptionButton clearHash = new UciOptionButton(OPT_CLEAR_HASH);
         private static UciOptionString engineAbout = new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}");
-        private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, -25, -50, 50);
+        private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
         private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 1024);
         private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000);

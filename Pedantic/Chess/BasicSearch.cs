@@ -125,15 +125,7 @@ namespace Pedantic.Chess
         public int DrawScore
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                int score = (int)(8 - (NodesVisited & 0x7));
-                if (board.GamePhase < GamePhase.EndGame)
-                {
-                    score += rootSideToMove == board.SideToMove ? UciOptions.Contempt : -UciOptions.Contempt;
-                }
-                return score;
-            }
+            get => (int)(8 - (NodesVisited & 0x7) + UciOptions.Contempt);
         }
 
         #endregion
@@ -142,7 +134,6 @@ namespace Pedantic.Chess
 
         public void Search()
         {
-            rootSideToMove = board.SideToMove;
             string position = board.ToFenString();
             MoveList list = listPool.Rent();
 
@@ -1047,7 +1038,6 @@ namespace Pedantic.Chess
         private DateTime startDateTime = DateTime.MinValue;
         private int rootChanges = 0;
         private long tbHits = 0;
-        private Color rootSideToMove = Color.None;
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
         internal static readonly sbyte[] LMP = new sbyte[LMP_MAX_DEPTH_CUTOFF];
