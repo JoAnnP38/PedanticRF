@@ -354,10 +354,12 @@ namespace Pedantic.Chess.HCE
             int o = (int)other;
 
             // give a bonus to each attack on a square within 1 or 2 squares from the enemy king
+            Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
             SquareIndex enemyKI = evalInfo[o].KI;
+
             for (int n = 0; n < evalInfo[c].AttackCount; n++)
             {
-                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
                 score += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount * wts.KingAttack(0);
                 score += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount * wts.KingAttack(1);
             }
