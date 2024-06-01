@@ -51,18 +51,18 @@ namespace Pedantic.Tuning
 
                     IncrementPieceCount(color, coefficients, piece);
                     IncrementPieceSquare(color, coefficients, piece, kb, normalFrom);
-                    Bitboard occupied = bd.All;
-                    if (piece == Piece.Bishop)
-                    {
-                        occupied ^= bd.DiagonalSliders(color);
-                    }
-                    else if (piece == Piece.Rook)
-                    {
-                        occupied ^= bd.OrthogonalSliders(color);
-                    }
-
                     if (piece != Piece.Pawn && piece != Piece.King)
                     {
+                        Bitboard occupied = bd.All;
+                        if (piece == Piece.Bishop)
+                        {
+                            occupied ^= bd.DiagonalSliders(color);
+                        }
+                        else if (piece == Piece.Rook)
+                        {
+                            occupied ^= bd.OrthogonalSliders(color);
+                        }
+
                         Bitboard pieceAttacks = Board.GetPieceMoves(piece, from, occupied);
                         evalInfo[c].AttackByTwo |= evalInfo[c].AttackBy[AttackBy.All] & pieceAttacks;
                         evalInfo[c].AttackBy[(int)piece] |= pieceAttacks;
@@ -134,18 +134,6 @@ namespace Pedantic.Tuning
                 Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8);
                 Bitboard minorPieces = bd.Pieces(color, Piece.Knight) | bd.Pieces(color, Piece.Bishop);
                 IncrementPawnShieldsMinor(color, coefficients, (shieldPawns & minorPieces).PopCount);
-
-                Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
-                SquareIndex enemyKI = evalInfo[o].KI;
-
-                for (int n = 0; n < evalInfo[c].AttackCount; n++)
-                {
-                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
-                    int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
-                    IncrementKingAttack(color, coefficients, 0, count);
-                    count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
-                    IncrementKingAttack(color, coefficients, 1, count);
-                }
 
                 if ((evalInfo[c].CanCastle & 0x01) != 0)
                 {
@@ -246,7 +234,8 @@ namespace Pedantic.Tuning
                 }
 
                 Bitboard toSquares = (~bd.Units(color)).AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
-                
+                SquareIndex enemyKI = evalInfo[o].KI;
+
                 // check threats from knights
                 Bitboard checkThreats = Board.KnightMoves(enemyKI) & toSquares;
                 foreach (SquareIndex from in bd.Pieces(color, Piece.Knight))
@@ -291,6 +280,18 @@ namespace Pedantic.Tuning
                 int c = (int)color;
                 int o = (int)other;
 
+
+                Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
+                SquareIndex enemyKI = evalInfo[o].KI;
+
+                for (int n = 0; n < evalInfo[c].AttackCount; n++)
+                {
+                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
+                    int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
+                    IncrementKingAttack(color, coefficients, 0, count);
+                    count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
+                    IncrementKingAttack(color, coefficients, 1, count);
+                }
 
                 foreach (SquareIndex ppIndex in evalInfo[c].PassedPawns)
                 {
