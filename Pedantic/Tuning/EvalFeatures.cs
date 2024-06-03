@@ -283,15 +283,23 @@ namespace Pedantic.Tuning
 
                 Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
                 SquareIndex enemyKI = evalInfo[o].KI;
+                Bitboard attacks = evalInfo[c].AttackBy[AttackBy.PawnLeft].AndNot(defended);
+                int count1 = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
+                int count2 = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
+
+                attacks = evalInfo[c].AttackBy[AttackBy.PawnRight].AndNot(defended);
+                count1 += (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
+                count2 += (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
 
                 for (int n = 0; n < evalInfo[c].AttackCount; n++)
                 {
-                    Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
-                    int count = (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
-                    IncrementKingAttack(color, coefficients, 0, count);
-                    count = (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
-                    IncrementKingAttack(color, coefficients, 1, count);
+                    attacks = evalInfo[c].Attacks[n].AndNot(defended);
+                    count1 += (attacks & (Bitboard)HceEval.KingProximity[0, (int)enemyKI]).PopCount;
+                    count2 += (attacks & (Bitboard)HceEval.KingProximity[1, (int)enemyKI]).PopCount;
                 }
+
+                IncrementKingAttack1(color, coefficients, count1);
+                IncrementKingAttack2(color, coefficients, count2);
 
                 foreach (SquareIndex ppIndex in evalInfo[c].PassedPawns)
                 {
@@ -547,16 +555,31 @@ namespace Pedantic.Tuning
             }
         }
 
-        private static void IncrementKingAttack(Color color, SparseArray<short> v, int dist, int count)
+        private static void IncrementKingAttack1(Color color, SparseArray<short> v, int count)
         {
-            int index = KING_ATTACK + dist;
+            count = Math.Clamp(count, 0, 8);
+            int index = KING_ATTACK_1 + count;
             if (v.ContainsKey(index))
             {
-                v[index] += (short)(count * Increment(color));
+                v[index] += Increment(color);
             }
             else
             {
-                v[index] = (short)(count * Increment(color));
+                v.Add(index, Increment(color));
+            }
+        }
+
+        private static void IncrementKingAttack2(Color color, SparseArray<short> v, int count)
+        {
+            count = Math.Clamp(count, 0, 8);
+            int index = KING_ATTACK_2 + count;
+            if (v.ContainsKey(index))
+            {
+                v[index] += Increment(color);
+            }
+            else
+            {
+                v.Add(index, Increment(color));
             }
         }
 

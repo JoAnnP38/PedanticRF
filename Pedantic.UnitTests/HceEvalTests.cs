@@ -137,7 +137,7 @@ namespace Pedantic.UnitTests
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
             Assert.AreEqual(expected, actual, "Material+PST");
 
-            expected = features.Compute(HceEval.Weights, Weights.PASSED_PAWN, Weights.KING_ATTACK, false);
+            expected = features.Compute(HceEval.Weights, Weights.PASSED_PAWN, Weights.KING_ATTACK_1, false);
             score = eval.ProbePawnCache(bd);
             actual = score.NormalizeScore(bd.Phase);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * actual);
@@ -149,7 +149,7 @@ namespace Pedantic.UnitTests
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
             Assert.AreEqual(expected, actual, "Piece Mobility");
 
-            expected = features.Compute(HceEval.Weights, Weights.KING_ATTACK, Weights.KING_OUTSIDE_PP_SQUARE, false);
+            expected = features.Compute(HceEval.Weights, Weights.KING_ATTACK_1, Weights.KING_OUTSIDE_PP_SQUARE, false);
             score = eval.EvalKingSafety(bd, Color.White);
             score -= eval.EvalKingSafety(bd, Color.Black);
             actual = (short)(HceEval.ColorToSign(bd.SideToMove) * score.NormalizeScore(bd.Phase));
