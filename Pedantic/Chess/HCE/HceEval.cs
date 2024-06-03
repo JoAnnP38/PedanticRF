@@ -38,10 +38,10 @@ namespace Pedantic.Chess.HCE
             }
         }
 
-        [InlineArray(MAX_PIECES + 1)]
+        [InlineArray(MAX_PIECES + 3)]
         public struct AttackByArray
         {
-            public const int CAPACITY = MAX_PIECES + 1;
+            public const int CAPACITY = MAX_PIECES + 3;
             private Bitboard _element0;
 
             public Bitboard this[AttackBy attackBy]
@@ -356,13 +356,23 @@ namespace Pedantic.Chess.HCE
             // give a bonus to each attack on a square within 1 or 2 squares from the enemy king
             Bitboard defended = evalInfo[o].AttackBy[AttackBy.Pawn] | (evalInfo[o].AttackByTwo & ~evalInfo[c].AttackByTwo);
             SquareIndex enemyKI = evalInfo[o].KI;
+            Bitboard attacks = evalInfo[c].AttackBy[AttackBy.PawnLeft].AndNot(defended);
+            int count1 = (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount;
+            int count2 = (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount;
+
+            attacks = evalInfo[c].AttackBy[AttackBy.PawnRight].AndNot(defended);
+            count1 += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount;
+            count2 += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount;
 
             for (int n = 0; n < evalInfo[c].AttackCount; n++)
             {
-                Bitboard attacks = evalInfo[c].Attacks[n].AndNot(defended);
-                score += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount * wts.KingAttack(0);
-                score += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount * wts.KingAttack(1);
+                attacks = evalInfo[c].Attacks[n].AndNot(defended);
+                count1 += (attacks & (Bitboard)KingProximity[0, (int)enemyKI]).PopCount;
+                count2 += (attacks & (Bitboard)KingProximity[1, (int)enemyKI]).PopCount;
             }
+
+            score += wts.KingAttack1(count1);
+            score += wts.KingAttack2(count2);
 
             // give a bonus for castling rights to force engine to castle and not forfeit them for free
             if ((evalInfo[c].CanCastle & 0x01) != 0)
@@ -380,14 +390,14 @@ namespace Pedantic.Chess.HCE
             SquareIndex KI = evalInfo[c].KI;
             if (board.DiagonalSliders(other) != 0)
             {
-                Bitboard attacks = Board.GetBishopMoves(KI, board.All);
+                attacks = Board.GetBishopMoves(KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsDiagonalMobility(mobility);
             }
 
             if (board.OrthogonalSliders(other) != 0)
             {
-                Bitboard attacks = Board.GetRookMoves(KI, board.All);
+                attacks = Board.GetRookMoves(KI, board.All);
                 int mobility = (attacks & evalInfo[o].MobilityArea).PopCount;
                 score += wts.KsOrthogonalMobility(mobility);
             }
@@ -718,27 +728,29 @@ namespace Pedantic.Chess.HCE
                 Bitboard kingAttacks = Board.KingMoves(evalInfo[c].KI);
                 evalInfo[c].AttackBy[AttackBy.King] = kingAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] = kingAttacks;
-                Bitboard dblPawnAttack = Bitboard.None;
-                Bitboard pawnAttacks;
+                Bitboard dblPawnAttack;
+                Bitboard pawnAttacks, pawnLeft, pawnRight;
                 if (color == Color.White)
                 {
-                    Bitboard left = pawns.AndNot(Bitboard.BbFileA) << 7;
-                    Bitboard right = pawns.AndNot(Bitboard.BbFileH) << 9;
-                    pawnAttacks = left | right;
-                    dblPawnAttack = left & right;
+                    pawnLeft = pawns.AndNot(Bitboard.BbFileA) << 7;
+                    pawnRight = pawns.AndNot(Bitboard.BbFileH) << 9;
+                    pawnAttacks = pawnLeft | pawnRight;
+                    dblPawnAttack = pawnLeft & pawnRight;
                     evalInfo[c].CanCastle = (byte)(board.Castling & CastlingRights.WhiteRights);
                 }
                 else
                 {
-                    Bitboard left = pawns.AndNot(Bitboard.BbFileA) >> 9;
-                    Bitboard right = pawns.AndNot(Bitboard.BbFileH) >> 7;
-                    pawnAttacks = left | right;
-                    dblPawnAttack = left & right;
+                    pawnLeft = pawns.AndNot(Bitboard.BbFileA) >> 9;
+                    pawnRight = pawns.AndNot(Bitboard.BbFileH) >> 7;
+                    pawnAttacks = pawnLeft | pawnRight;
+                    dblPawnAttack = pawnLeft & pawnRight;
                     evalInfo[c].CanCastle = (byte)((int)(board.Castling & CastlingRights.BlackRights) >> 2);
                 }
 
                 evalInfo[c].AttackByTwo = dblPawnAttack | (pawnAttacks & kingAttacks);
                 evalInfo[c].AttackBy[AttackBy.Pawn] = pawnAttacks;
+                evalInfo[c].AttackBy[AttackBy.PawnLeft] = pawnLeft;
+                evalInfo[c].AttackBy[AttackBy.PawnRight] = pawnRight;
                 evalInfo[c].AttackBy[AttackBy.All] |= pawnAttacks;
             }
 
