@@ -75,7 +75,7 @@ namespace Pedantic.Chess
 
     public enum Bound : byte { None, Exact, Lower, Upper }
 
-    public enum AttackBy : byte { Pawn, Knight, Bishop, Rook, Queen, King, PawnLeft, PawnRight, All }
+    public enum AttackBy : byte { Pawn, Knight, Bishop, Rook, Queen, King, PawnLeft, PawnRight, PawnPush, All }
 
     public enum MoveGenType : byte { Normal, QSearch, Evasion };
 }
