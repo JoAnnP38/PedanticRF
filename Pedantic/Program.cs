@@ -690,6 +690,9 @@ namespace Pedantic
             WriteLine("/* bishop on long diagonal */");
             WriteWtLine(wts.BishopLongDiagonal);
             WriteLine();
+            WriteLine("/* minor outpost */");
+            WriteWtLine(wts.MinorOutpost);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* threats */");
