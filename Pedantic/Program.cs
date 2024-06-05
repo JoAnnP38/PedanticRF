@@ -691,7 +691,7 @@ namespace Pedantic
             WriteWtLine(wts.BishopLongDiagonal);
             WriteLine();
             WriteLine("/* minor outpost */");
-            WriteWtLine(wts.MinorOutpost);
+            WriteWts2D(wts, MINOR_OUTPOST, 8, 2);
             WriteLine();
             WriteLine("#endregion");
             WriteLine();

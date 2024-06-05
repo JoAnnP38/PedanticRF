@@ -41,10 +41,10 @@ namespace Pedantic.Chess.HCE
             }
         }
 
-        [InlineArray(MAX_PIECES + 3)]
+        [InlineArray(MAX_PIECES + 4)]
         public struct AttackByArray
         {
-            public const int CAPACITY = MAX_PIECES + 3;
+            public const int CAPACITY = MAX_PIECES + 4;
             private Bitboard _element0;
 
             public Bitboard this[AttackBy attackBy]
@@ -468,9 +468,10 @@ namespace Pedantic.Chess.HCE
             Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8); 
             score += (shieldPawns & minorPieces).PopCount * wts.PawnShieldsMinor;
 
-            Bitboard outposts = minorPieces & Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
-            outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
-            score += outposts.PopCount * wts.MinorOutpost;
+            Bitboard outposts = Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
+            outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn] | evalInfo[o].AttackBy[AttackBy.PawnPush]);
+            score += (knights & outposts).PopCount * wts.MinorOutpost(Piece.Knight);
+            score += (bishops & outposts).PopCount * wts.MinorOutpost(Piece.Bishop);
 
             return score;
         }
@@ -546,24 +547,11 @@ namespace Pedantic.Chess.HCE
             Bitboard pawns = evalInfo[c].Pawns;
             Bitboard otherPawns = evalInfo[o].Pawns;
             Bitboard targets = board.Units(other).AndNot(otherPawns);
-            Bitboard pushAttacks;
+            Bitboard pushAttacks = evalInfo[c].AttackBy[AttackBy.PawnPush];
 
             if (targets == 0)
             {
                 return score;
-            }
-
-            if (color == Color.White)
-            {
-                Bitboard pawnPushes = (pawns << 8).AndNot(board.All);
-                pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileA) << 7) |
-                              (pawnPushes.AndNot(Bitboard.BbFileH) << 9);
-            }
-            else
-            {
-                Bitboard pawnPushes = (pawns >> 8).AndNot(board.All);
-                pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileH) >> 7) |
-                              (pawnPushes.AndNot(Bitboard.BbFileA) >> 9);
             }
 
             foreach (SquareIndex sq in pushAttacks & targets)
@@ -739,9 +727,12 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].AttackBy[AttackBy.King] = kingAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] = kingAttacks;
                 Bitboard dblPawnAttack;
-                Bitboard pawnAttacks, pawnLeft, pawnRight;
+                Bitboard pawnAttacks, pawnLeft, pawnRight, pushAttacks;
                 if (color == Color.White)
                 {
+                    Bitboard pawnPush = (pawns << 8).AndNot(board.All);
+                    pushAttacks = (pawnPush.AndNot(Bitboard.BbFileA) << 7) |
+                                  (pawnPush.AndNot(Bitboard.BbFileH) << 9);
                     pawnLeft = pawns.AndNot(Bitboard.BbFileA) << 7;
                     pawnRight = pawns.AndNot(Bitboard.BbFileH) << 9;
                     pawnAttacks = pawnLeft | pawnRight;
@@ -750,6 +741,9 @@ namespace Pedantic.Chess.HCE
                 }
                 else
                 {
+                    Bitboard pawnPush = (pawns >> 8).AndNot(board.All);
+                    pushAttacks = (pawnPush.AndNot(Bitboard.BbFileA) >> 9) |
+                                  (pawnPush.AndNot(Bitboard.BbFileH) >> 7);
                     pawnLeft = pawns.AndNot(Bitboard.BbFileA) >> 9;
                     pawnRight = pawns.AndNot(Bitboard.BbFileH) >> 7;
                     pawnAttacks = pawnLeft | pawnRight;
@@ -761,6 +755,7 @@ namespace Pedantic.Chess.HCE
                 evalInfo[c].AttackBy[AttackBy.Pawn] = pawnAttacks;
                 evalInfo[c].AttackBy[AttackBy.PawnLeft] = pawnLeft;
                 evalInfo[c].AttackBy[AttackBy.PawnRight] = pawnRight;
+                evalInfo[c].AttackBy[AttackBy.PawnPush] = pushAttacks;
                 evalInfo[c].AttackBy[AttackBy.All] |= pawnAttacks;
             }
 

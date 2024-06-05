@@ -131,13 +131,16 @@ namespace Pedantic.Tuning
                     }
                 }
 
+                Bitboard knights = bd.Pieces(color, Piece.Knight);
+                Bitboard bishops = bd.Pieces(color, Piece.Bishop);
                 Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8);
-                Bitboard minorPieces = bd.Pieces(color, Piece.Knight) | bd.Pieces(color, Piece.Bishop);
+                Bitboard minorPieces = knights | bishops;
                 IncrementPawnShieldsMinor(color, coefficients, (shieldPawns & minorPieces).PopCount);
 
-                Bitboard outposts = minorPieces & HceEval.Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
-                outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
-                IncrementMinorOutpost(color, coefficients, outposts.PopCount);
+                Bitboard outposts = HceEval.Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
+                outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn] | evalInfo[o].AttackBy[AttackBy.PawnPush]);
+                IncrementMinorOutpost(color, coefficients, Piece.Knight, (knights & outposts).PopCount);
+                IncrementMinorOutpost(color, coefficients, Piece.Bishop, (bishops & outposts).PopCount);
 
                 if ((evalInfo[c].CanCastle & 0x01) != 0)
                 {
@@ -168,7 +171,6 @@ namespace Pedantic.Tuning
                     IncrementPawnlessFlank(color, coefficients);
                 }
 
-                Bitboard bishops = bd.Pieces(color, Piece.Bishop);
                 int bishopCount = bishops.PopCount;
                 if (bishopCount >= 2)
                 {
@@ -192,20 +194,7 @@ namespace Pedantic.Tuning
                 }
 
                 Bitboard targets = bd.Units(other).AndNot(otherPawns);
-                Bitboard pushAttacks;
-                
-                if (color == Color.White)
-                {
-                    Bitboard pawnPushes = (pawns << 8).AndNot(bd.All);
-                    pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileA) << 7) |
-                                  (pawnPushes.AndNot(Bitboard.BbFileH) << 9);
-                }
-                else
-                {
-                    Bitboard pawnPushes = (pawns >> 8).AndNot(bd.All);
-                    pushAttacks = (pawnPushes.AndNot(Bitboard.BbFileH) >> 7) |
-                                  (pawnPushes.AndNot(Bitboard.BbFileA) >> 9);
-                }
+                Bitboard pushAttacks = evalInfo[c].AttackBy[AttackBy.PawnPush];
 
                 foreach (SquareIndex sq in pushAttacks & targets)
                 {
@@ -887,20 +876,21 @@ namespace Pedantic.Tuning
             }
         }
 
-        private static void IncrementMinorOutpost(Color color, SparseArray<short> v, int count)
+        private static void IncrementMinorOutpost(Color color, SparseArray<short> v, Piece piece, int count)
         {
-            if (count <= 0)
+            if (piece < Piece.Knight || piece > Piece.Bishop || count <= 0)
             {
                 return;
             }
 
-            if (v.ContainsKey(MINOR_OUTPOST))
+            int index = MINOR_OUTPOST + (piece - Piece.Knight);
+            if (v.ContainsKey(index))
             {
-                v[MINOR_OUTPOST] += (short)(count * Increment(color));
+                v[index] += (short)(count * Increment(color));
             }
             else
             {
-                v.Add(MINOR_OUTPOST, (short)(count * Increment(color)));
+                v.Add(index, (short)(count * Increment(color)));
             }
         }
 
