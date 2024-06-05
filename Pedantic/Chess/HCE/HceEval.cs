@@ -17,6 +17,9 @@ namespace Pedantic.Chess.HCE
         public const ulong DARK_SQUARES_MASK = 0xAA55AA55AA55AA55ul;
         public const ulong LITE_SQUARES_MASK = 0x55AA55AA55AA55AAul;
         public const ulong CENTER_MASK = 0x0000001818000000ul;
+        public readonly static Bitboard WHITE_OUTPOST_RANKS = new Bitboard(Rank.Rank4, Rank.Rank5, Rank.Rank6);
+        public readonly static Bitboard BLACK_OUTPOST_RANKS = new Bitboard(Rank.Rank5, Rank.Rank4, Rank.Rank3);
+        public readonly static ByColor<Bitboard> Outposts;
 
 
         [InlineArray(MAX_ATTACK_LEN)]
@@ -74,14 +77,16 @@ namespace Pedantic.Chess.HCE
         {
             wts = Engine.Weights;
 
-            FlankMask[0] = new Bitboard(File.FileA) | new Bitboard(File.FileB) | new Bitboard(File.FileC);
+            FlankMask[0] = new Bitboard(File.FileA, File.FileB, File.FileC);
             FlankMask[1] = FlankMask[0] | new Bitboard(File.FileD);
             FlankMask[2] = FlankMask[1];
-            FlankMask[3] = new Bitboard(File.FileC) | new Bitboard(File.FileD) | new Bitboard(File.FileE) | new Bitboard(File.FileF);
+            FlankMask[3] = new Bitboard(File.FileC, File.FileD, File.FileE, File.FileF);
             FlankMask[4] = FlankMask[3];
-            FlankMask[5] = new Bitboard(File.FileE) | new Bitboard(File.FileF) | new Bitboard(File.FileG) | new Bitboard(File.FileH);
+            FlankMask[5] = new Bitboard(File.FileE, File.FileF, File.FileG, File.FileH);
             FlankMask[6] = FlankMask[5];
-            FlankMask[7] = new Bitboard(File.FileF) | new Bitboard(File.FileG) | new Bitboard(File.FileH);
+            FlankMask[7] = new Bitboard(File.FileF, File.FileG, File.FileH);
+            Outposts[Color.White] = WHITE_OUTPOST_RANKS;
+            Outposts[Color.Black] = BLACK_OUTPOST_RANKS;
         }
 
         public HceEval(EvalCache evalCache)
@@ -419,6 +424,7 @@ namespace Pedantic.Chess.HCE
             int c = (int)color;
             int o = (int)other;
 
+            Bitboard knights = board.Pieces(color, Piece.Knight);
             Bitboard bishops = board.Pieces(color, Piece.Bishop);
             int bishopCount = bishops.PopCount;
             if (bishopCount >= 2)
@@ -458,9 +464,13 @@ namespace Pedantic.Chess.HCE
                 }
             }
 
+            Bitboard minorPieces = knights | bishops;
             Bitboard shieldPawns = color == Color.White ? (pawns >> 8) : (pawns << 8); 
-            Bitboard minorPieces = board.Pieces(color, Piece.Knight) | board.Pieces(color, Piece.Bishop);
             score += (shieldPawns & minorPieces).PopCount * wts.PawnShieldsMinor;
+
+            Bitboard outposts = minorPieces & Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
+            outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+            score += outposts.PopCount * wts.MinorOutpost;
 
             return score;
         }

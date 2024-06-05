@@ -135,6 +135,10 @@ namespace Pedantic.Tuning
                 Bitboard minorPieces = bd.Pieces(color, Piece.Knight) | bd.Pieces(color, Piece.Bishop);
                 IncrementPawnShieldsMinor(color, coefficients, (shieldPawns & minorPieces).PopCount);
 
+                Bitboard outposts = minorPieces & HceEval.Outposts[color] & evalInfo[c].AttackBy[AttackBy.Pawn];
+                outposts = outposts.AndNot(evalInfo[o].AttackBy[AttackBy.Pawn]);
+                IncrementMinorOutpost(color, coefficients, outposts.PopCount);
+
                 if ((evalInfo[c].CanCastle & 0x01) != 0)
                 {
                     IncrementCanCastleKS(color, coefficients);
@@ -880,6 +884,23 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(BISHOP_LONG_DIAG, Increment(color));
+            }
+        }
+
+        private static void IncrementMinorOutpost(Color color, SparseArray<short> v, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+
+            if (v.ContainsKey(MINOR_OUTPOST))
+            {
+                v[MINOR_OUTPOST] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v.Add(MINOR_OUTPOST, (short)(count * Increment(color)));
             }
         }
 

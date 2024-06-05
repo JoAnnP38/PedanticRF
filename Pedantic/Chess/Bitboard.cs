@@ -86,10 +86,27 @@ namespace Pedantic.Chess
             bb = FILE_A_MASK << (int)file;
         }
 
+        public Bitboard(File file, params File[] files) : this(file)
+        {
+            for (int i = 0; i < files.Length; i++)
+            {
+                bb |= FILE_A_MASK << (int)files[i];
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Bitboard(Rank rank)
         {
             bb = RANK_1_MASK << ((int)rank * 8);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Bitboard(Rank rank, params Rank[] ranks) : this(rank)
+        {
+            for (int i = 0; i < ranks.Length; i++)
+            {
+                bb |= RANK_1_MASK << ((int)ranks[i] * 8);
+            }
         }
 
         public int TzCount
