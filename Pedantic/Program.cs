@@ -611,6 +611,9 @@ namespace Pedantic
             WriteLine("/* backward pawn */");
             WriteWtLine(wts.BackwardPawn);
             WriteLine();
+            WriteLine("/* doubled pawn */");
+            WriteWtLine(wts.DoubledPawn);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* king safety */");
