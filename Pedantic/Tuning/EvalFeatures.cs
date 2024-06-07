@@ -41,6 +41,7 @@ namespace Pedantic.Tuning
                 Bitboard otherPawns = evalInfo[o].Pawns;
                 Bitboard allPawns = pawns | otherPawns;
                 Bitboard pawnRams = (color == Color.White ? otherPawns >> 8 : otherPawns << 8);
+                Bitboard fileMask;
 
                 foreach (SquareIndex from in bd.Units(color))
                 {
@@ -118,7 +119,7 @@ namespace Pedantic.Tuning
                     }
                     else if (piece == Piece.Rook)
                     {
-                        Bitboard fileMask = new Bitboard(from.File());
+                        fileMask = new Bitboard(from.File());
                         if ((allPawns & fileMask) == 0)
                         {
                             IncrementRookOnOpenFile(color, coefficients);
@@ -128,6 +129,16 @@ namespace Pedantic.Tuning
                         {
                             IncrementRookOnHalfOpenFile(color, coefficients);
                         }
+                    }
+                }
+
+                fileMask = Bitboard.BbFileA;
+                for (File f = File.FileA; f <= File.FileH; f++, fileMask <<= 1)
+                {
+                    int count = (pawns & fileMask).PopCount;
+                    if (count > 1)
+                    {
+                        IncrementDoubledPawn(color, coefficients, --count);
                     }
                 }
 
@@ -545,6 +556,22 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(BACKWARD_PAWN, Increment(color));
+            }
+        }
+
+        private static void IncrementDoubledPawn(Color color, SparseArray<short> v, int count)
+        {
+            if (count <= 0)
+            {
+                return;
+            }
+            if (v.ContainsKey(DOUBLED_PAWN))
+            {
+                v[DOUBLED_PAWN] += (short)(count * Increment(color));
+            }
+            else
+            {
+                v.Add(DOUBLED_PAWN, (short)(count * Increment(color)));
             }
         }
 

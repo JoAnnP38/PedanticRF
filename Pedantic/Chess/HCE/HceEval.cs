@@ -277,6 +277,16 @@ namespace Pedantic.Chess.HCE
                 }
             }
 
+            Bitboard fileMask = Bitboard.BbFileA;
+            for (File f = File.FileA; f <= File.FileH; f++, fileMask <<= 1)
+            {
+                int count = (pawns & fileMask).PopCount;
+                if (count > 1)
+                {
+                    score += --count * wts.DoubledPawn;
+                }
+            }
+
             return score;
         }
 
