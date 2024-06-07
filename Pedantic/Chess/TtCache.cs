@@ -25,7 +25,7 @@ namespace Pedantic.Chess
             private readonly ulong data;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public TtItem() : this(0, 0, Bound.None, 0, 0, Move.NullMove)
+            public TtItem() : this(0, NO_SCORE, Bound.None, 0, 0, Move.NullMove)
             { }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -151,10 +151,12 @@ namespace Pedantic.Chess
             generation = 1;
         }
 
-        public bool Probe(ulong hash, int depth, int ply, int alpha, int beta, out int ttScore, out TtItem ttItem)
+        public bool Probe(ulong hash, int depth, int ply, int alpha, int beta, out bool ttHit, out int ttScore, out TtItem ttItem)
         {
             ttScore = NO_SCORE;
-            if (!TryGetItem(hash, out ttItem) || ttItem.Depth < depth)
+            ttHit = TryGetItem(hash, out ttItem);
+
+            if (!ttHit || ttItem.Depth < depth)
             {
                 return false;
             }
