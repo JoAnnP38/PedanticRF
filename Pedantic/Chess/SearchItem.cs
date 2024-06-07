@@ -10,7 +10,6 @@ namespace Pedantic.Chess
     public struct SearchItem
     {
         public Move Move;
-        public Move Exclude;
         public bool IsCheckingMove;
         public MovePair Killers;
         public short Eval;
@@ -19,7 +18,6 @@ namespace Pedantic.Chess
         public SearchItem()
         {
             Move = Move.NullMove;
-            Exclude = Move.NullMove;
             IsCheckingMove = false;
             Killers = new();
             Eval = NO_SCORE;

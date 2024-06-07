@@ -58,9 +58,6 @@ namespace Pedantic.Chess
         internal const string OPT_RZR_MARGIN = "T_RZR_Margin";
         internal const string OPT_HIS_MAX_BONUS = "T_HIS_MaxBonus";
         internal const string OPT_HIS_BONUS_COEFF = "T_HIS_BonusCoefficient";
-        internal const string OPT_SEX_DEPTH_MULT = "T_SEX_DepthMult";
-        internal const string OPT_SEX_DEPTH_OFFSET = "T_SEX_DepthOffset";
-        internal const string OPT_SEX_MIN_DEPTH = "T_SEX_MinDepth";
 
         static UciOptions()
         {
@@ -113,9 +110,6 @@ namespace Pedantic.Chess
                 { rzrMargin.Name, rzrMargin },
                 { hisMaxBonus.Name, hisMaxBonus },
                 { hisBonusCoefficient.Name, hisBonusCoefficient },
-                { sexDepthMult.Name, sexDepthMult },
-                { sexDepthOffset.Name, sexDepthOffset },
-                { sexMinDepth.Name, sexMinDepth },
             };
         }
 
@@ -545,33 +539,6 @@ namespace Pedantic.Chess
             }
         }
 
-        public static int SexDepthMult
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return sexDepthMult.CurrentValue;
-            }
-        }
-
-        public static int SexDepthOffset
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return sexDepthOffset.CurrentValue;
-            }
-        }
-
-        public static int SexMinDepth
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return sexMinDepth.CurrentValue;
-            }
-        }
-
         public static bool Optimizing
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -704,8 +671,5 @@ namespace Pedantic.Chess
         private static UciOptionSpin hisMaxBonus = new UciOptionSpin(OPT_HIS_MAX_BONUS, 745, 500, 2500);
         private static UciOptionSpin hisBonusCoefficient = new UciOptionSpin(OPT_HIS_BONUS_COEFF, 158, 50, 250);
         private static UciOptionSpin lmrHistoryDiv = new UciOptionSpin(OPT_LMR_HISTORY_DIV, 5815, 2048, 16384);
-        private static UciOptionSpin sexDepthMult = new UciOptionSpin(OPT_SEX_DEPTH_MULT, 19, 4, 32);
-        private static UciOptionSpin sexDepthOffset = new UciOptionSpin(OPT_SEX_DEPTH_OFFSET, -1, -2, 2);
-        private static UciOptionSpin sexMinDepth = new UciOptionSpin(OPT_SEX_MIN_DEPTH, 6, 4, 12);
     }
 }
