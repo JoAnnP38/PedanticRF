@@ -83,7 +83,7 @@ namespace Pedantic.Chess
                 { tmBranchFactor.Name, tmBranchFactor },
                 { tmDefMovesToGo.Name, tmDefMovesToGo },
                 { tmDefMovesToGoPonder.Name, tmDefMovesToGoPonder },
-                { tmDefMovesToGoSuddenDeath.Name, tmDefMovesToGoPonder },
+                { tmDefMovesToGoSuddenDeath.Name, tmDefMovesToGoSuddenDeath },
                 { tmAbsoluteLimit.Name, tmAbsoluteLimit },
                 { tmDifficultyMin.Name, tmDifficultyMin },
                 { tmDifficultyMax.Name, tmDifficultyMax },

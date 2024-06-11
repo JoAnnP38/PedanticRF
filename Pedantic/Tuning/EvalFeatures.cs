@@ -41,6 +41,7 @@ namespace Pedantic.Tuning
                 Bitboard otherPawns = evalInfo[o].Pawns;
                 Bitboard allPawns = pawns | otherPawns;
                 Bitboard pawnRams = (color == Color.White ? otherPawns >> 8 : otherPawns << 8);
+                Bitboard blockedPawns = pawns & (color == Color.White ? bd.All >> 8 : bd.All << 8);
                 Bitboard fileMask;
 
                 foreach (SquareIndex from in bd.Units(color))
@@ -128,6 +129,11 @@ namespace Pedantic.Tuning
                         if ((pawns & fileMask) == 0 && (otherPawns & fileMask) != 0)
                         {
                             IncrementRookOnHalfOpenFile(color, coefficients);
+                        }
+
+                        if ((blockedPawns & fileMask) != 0)
+                        {
+                            IncrementRookOnBlockedFile(color, coefficients);
                         }
                     }
                 }
@@ -775,6 +781,18 @@ namespace Pedantic.Tuning
             else
             {
                 v.Add(ROOK_ON_HALF_OPEN_FILE, Increment(color));
+            }
+        }
+
+        private static void IncrementRookOnBlockedFile(Color color, SparseArray<short> v)
+        {
+            if (v.ContainsKey(ROOK_ON_BLOCKED_FILE))
+            {
+                v[ROOK_ON_BLOCKED_FILE] += Increment(color);
+            }
+            else
+            {
+                v.Add(ROOK_ON_BLOCKED_FILE, Increment(color));
             }
         }
 

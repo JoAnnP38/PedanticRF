@@ -408,11 +408,6 @@ namespace Pedantic.Chess
                 return 0;
             }
 
-            //if (inCheck)
-            //{
-            //    depth++;
-            //}
-
             if (ply >= MAX_PLY - 1)
             {
                 return eval.Compute(board, alpha, beta);
