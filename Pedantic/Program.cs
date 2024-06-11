@@ -696,6 +696,9 @@ namespace Pedantic
             WriteLine("/* minor outpost */");
             WriteWts2D(wts, MINOR_OUTPOST, 8, 2);
             WriteLine();
+            WriteLine("/* rook on blocked file */");
+            WriteWtLine(wts.RookOnBlockedFile);
+            WriteLine();
             WriteLine("#endregion");
             WriteLine();
             WriteLine("/* threats */");

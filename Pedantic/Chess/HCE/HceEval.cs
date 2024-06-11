@@ -459,6 +459,7 @@ namespace Pedantic.Chess.HCE
 
             Bitboard pawns = evalInfo[c].Pawns;
             Bitboard otherPawns = evalInfo[o].Pawns;
+            Bitboard blockedPawns = pawns & (color == Color.White ? board.All >> 8 : board.All << 8);
 
             foreach (SquareIndex sq in board.Pieces(color, Piece.Rook))
             {
@@ -471,6 +472,11 @@ namespace Pedantic.Chess.HCE
                 if ((pawns & fileMask) == 0 && (otherPawns & fileMask) != 0)
                 {
                     score += wts.RookOnHalfOpenFile;
+                }
+
+                if ((blockedPawns & fileMask) != 0)
+                {
+                    score += wts.RookOnBlockedFile;
                 }
             }
 
