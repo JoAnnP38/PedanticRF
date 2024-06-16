@@ -1,0 +1,4 @@
+uci
+bench depth 20
+wait
+quit
