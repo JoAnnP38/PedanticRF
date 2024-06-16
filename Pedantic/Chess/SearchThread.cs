@@ -16,11 +16,11 @@ namespace Pedantic.Chess
         public SearchThread(bool isPrimary = false)
         {
             this.isPrimary = isPrimary;
-            search = null;
             clock = null;
             eval = new(cache);
             history = new(stack);
             listPool = new(() => new MoveList(history), (o) => {o.History = history; o.Clear();}, MAX_PLY, 32);
+            search = new BasicSearch(stack, eval, history, listPool);
         }
 
         public void Search(GameClock clock, Board board, int maxDepth, long maxNodes, CountdownEvent done)
@@ -29,11 +29,7 @@ namespace Pedantic.Chess
             clock.Uci = uci;
             this.clock = clock;
 
-            search = new(stack, board, clock, eval, history, listPool, TtCache.Default, maxDepth, maxNodes)
-            {
-                CanPonder = UciOptions.Ponder,
-                Uci = uci
-            };
+            search.Initialize(board, clock, uci, UciOptions.Ponder, maxDepth, maxNodes);
 
             ThreadPool.QueueUserWorkItem((state) =>
             {
@@ -51,7 +47,7 @@ namespace Pedantic.Chess
         private void SearchProc(Board board, CountdownEvent done)
         {
             stack.Initialize(board, history);
-            search?.Search();
+            search.Search();
             done.Signal();
 
             if (IsPrimary)
@@ -69,7 +65,7 @@ namespace Pedantic.Chess
         public ObjectPool<MoveList> MoveListPool => listPool;
 
         private readonly bool isPrimary;
-        private BasicSearch? search;
+        private BasicSearch search;
         private GameClock? clock;
         private readonly EvalCache cache = new();
         private readonly HceEval eval;

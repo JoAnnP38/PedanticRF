@@ -108,7 +108,8 @@ namespace Pedantic.Chess
         {
             TtCache.Default.Clear();
             threads.ClearEvalCache();
-            GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, true);
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true);
+            //SystemUtil.EmptyWorkingSet();
         }
 
         public static void SetupNewGame()
@@ -276,7 +277,7 @@ namespace Pedantic.Chess
             gameResult = TbGameResult.Draw;
             if (UciOptions.SyzygyProbeRoot && Syzygy.IsInitialized && BitOps.PopCount(board.All) <= Syzygy.TbLargest)
             {
-                MoveList moveList = new();
+                moveList.Clear();
                 board.GenerateMoves(moveList);
                 TbResult result = Syzygy.ProbeRoot(board.WhitePieces, board.BlackPieces,
                     board.Kings, board.Queens, board.Rooks, board.Bishops, board.Knights, board.Pawns,
@@ -381,7 +382,7 @@ namespace Pedantic.Chess
         }
 
         public static void Initialize() {}
-
+        private static readonly MoveList moveList = new();
         private static readonly GameClock time = new();
         private static Weights? weights;
         private static readonly SearchThreads threads = new();

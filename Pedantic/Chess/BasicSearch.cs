@@ -24,18 +24,13 @@ namespace Pedantic.Chess
 
         #region Constructors
 
-        public BasicSearch(SearchStack searchStack, Board board, GameClock clock, HceEval eval, History history,
-            ObjectPool<MoveList> listPool, TtCache ttCache, int maxDepth, long maxNodes = long.MaxValue - 100)
+        public BasicSearch(SearchStack searchStack, HceEval eval, History history, ObjectPool<MoveList> listPool)
         {
             ss = searchStack;
-            this.board = board;
-            this.clock = clock;
             this.eval = eval;
             this.history = history;
             this.listPool = listPool;
-            this.ttCache = ttCache;
-            this.maxDepth = maxDepth;
-            this.maxNodes = maxNodes;
+            ttCache = TtCache.Default;
         }
 
         #endregion
@@ -73,7 +68,7 @@ namespace Pedantic.Chess
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => NodesVisited >= maxNodes ||
-                   ((NodesVisited & CHECK_TC_NODES_MASK) == 0 && clock.CheckTimeBudget());
+                   ((NodesVisited & CHECK_TC_NODES_MASK) == 0 && clock!.CheckTimeBudget());
         }
 
         public long NodesVisited
@@ -130,11 +125,38 @@ namespace Pedantic.Chess
 
         #endregion
 
+        #region Initializer
+
+        public void Initialize(Board board, GameClock clock, Uci uci, bool canPonder, int maxDepth, long maxNodes)
+        {
+            this.board = board;
+            this.clock = clock;
+            this.uci = uci;
+            CanPonder = canPonder;
+            Depth = 0;
+            Elapsed = 0;
+            NodesVisited = 0;
+            Score = 0;
+            SelDepth = 0;
+            this.maxDepth = maxDepth;
+            this.maxNodes = maxNodes;
+            pv.Clear();
+            cpuStats.Reset();
+            oneLegalMove = false;
+            wasAborted = false;
+            startReporting = false;
+            startDateTime = DateTime.MinValue;
+            rootChanges = 0;
+            tbHits = 0;
+        }
+
+        #endregion
+
         #region Search Methods
 
         public void Search()
         {
-            string position = board.ToFenString();
+            string position = board!.ToFenString();
             MoveList list = listPool.Rent();
 
             try
@@ -150,7 +172,7 @@ namespace Pedantic.Chess
                 }
                 startDateTime = DateTime.Now;
 
-                while (++Depth <= maxDepth && clock.CanSearchDeeper())
+                while (++Depth <= maxDepth && clock!.CanSearchDeeper())
                 {
                     int iAlpha = 0, iBeta = 0;
                     clock.StartInterval();
@@ -201,7 +223,7 @@ namespace Pedantic.Chess
                 if (CanPonder)
                 {
                     bool waiting = false;
-                    while (clock.Infinite && !wasAborted)
+                    while (clock!.Infinite && !wasAborted)
                     {
                         waiting = true;
                         Thread.Sleep(WAIT_TIME);
@@ -222,7 +244,7 @@ namespace Pedantic.Chess
                     err.WriteLine($"[{DateTime.Now}]\nIllegal null move result on position: {board.ToFenString()}");
                     err.WriteLine($"Thread ID: {Thread.CurrentThread.ManagedThreadId}");
                     err.WriteLine($"Search.Depth = {Depth}");
-                    err.WriteLine(clock.ToString());
+                    err.WriteLine(clock!.ToString());
 
                     if (list.Count > 0)
                     {
@@ -284,7 +306,7 @@ namespace Pedantic.Chess
             Move bestMove = Move.NullMove;
             int bestMoveIndex = -1;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
-            board.PushBoardState();
+            board!.PushBoardState();
 
             for (int n = 0; n < list.Count; n++)
             {
@@ -410,7 +432,7 @@ namespace Pedantic.Chess
 
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board, alpha, beta);
+                return eval.Compute(board!, alpha, beta);
             }
 
             if (depth <= 0)
@@ -418,7 +440,7 @@ namespace Pedantic.Chess
                 return Quiesce(alpha, beta, ply);
             }
 
-            var rep = board.PositionRepeated();
+            var rep = board!.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)
             {
                 return DrawScore;
@@ -752,10 +774,10 @@ namespace Pedantic.Chess
             SelDepth = Math.Max(SelDepth, ply);
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board, alpha, beta);
+                return eval.Compute(board!, alpha, beta);
             }
 
-            var rep = board.PositionRepeated();
+            var rep = board!.PositionRepeated();
             if (rep.Repeated || rep.OverFiftyMoves)
             {
                 return DrawScore;
@@ -766,7 +788,7 @@ namespace Pedantic.Chess
             ref SearchItem ssItem = ref ss[ply];
 
             Move ttMove = Move.NullMove;
-            if (ttCache.Probe(board.Hash, -qsPly, ply, alpha, beta, out _, out int ttScore, out TtCache.TtItem ttItem))
+            if (ttCache.Probe(board!.Hash, -qsPly, ply, alpha, beta, out _, out int ttScore, out TtCache.TtItem ttItem))
             {
                 return ttScore;
             }
@@ -864,7 +886,7 @@ namespace Pedantic.Chess
         {
             score = 0;
             if (Syzygy.IsInitialized && depth >= UciOptions.SyzygyProbeDepth && 
-                BitOps.PopCount(board.All) <= Syzygy.TbLargest)
+                BitOps.PopCount(board!.All) <= Syzygy.TbLargest)
             {
                 TbResult result = Syzygy.ProbeWdl(board.WhitePieces, board.BlackPieces, 
                     board.Kings, board.Queens, board.Rooks, board.Bishops, board.Knights, board.Pawns,
@@ -919,7 +941,7 @@ namespace Pedantic.Chess
         {
             if (Depth >= UciOptions.AspMinDepth)
             {
-                Uci.Info(Depth, SelDepth, ScaleCpScore(score), NodesVisited, clock.Elapsed, PV, 0, tbHits, bound);
+                Uci.Info(Depth, SelDepth, ScaleCpScore(score), NodesVisited, clock!.Elapsed, PV, 0, tbHits, bound);
             }
             if (bound == Bound.Lower)
             {
@@ -936,7 +958,7 @@ namespace Pedantic.Chess
 
         private void ReportSearchResults(ref Move bestMove, ref Move ponderMove)
         {
-            Elapsed = clock.Elapsed;
+            Elapsed = clock!.Elapsed;
             bool bestMoveChanged = false;
             Move oldBestMove = bestMove;
             pv.Clear();
@@ -962,7 +984,7 @@ namespace Pedantic.Chess
             }
             else if (bestMove != Move.NullMove)
             {
-                if (board.IsLegalMove(bestMove))
+                if (board!.IsLegalMove(bestMove))
                 {
                     board.MakeMove(bestMove);
                     pv.Add(bestMove);
@@ -998,7 +1020,7 @@ namespace Pedantic.Chess
 
         public int ScaleCpScore(int score)
         {
-            return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board.Phase);
+            return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
         }
 
         #endregion
@@ -1063,24 +1085,26 @@ namespace Pedantic.Chess
         #region Fields
 
         private readonly SearchStack ss;
-        private readonly Board board;
-        private readonly GameClock clock;
         private readonly HceEval eval;
         private readonly History history;
         private readonly ObjectPool<MoveList> listPool;
         private readonly TtCache ttCache;
-        private readonly int maxDepth;
-        private readonly long maxNodes;
         private readonly PvTable pvTable = new();
         private readonly List<Move> pv = new(MAX_PLY);
         private readonly CpuStats cpuStats = new();
+
+        private Board? board = null;
+        private GameClock? clock = null;
         private Uci uci = Uci.Default;
+        private int maxDepth;
+        private long maxNodes;
         private bool oneLegalMove = false;
         private bool wasAborted = false;
         private bool startReporting = false;
         private DateTime startDateTime = DateTime.MinValue;
         private int rootChanges = 0;
         private long tbHits = 0;
+
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
         internal static readonly sbyte[] LMP = new sbyte[LMP_MAX_DEPTH_CUTOFF];

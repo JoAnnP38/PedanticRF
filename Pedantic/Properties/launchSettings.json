@@ -13,10 +13,14 @@
     },
     "Search": {
       "commandName": "Project",
-      "commandLineArgs": "< \"e:\\repos.2\\Pedantic\\uci_test.txt\""
+      "commandLineArgs": "< \"d:\\repos.2\\Pedantic\\uci_test.txt\""
     },
     "Open": {
       "commandName": "Project"
+    },
+    "Bench": {
+      "commandName": "Project",
+      "commandLineArgs": "< \"d:\\repos.2\\Pedantic\\uci_bench.txt\""
     }
   }
 }

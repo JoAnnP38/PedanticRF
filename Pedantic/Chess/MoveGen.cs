@@ -378,7 +378,7 @@ namespace Pedantic.Chess
                         board.GenerateKingQuiets(kingIndex, list, in info);
                         if (info.CheckerCount <= 1)
                         {
-                            board.GeneratePawnQuiets(list, in info, helper);
+                            board.GeneratePawnQuiets(list, in info, helper!);
                             board.GeneratePieceQuiets(list, in info);
                         }
                         list.Remove(ttMove);
