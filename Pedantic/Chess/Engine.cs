@@ -88,20 +88,20 @@ namespace Pedantic.Chess
             }
         }
 
-        public static void Go(int maxDepth, int maxTime, long maxNodes, bool ponder = false)
+        public static void Go(int maxDepth, int maxTime, long maxNodes, long minNodes, bool ponder = false)
         {
             Stop();
             IsPondering = ponder;
-            time.Go(maxTime, ponder || Infinite);
-            StartSearch(maxDepth, maxNodes);
+            time.Go(maxTime, ponder || Infinite || minNodes < long.MaxValue);
+            StartSearch(maxDepth, maxNodes, minNodes);
         }
 
-        public static void Go(int maxTime, int opponentTime, int increment, int movesToGo, int maxDepth, long maxNodes, bool ponder = false)
+        public static void Go(int maxTime, int opponentTime, int increment, int movesToGo, int maxDepth, long maxNodes, long minNodes, bool ponder = false)
         {
             Stop();
             IsPondering = ponder;
             time.Go(maxTime, opponentTime, increment, movesToGo, MovesOutOfBook, ponder || Infinite);
-            StartSearch(maxDepth, maxNodes);
+            StartSearch(maxDepth, maxNodes, minNodes);
         }
 
         public static void ClearHashTable()
@@ -354,14 +354,14 @@ namespace Pedantic.Chess
                 SetupNewGame();
                 SetupPosition(fen);
                 Uci.Default.Log($"fen: '{fen}'");
-                Go(depth, int.MaxValue, long.MaxValue, false);
+                Go(depth, int.MaxValue, long.MaxValue, long.MaxValue, false);
                 Wait();
                 totalNodes += threads.TotalNodes;
                 totalTime += threads.TotalTime;
             }
         }
 
-        private static void StartSearch(int maxDepth, long maxNodes)
+        private static void StartSearch(int maxDepth, long maxNodes, long minNodes)
         {
             Span<Move> pv = stackalloc Move[12];
             if (ProbePvTb(Board, pv, out int pvLen, out int score))
@@ -377,7 +377,7 @@ namespace Pedantic.Chess
             }
 
             ++MovesOutOfBook;
-            threads.Search(time, Board, maxDepth, maxNodes);
+            threads.Search(time, Board, maxDepth, maxNodes, minNodes);
             IsRunning = true;
         }
 

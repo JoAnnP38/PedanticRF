@@ -233,6 +233,7 @@ namespace Pedantic
             TryParse(tokens, "depth", out int maxDepth, MAX_PLY - 1);
             TryParse(tokens, "movetime", out int maxTime, int.MaxValue);
             TryParse(tokens, "nodes", out long maxNodes, long.MaxValue);
+            TryParse(tokens, "minnodes", out long minNodes, long.MaxValue);
             TryParse(tokens, "movestogo", out int movesToGo, -1);  
             bool ponder = tokens.IndexOfToken("ponder") >= 0;
 
@@ -241,17 +242,17 @@ namespace Pedantic
             {
                 TryParse(tokens, "winc", out int whiteIncrement);
                 TryParse(tokens, "btime", out blackTime, whiteTime);
-                Engine.Go(whiteTime, blackTime, whiteIncrement, movesToGo, maxDepth, maxNodes, ponder);
+                Engine.Go(whiteTime, blackTime, whiteIncrement, movesToGo, maxDepth, maxNodes, minNodes, ponder);
             }
             else if (Engine.Color == Color.Black && TryParse(tokens, "btime", out blackTime))
             {
                 TryParse(tokens, "binc", out int blackIncrement);
                 TryParse(tokens, "wtime", out whiteTime, blackTime);
-                Engine.Go(blackTime, whiteTime, blackIncrement, movesToGo, maxDepth, maxNodes, ponder);
+                Engine.Go(blackTime, whiteTime, blackIncrement, movesToGo, maxDepth, maxNodes, minNodes, ponder);
             }
             else
             {
-                Engine.Go(maxDepth, maxTime, maxNodes, ponder);
+                Engine.Go(maxDepth, maxTime, maxNodes, minNodes, ponder);
             }
         }
 

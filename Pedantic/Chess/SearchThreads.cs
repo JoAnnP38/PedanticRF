@@ -73,16 +73,16 @@ namespace Pedantic.Chess
             }
         }
 
-        public void Search(GameClock clock, Board board, int maxDepth, long maxNodes)
+        public void Search(GameClock clock, Board board, int maxDepth, long maxNodes, long minNodes)
         {
             if (done.IsSet)
             {
                 done.Reset(threads.Length);
                 for (int n = 1; n < threads.Length; n++)
                 {
-                    threads[n].Search(clock.Clone(), board.Clone(), maxDepth, maxNodes, done);
+                    threads[n].Search(clock.Clone(), board.Clone(), maxDepth, maxNodes, minNodes, done);
                 }
-                threads[0].Search(clock, board, maxDepth, maxNodes, done);
+                threads[0].Search(clock, board, maxDepth, maxNodes, minNodes, done);
             }
         }
 
