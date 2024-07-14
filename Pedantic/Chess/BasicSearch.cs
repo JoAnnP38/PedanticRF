@@ -127,7 +127,7 @@ namespace Pedantic.Chess
 
         #region Initializer
 
-        public void Initialize(Board board, GameClock clock, Uci uci, bool canPonder, int maxDepth, long maxNodes)
+        public void Initialize(Board board, GameClock clock, Uci uci, bool canPonder, int maxDepth, long maxNodes, long minNodes)
         {
             this.board = board;
             this.clock = clock;
@@ -140,6 +140,7 @@ namespace Pedantic.Chess
             SelDepth = 0;
             this.maxDepth = maxDepth;
             this.maxNodes = maxNodes;
+            this.minNodes = minNodes;
             pv.Clear();
             cpuStats.Reset();
             oneLegalMove = false;
@@ -172,7 +173,7 @@ namespace Pedantic.Chess
                 }
                 startDateTime = DateTime.Now;
 
-                while (++Depth <= maxDepth && clock!.CanSearchDeeper())
+                while (++Depth <= maxDepth && NodesVisited < minNodes && clock!.CanSearchDeeper())
                 {
                     int iAlpha = 0, iBeta = 0;
                     clock.StartInterval();
@@ -267,7 +268,6 @@ namespace Pedantic.Chess
                     {
                         throw new Exception("Engine could not generate a legal move.");
                     }
-
                 }
                 Uci.Usage(cpuStats.CpuLoad);
                 Uci.BestMove(bestMove, CanPonder ? ponderMove : Move.NullMove);
@@ -566,7 +566,6 @@ namespace Pedantic.Chess
             {
                 depth--;
             }
-
 
             Move bestMove = Move.NullMove;
             int expandedNodes = 0, bestScore = -INFINITE_WINDOW;
@@ -1098,6 +1097,7 @@ namespace Pedantic.Chess
         private Uci uci = Uci.Default;
         private int maxDepth;
         private long maxNodes;
+        private long minNodes;
         private bool oneLegalMove = false;
         private bool wasAborted = false;
         private bool startReporting = false;

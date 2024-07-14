@@ -23,13 +23,13 @@ namespace Pedantic.Chess
             search = new BasicSearch(stack, eval, history, listPool);
         }
 
-        public void Search(GameClock clock, Board board, int maxDepth, long maxNodes, CountdownEvent done)
+        public void Search(GameClock clock, Board board, int maxDepth, long maxNodes, long minNodes, CountdownEvent done)
         {
             Uci uci = new(isPrimary, false);
             clock.Uci = uci;
             this.clock = clock;
 
-            search.Initialize(board, clock, uci, UciOptions.Ponder, maxDepth, maxNodes);
+            search.Initialize(board, clock, uci, UciOptions.Ponder, maxDepth, maxNodes, minNodes);
 
             ThreadPool.QueueUserWorkItem((state) =>
             {

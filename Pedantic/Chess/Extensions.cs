@@ -240,10 +240,11 @@ namespace Pedantic.Chess
 
         public static int IndexOfToken(this ReadOnlySpan<char> roSpan, ReadOnlySpan<char> token)
         {
+            bool startToken = true;
             for (int n = 0; n < roSpan.Length - token.Length; n++)
             {
                 char ch = roSpan[n];
-                if (!char.IsWhiteSpace(ch))
+                if (startToken && !char.IsWhiteSpace(ch))
                 {
                     if (roSpan.Slice(n, token.Length).Equals(token, StringComparison.InvariantCulture))
                     {
@@ -253,7 +254,13 @@ namespace Pedantic.Chess
                             return n;
                         }
                     }
+                    else
+                    {
+                        startToken = false;
+                    }
                 }
+
+                startToken = !startToken && char.IsWhiteSpace(ch);
             }
             return -1;
         }
