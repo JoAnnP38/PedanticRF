@@ -1020,11 +1020,7 @@ namespace Pedantic.Chess
 
         public int ScaleCpScore(int score)
         {
-            if (Math.Abs(score) < MIN_TABLEBASE_WIN)
-            {
-                return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
-            }
-            return score;
+            return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
         }
 
         #endregion
