@@ -207,6 +207,12 @@ namespace Pedantic.Chess
             return side == Color.White ? sq : (SquareIndex)((int)sq ^ 56);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SquareIndex Flip(this SquareIndex sq)
+        {
+            return (SquareIndex)((int)sq ^ 56);
+        }
+
         private static readonly string[] algebraicIndices =
         {
             string.Empty,

@@ -8,7 +8,7 @@
 namespace Pedantic.Chess
 {
     using System.Runtime.CompilerServices;
-    using Pedantic.Chess.HCE;
+    using Pedantic.Chess.NNUE;
     using Pedantic.Utilities;
 
     public sealed class SearchThread
@@ -68,7 +68,7 @@ namespace Pedantic.Chess
         private BasicSearch search;
         private GameClock? clock;
         private readonly EvalCache cache = new();
-        private readonly HceEval eval;
+        private readonly NnueEval eval;
         private readonly SearchStack stack = new();
         private readonly History history;
         private readonly ObjectPool<MoveList> listPool;

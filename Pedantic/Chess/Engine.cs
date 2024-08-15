@@ -8,6 +8,7 @@
 namespace Pedantic.Chess
 {
     using Pedantic.Chess.HCE;
+    using Pedantic.Chess.NNUE;
     using Pedantic.Tablebase;
     using Pedantic.Utilities;
 
@@ -86,6 +87,13 @@ namespace Pedantic.Chess
             {
                 Stop();
             }
+        }
+
+        public static void Eval()
+        {
+            NnueEval nnue = new();
+            short eval = nnue.ComputeUncached(Board);
+            Uci.Default.Log($"{eval}");
         }
 
         public static void Go(int maxDepth, int maxTime, long maxNodes, long minNodes, bool ponder = false)

@@ -11,6 +11,7 @@ namespace Pedantic.Chess
     using System.Runtime.InteropServices;
     using System.Text;
     using Pedantic.Chess.HCE;
+    using Pedantic.Chess.NNUE;
     using Pedantic.Collections;
     using Pedantic.Utilities;
 
@@ -89,7 +90,7 @@ namespace Pedantic.Chess
             public ByColor<Score> Material;
             public Move Move;
 
-            public BoardState(Board board)
+            public void Save(Board board)
             {
                 SideToMove = board.sideToMove;
                 Castling = board.castling;
@@ -321,6 +322,7 @@ namespace Pedantic.Chess
         private ByColor<SquareIndex> kingIndex;
         private ByColor<GenMoveHelper> helpers;
         private ByColor<Score> material;
+        private EfficientlyUpdatable updatable = new();
 
         private MoveList moveList = new();
         private readonly ValueStack<BoardState> gameStack = new(MAX_GAME_LENGTH);
@@ -376,6 +378,7 @@ namespace Pedantic.Chess
             kingIndex = other.kingIndex;
             material = other.material;
             phase = other.phase;
+            updatable.Copy(other.updatable);
         }
 
         #endregion
@@ -666,6 +669,7 @@ namespace Pedantic.Chess
             phase = 0;
             moveList.Clear();
             gameStack.Clear();
+            updatable.Clear();
         }
 
         public void AddPiece(Color color, Piece piece, SquareIndex sq)
@@ -692,6 +696,8 @@ namespace Pedantic.Chess
             {
                 kingIndex[color] = sq;
             }
+
+            updatable.AddPiece(color, piece, sq);
         }
 
         public void RemovePiece(Color color, Piece piece, SquareIndex sq)
@@ -714,6 +720,8 @@ namespace Pedantic.Chess
             {
                 pawnHash = ZobristHash.HashPiece(pawnHash, color, piece, sq);
             }
+
+            updatable.RemovePiece(color, piece, sq);
         }
 
         #endregion
@@ -1427,25 +1435,34 @@ namespace Pedantic.Chess
         {
             UnmakeMoveNs();
             gameStack.Pop();
+            updatable.PopState();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnmakeMoveNs()
         {
-            gameStack.Peek().Restore(this);
+            RestoreBoardState();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PushBoardState()
         {
-            BoardState state = new BoardState(this);
-            gameStack.Push(ref state);
+            gameStack.Push().Save(this);
+            updatable.PushState();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void PopBoardState()
         {
             gameStack.Pop();
+            updatable.PopState();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RestoreBoardState()
+        {
+            gameStack.Peek().Restore(this);
+            updatable.RestoreState();
         }
 
         #endregion
@@ -2005,6 +2022,17 @@ namespace Pedantic.Chess
         object ICloneable.Clone()
         {
             return Clone();
+        }
+
+        public void AttachEfficientlyUpdatable(EfficientlyUpdatable updatable)
+        {
+            this.updatable = updatable;
+            updatable.Update(this);
+        }
+
+        public void DetachEfficientlyUpdatable()
+        {
+            updatable = new EfficientlyUpdatable();
         }
 
         #endregion

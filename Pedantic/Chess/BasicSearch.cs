@@ -8,7 +8,7 @@
 namespace Pedantic.Chess
 {
     using System.Runtime.CompilerServices;
-    using Pedantic.Chess.HCE;
+    using Pedantic.Chess.NNUE;
     using Pedantic.Collections;
     using Pedantic.Tablebase;
     using Pedantic.Utilities;
@@ -24,7 +24,7 @@ namespace Pedantic.Chess
 
         #region Constructors
 
-        public BasicSearch(SearchStack searchStack, HceEval eval, History history, ObjectPool<MoveList> listPool)
+        public BasicSearch(SearchStack searchStack, NnueEval eval, History history, ObjectPool<MoveList> listPool)
         {
             ss = searchStack;
             this.eval = eval;
@@ -149,6 +149,7 @@ namespace Pedantic.Chess
             startDateTime = DateTime.MinValue;
             rootChanges = 0;
             tbHits = 0;
+            board.AttachEfficientlyUpdatable(eval);
         }
 
         #endregion
@@ -157,6 +158,7 @@ namespace Pedantic.Chess
 
         public void Search()
         {
+            Util.Assert(eval.StateCount == 0);
             string position = board!.ToFenString();
             MoveList list = listPool.Rent();
 
@@ -175,6 +177,7 @@ namespace Pedantic.Chess
 
                 while (++Depth <= maxDepth && NodesVisited < minNodes && clock!.CanSearchDeeper())
                 {
+                    Util.Assert(eval.StateCount == 0);
                     int iAlpha = 0, iBeta = 0;
                     clock.StartInterval();
                     SelDepth = 0;
@@ -285,11 +288,14 @@ namespace Pedantic.Chess
             finally
             {
                 listPool.Return(list);
+                board.DetachEfficientlyUpdatable();
             }
         }
 
         private int SearchRoot(MoveList list, int alpha, int beta, int depth)
         {
+            Util.Assert(eval.StateCount == 0);
+
             int originalAlpha = alpha;
             bool inCheck = ss[-1].IsCheckingMove;
             ref SearchItem ssItem = ref ss[0];
@@ -403,6 +409,7 @@ namespace Pedantic.Chess
             }
 
             board.PopBoardState();
+            Util.Assert(eval.StateCount == 0);
 
             if (wasAborted)
             {
@@ -420,6 +427,7 @@ namespace Pedantic.Chess
 
         private int Search(int alpha, int beta, int depth, int ply, bool cutNode, bool canNull = true)
         {
+            Util.Assert(eval.StateCount == ply);
             pvTable.InitPly(ply);
             SelDepth = Math.Max(SelDepth, ply);
             bool inCheck = ss[ply - 1].IsCheckingMove;
@@ -432,7 +440,7 @@ namespace Pedantic.Chess
 
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board!, alpha, beta);
+                return ComputeStaticEval();
             }
 
             if (depth <= 0)
@@ -492,7 +500,7 @@ namespace Pedantic.Chess
                 }
                 else
                 {
-                    evaluation = ssItem.Eval = eval.Compute(board, alpha, beta);
+                    evaluation = ssItem.Eval = ComputeStaticEval();
                 }
 
                 if (ply >= 4 && ss[ply - 4].Eval != NO_SCORE)
@@ -744,6 +752,7 @@ namespace Pedantic.Chess
 
             listPool.Return(list);
             board.PopBoardState();
+            Util.Assert(eval.StateCount == ply);
 
             if (wasAborted)
             {
@@ -764,6 +773,8 @@ namespace Pedantic.Chess
 
         private int Quiesce(int alpha, int beta, int ply, int qsPly = 0)
         {
+            Util.Assert(eval.StateCount == ply);
+
             if (wasAborted || MustAbort)
             {
                 wasAborted = true;
@@ -773,7 +784,7 @@ namespace Pedantic.Chess
             SelDepth = Math.Max(SelDepth, ply);
             if (ply >= MAX_PLY - 1)
             {
-                return eval.Compute(board!, alpha, beta);
+                return ComputeStaticEval();
             }
 
             var rep = board!.PositionRepeated();
@@ -797,7 +808,7 @@ namespace Pedantic.Chess
                 ttMove = ttItem.BestMove;
             }
 
-            int standPatScore = eval.Compute(board, alpha, beta);
+            int standPatScore = ComputeStaticEval();
             if (!inCheck)
             {
                 if (standPatScore >= beta)
@@ -841,7 +852,7 @@ namespace Pedantic.Chess
 
                 score = -Quiesce(-beta, -alpha, ply + 1, qsPly + 1);
                 board.UnmakeMoveNs();
-
+                
                 if (wasAborted)
                 {
                     break;
@@ -866,6 +877,7 @@ namespace Pedantic.Chess
 
             listPool.Return(list);
             board.PopBoardState();
+            Util.Assert(eval.StateCount == ply);
 
             if (wasAborted)
             {
@@ -1017,16 +1029,31 @@ namespace Pedantic.Chess
             }
         }
 
+        private short ComputeStaticEval()
+        {
+            if (board != null)
+            {
+                short score = eval.Compute(board);
+
+#if DEBUG
+                short scoreDebug = evalDebug.ComputeUncached(board);
+                Util.Assert(score == scoreDebug);
+#endif
+                return score;
+            }
+            return 0;
+        }
+
         public int ScaleCpScore(int score)
         {
-            if (Math.Abs(score) < MIN_TABLEBASE_WIN)
-            {
-                return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
-            }
+            //if (Math.Abs(score) < MIN_TABLEBASE_WIN)
+            //{
+            //    return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
+            //}
             return score;
         }
 
-        #endregion
+#endregion
 
         #region Static Methods
 
@@ -1088,7 +1115,7 @@ namespace Pedantic.Chess
         #region Fields
 
         private readonly SearchStack ss;
-        private readonly HceEval eval;
+        private readonly NnueEval eval;
         private readonly History history;
         private readonly ObjectPool<MoveList> listPool;
         private readonly TtCache ttCache;
@@ -1109,11 +1136,15 @@ namespace Pedantic.Chess
         private int rootChanges = 0;
         private long tbHits = 0;
 
+#if DEBUG
+        private readonly NnueEval evalDebug = new();
+#endif
+
         internal static readonly int[] AspWindow = [33, 100, 300, 900, 2700, INFINITE_WINDOW];
         internal static readonly sbyte[] NMP = new sbyte[MAX_PLY];
         internal static readonly sbyte[] LMP = new sbyte[LMP_MAX_DEPTH_CUTOFF];
         internal static readonly FixedArray2D<sbyte> LMR = new(MAX_PLY, LMR_MAX_MOVES, true);
 
-        #endregion
+#endregion
     }
 }

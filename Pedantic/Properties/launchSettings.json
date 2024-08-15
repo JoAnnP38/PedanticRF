@@ -13,7 +13,7 @@
     },
     "Search": {
       "commandName": "Project",
-      "commandLineArgs": "< \"d:\\repos.2\\Pedantic\\uci_test.txt\""
+      "commandLineArgs": "< \"c:\\repos\\Pedantic\\uci_test.txt\""
     },
     "Open": {
       "commandName": "Project"

@@ -90,6 +90,15 @@ namespace Pedantic.Collections
             stack[sp++] = item;
         }
 
+        public ref T Push()
+        {
+            if (sp >= stack.Length)
+            {
+                Array.Resize(ref stack, stack.Length << 1);
+            }
+            return ref stack[sp++];
+        }
+
         public bool Remove(T item)
         {
             if (sp > 0 && stack[sp - 1].Equals(item))

@@ -12,6 +12,7 @@ namespace Pedantic
     using System.Text;
     using Pedantic.Chess;
     using Pedantic.Chess.HCE;
+    using Pedantic.Chess.NNUE;
     using Pedantic.Tablebase;
     using Pedantic.Tuning;
     using static Pedantic.Chess.HCE.Weights;
@@ -124,6 +125,7 @@ namespace Pedantic
         public static void InitializeStaticData()
         {
             Board.Initialize();
+            Network.Initialize();
             Weights.Initialize();
             HceEval.Initialize();
             Engine.Initialize();
@@ -173,6 +175,10 @@ namespace Pedantic
 
                 case "debug":
                     Debug(inputSpan[tokenRange[1]]);
+                    break;
+
+                case "eval":
+                    Engine.Eval();
                     break;
 
                 case "go":

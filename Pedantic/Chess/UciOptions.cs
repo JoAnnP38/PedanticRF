@@ -663,7 +663,7 @@ namespace Pedantic.Chess
         private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
         private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 1024);
-        private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 25, 0, 1000);
+        private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 50, 0, 1000);
         private static UciOptionCheck ponder = new UciOptionCheck(OPT_PONDER, false);
         private static UciOptionCheck randomSearch = new UciOptionCheck(OPT_RANDOM_SEARCH, false);
         private static UciOptionString syzygyPath = new UciOptionString(OPT_SYZYGY_PATH, string.Empty);

@@ -20,30 +20,24 @@ namespace Pedantic.Chess
         { }
     }
 
-    public interface IEvaluate
+    public interface IEfficientlyUpdatable
     {
-        public void AddPiece(Color color, Piece Piece, SquareIndex sq);
+        public void Clear();
 
-        public void RemovePiece(Color color, Piece Piece, SquareIndex sq);
+        public void Copy(IEfficientlyUpdatable updatable);
 
-        public short Compute(short alpha, short beta);
-    }
+        public void AddPiece(Color color, Piece piece, SquareIndex sq);
 
-    // Implemented by HceEval & NnueEval classes and used by the Board/Search classes for position updates
-    public interface IEfficientlyUpdateable
-    {
-        // called when a new position is setup (initial update)
-        // called after position is setup with UCI position command
+        public void RemovePiece(Color color, Piece piece, SquareIndex sq);
+
         public void Update(Board board);
 
-        // called after a legal move is made (incremental update)
-        // called after move is confirmed to be legal to avoid unnecessary updates.
-        public void Update(Move move);
+        public void UpdatePiece(Color color, Piece piece, SquareIndex from, SquareIndex to);
 
-        // called to allow eval to save any state required for Copy-Make
-        public void SaveState(ref Board.BoardState state);
+        public void PushState();
 
-        // called to restore the state saved in SaveState()
-        public void RestoreState(ref Board.BoardState state);
+        public void PopState();
+
+        public void RestoreState();
     }
 }
