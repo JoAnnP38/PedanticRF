@@ -89,9 +89,17 @@ namespace Pedantic
                 getDefaultValue: () => 25
             );
 
+            var doDataGen = new Option<bool>
+            (
+                name: "--datagen",
+                description: "Configure engine for generating data.",
+                getDefaultValue: () => false
+            );
+
             var uciCmd = new Command("uci", "Start the pedantic application in UCI mode (default).")
             {
-                uciSpsaOption
+                uciSpsaOption,
+                doDataGen
             };
 
             var learnCmd = new Command("learn", "Optimize evaluation function using training data.")
@@ -114,11 +122,11 @@ namespace Pedantic
                 wfCmd
             };
 
-            uciCmd.SetHandler(RunUci, uciSpsaOption);
+            uciCmd.SetHandler(RunUci, uciSpsaOption, doDataGen);
             learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
                 learnSaveOption, learnResetOption, learnEvalPctOption);
             wfCmd.SetHandler(RunWf);
-            rootCmd.SetHandler(() => RunUci(false));
+            rootCmd.SetHandler(() => RunUci(false, false));
             await rootCmd.InvokeAsync(args);
         }
 
@@ -133,11 +141,12 @@ namespace Pedantic
             Engine.SetupPosition(FEN_START_POS);
         }
 
-        private static async Task RunUci(bool spsa)
+        private static async Task RunUci(bool spsa, bool datagen)
         {
             try
             {
                 UciOptions.Optimizing = spsa;
+                UciOptions.IsDataGen = datagen;
                 Engine.Start();
 
                 while (Engine.IsRunning)

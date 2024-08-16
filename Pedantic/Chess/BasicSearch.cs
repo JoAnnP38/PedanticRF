@@ -599,7 +599,7 @@ namespace Pedantic.Chess
                 int hist = history.GetHistory(ply, genMove.Move);
                 bool interesting = inCheck || (genMove.MovePhase < MoveGenPhase.Killers) || expandedNodes == 1;
 
-                if (!interesting)
+                if (!interesting && !UciOptions.IsDataGen)
                 {
                     if (canPrune && genMove.MovePhase >= MoveGenPhase.BadCapture && bestScore > MAX_TABLEBASE_LOSS)
                     { 

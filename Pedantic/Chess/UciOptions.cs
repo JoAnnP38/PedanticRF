@@ -65,6 +65,7 @@ namespace Pedantic.Chess
         static UciOptions()
         {
             Optimizing = true;
+            IsDataGen = false;
             options = new(StringComparer.InvariantCultureIgnoreCase)
             {
                 { clearHash.Name, clearHash },
@@ -573,6 +574,15 @@ namespace Pedantic.Chess
         }
 
         public static bool Optimizing
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set;
+        }
+
+        public static bool IsDataGen
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get;
