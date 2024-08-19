@@ -18,7 +18,7 @@ namespace Pedantic.Chess.NNUE
         static Network()
         {
             // default network embedded as a resource
-            defaultNetwork = new Network(Resource._128HL_57716AF0);
+            defaultNetwork = new Network(Resource.NN128HL_20240818);
         }
 
         public Network(byte[] networkBytes)
