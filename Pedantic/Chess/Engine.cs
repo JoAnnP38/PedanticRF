@@ -250,27 +250,28 @@ namespace Pedantic.Chess
         {
             try
             {
-                string? exeFullName = Environment.ProcessPath;
-                string? dirFullName = Path.GetDirectoryName(exeFullName);
-                string? weightsPath = (exeFullName != null && dirFullName != null) ?
-                    Path.Combine(dirFullName, UciOptions.EvalFile) : null;
+                return null;
+                //string? exeFullName = Environment.ProcessPath;
+                //string? dirFullName = Path.GetDirectoryName(exeFullName);
+                //string? weightsPath = (exeFullName != null && dirFullName != null) ?
+                //    Path.Combine(dirFullName, UciOptions.EvalFile) : null;
 
-                Weights? wts = null;
-                if (weightsPath != null && System.IO.File.Exists(weightsPath))
-                {
-                    wts = Weights.Load(weightsPath);
-                    HceEval.Weights = wts;
-                }
-                else
-                {
-                    wts = Weights.Default;
-                    if (weightsPath != null)
-                    {
-                        wts.Save(weightsPath);
-                    }
-                }
+                //Weights? wts = null;
+                //if (weightsPath != null && System.IO.File.Exists(weightsPath))
+                //{
+                //    wts = Weights.Load(weightsPath);
+                //    HceEval.Weights = wts;
+                //}
+                //else
+                //{
+                //    wts = Weights.Default;
+                //    if (weightsPath != null)
+                //    {
+                //        wts.Save(weightsPath);
+                //    }
+                //}
 
-                return wts;
+                //return wts;
             }
             catch (Exception ex)
             {
