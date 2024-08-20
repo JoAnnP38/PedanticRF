@@ -39,7 +39,7 @@ namespace Pedantic.Chess
         public const string REGEX_INDEX = @"^[a-h][1-8]$";
         public const string FEN_EMPTY = @"8/8/8/8/8/8/8/8 w - - 0 0";
         public const string FEN_START_POS = @"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-        public const string APP_NAME = "Pedantic NNUE";
+        public const string APP_NAME = "Pedantic";
         public const string APP_VERSION = "2.0.0";
         public const string APP_NAME_VER = APP_NAME + " " + APP_VERSION;
         public const string APP_AUTHOR = "JoAnn D. Peeler";

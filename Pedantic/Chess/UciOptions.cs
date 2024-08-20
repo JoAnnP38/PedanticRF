@@ -14,7 +14,7 @@ namespace Pedantic.Chess
         // Prefix UCI_T_ is for tunable paramters
         internal const string OPT_CLEAR_HASH = "Clear Hash";
         internal const string OPT_CONTEMPT = "Contempt";
-        internal const string OPT_EVAL_FILE = "EvalFile";
+        //internal const string OPT_EVAL_FILE = "EvalFile";
         internal const string OPT_HASH_TABLE_SIZE = "Hash";
         internal const string OPT_MOVE_OVERHEAD = "Move Overhead";
         internal const string OPT_PONDER = "Ponder";
@@ -71,7 +71,7 @@ namespace Pedantic.Chess
                 { clearHash.Name, clearHash },
                 { engineAbout.Name, engineAbout },
                 { contempt.Name, contempt },
-                { evalFile.Name, evalFile },
+                //{ evalFile.Name, evalFile },
                 { hashTableSize.Name, hashTableSize },
                 { moveOverhead.Name, moveOverhead },
                 { ponder.Name, ponder },
@@ -154,14 +154,14 @@ namespace Pedantic.Chess
             }
         }
 
-        public static string EvalFile
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return evalFile.CurrentValue;
-            }
-        }
+        //public static string EvalFile
+        //{
+        //    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //    get
+        //    {
+        //        return evalFile.CurrentValue;
+        //    }
+        //}
 
         public static int HashTableSize
         {
@@ -671,7 +671,7 @@ namespace Pedantic.Chess
         private static UciOptionButton clearHash = new UciOptionButton(OPT_CLEAR_HASH);
         private static UciOptionString engineAbout = new UciOptionString(OPT_ENGINE_ABOUT, $"{APP_NAME_VER} by {APP_AUTHOR}, see {PROGRAM_URL}");
         private static UciOptionSpin contempt = new UciOptionSpin(OPT_CONTEMPT, 0, -50, 50);
-        private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
+        //private static UciOptionString evalFile = new UciOptionString(OPT_EVAL_FILE, "./Pedantic.hce");
         private static UciOptionSpin hashTableSize = new UciOptionSpin(OPT_HASH_TABLE_SIZE, 64, 16, 1024);
         private static UciOptionSpin moveOverhead = new UciOptionSpin(OPT_MOVE_OVERHEAD, 50, 0, 1000);
         private static UciOptionCheck ponder = new UciOptionCheck(OPT_PONDER, false);

@@ -4,7 +4,7 @@ namespace Pedantic.Chess.NNUE
 {
     public class Network : IInitialize
     {
-        // smol-net™ 768 -> 128 x 2 -> 1
+        // smol-net™ (768 -> 128) x 2 -> 1
         public const int INPUT_SIZE = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
         public const int HIDDEN_SIZE = 128; 
 

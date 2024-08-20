@@ -1048,8 +1048,12 @@ namespace Pedantic.Chess
         {
             //if (Math.Abs(score) < MIN_TABLEBASE_WIN)
             //{
-            //    return score * 100 / HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
+            //    return score * 100 / HCE.HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
             //}
+            if (!UciOptions.IsDataGen && Math.Abs(score) < MIN_TABLEBASE_WIN)
+            {
+                return score / 2;
+            }
             return score;
         }
 
