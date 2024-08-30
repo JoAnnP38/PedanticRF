@@ -1052,7 +1052,7 @@ namespace Pedantic.Chess
             //}
             if (!UciOptions.IsDataGen && Math.Abs(score) < MIN_TABLEBASE_WIN)
             {
-                return score / 2;
+                return score * 2 / 3;
             }
             return score;
         }

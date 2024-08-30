@@ -15,10 +15,10 @@ namespace Pedantic.Chess.NNUE
 
     public class NnueEval : EfficientlyUpdatable
     {
-        public const int SCALE = 400;
-        public const int QA = 255;
-        public const int QB = 64;
-        public const int Q = QA * QB;
+        public const short SCALE = 400;
+        public const short QA = 255;
+        public const short QB = 64;
+        public const short QAB = QA * QB;
 
         public unsafe struct AccumState
         {
@@ -167,7 +167,7 @@ namespace Pedantic.Chess.NNUE
                 Activation(whiteAccum, blackAccum, Network.Default.OutputWeights) :
                 Activation(blackAccum, whiteAccum, Network.Default.OutputWeights);
 
-            score = (short)((eval + Network.Default.OutputBias) * SCALE / Q);
+            score = (short)((eval + Network.Default.OutputBias) * SCALE / QAB);
             return score;
         }
 
@@ -182,7 +182,7 @@ namespace Pedantic.Chess.NNUE
                 Activation(whiteAccum, blackAccum, Network.Default.OutputWeights) :
                 Activation(blackAccum, whiteAccum, Network.Default.OutputWeights);
 
-            score = (short)((eval + Network.Default.OutputBias) * SCALE / Q);
+            score = (short)((eval / QA + Network.Default.OutputBias) * SCALE / QAB);
 
             if (UciOptions.RandomSearch)
             {
@@ -232,13 +232,13 @@ namespace Pedantic.Chess.NNUE
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int Activation(ReadOnlySpan<short> us, ReadOnlySpan<short> them, ReadOnlySpan<short> weights)
         {
-            return ActivationCReLU(us, weights.Slice(0, Network.HIDDEN_SIZE)) + 
-                   ActivationCReLU(them, weights.Slice(Network.HIDDEN_SIZE, Network.HIDDEN_SIZE));
+            return ActivationSCReLU(us, weights.Slice(0, Network.HIDDEN_SIZE)) + 
+                   ActivationSCReLU(them, weights.Slice(Network.HIDDEN_SIZE, Network.HIDDEN_SIZE));
         }
 
         private static int ActivationCReLU(ReadOnlySpan<short> accum, ReadOnlySpan<short> weights)
         {
-            Vector<short> CReLU_Max = new Vector<short>(255);
+            Vector<short> CReLU_Max = new Vector<short>(QA);
             Vector<short> CReLU_Min = Vector<short>.Zero; 
             
             Vector<int> sum = Vector<int>.Zero;
@@ -252,6 +252,37 @@ namespace Pedantic.Chess.NNUE
                 Vector<short> w = wts[n];
 
                 Vector.Widen(a, out Vector<int> aLow, out Vector<int> aHigh);
+                Vector.Widen(w, out Vector<int> wLow, out Vector<int> wHigh);
+
+                sum += aLow * wLow;
+                sum += aHigh * wHigh;
+            }
+
+            return Vector.Sum(sum);
+        }
+
+
+        private static int ActivationSCReLU(ReadOnlySpan<short> accum, ReadOnlySpan<short> weights)
+        {
+            // SCReLU starts off like CReLU
+            Vector<short> CReLU_Max = new Vector<short>(QA);
+            Vector<short> CReLU_Min = Vector<short>.Zero;
+
+            Vector<int> sum = Vector<int>.Zero;
+
+            ReadOnlySpan<Vector<short>> acc = MemoryMarshal.Cast<short, Vector<short>>(accum);
+            ReadOnlySpan<Vector<short>> wts = MemoryMarshal.Cast<short, Vector<short>>(weights);
+
+            for (int n = 0; n < acc.Length; n++)
+            {
+                Vector<short> a = Vector.Max(Vector.Min(acc[n], CReLU_Max), CReLU_Min);
+                Vector<short> w = wts[n];
+
+                Vector.Widen(a, out Vector<int> aLow, out Vector<int> aHigh);
+                // special sauce: perform the squared part of SCReLU
+                aLow = aLow * aLow;
+                aHigh = aHigh * aHigh;
+
                 Vector.Widen(w, out Vector<int> wLow, out Vector<int> wHigh);
 
                 sum += aLow * wLow;
