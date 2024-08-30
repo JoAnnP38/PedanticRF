@@ -167,7 +167,7 @@ namespace Pedantic.Chess.NNUE
                 Activation(whiteAccum, blackAccum, Network.Default.OutputWeights) :
                 Activation(blackAccum, whiteAccum, Network.Default.OutputWeights);
 
-            score = (short)((eval + Network.Default.OutputBias) * SCALE / QAB);
+            score = (short)((eval / QA + Network.Default.OutputBias) * SCALE / QAB);
             return score;
         }
 
