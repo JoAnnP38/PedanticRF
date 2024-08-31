@@ -278,15 +278,13 @@ namespace Pedantic.Chess.NNUE
                 Vector<short> a = Vector.Max(Vector.Min(acc[n], CReLU_Max), CReLU_Min);
                 Vector<short> w = wts[n];
 
-                Vector.Widen(a, out Vector<int> aLow, out Vector<int> aHigh);
+                // widen to int32 to prevent overflows which reduces ops by 1/2 :`(
+                Vector.Widen(a, out Vector<int> accLow, out Vector<int> accHigh);
+                Vector.Widen(w, out Vector<int> wtsLow, out Vector<int> wtsHigh);
+
                 // special sauce: perform the squared part of SCReLU
-                aLow = aLow * aLow;
-                aHigh = aHigh * aHigh;
-
-                Vector.Widen(w, out Vector<int> wLow, out Vector<int> wHigh);
-
-                sum += aLow * wLow;
-                sum += aHigh * wHigh;
+                sum += accLow * accLow * wtsLow;
+                sum += accHigh * accHigh * wtsHigh;
             }
 
             return Vector.Sum(sum);
