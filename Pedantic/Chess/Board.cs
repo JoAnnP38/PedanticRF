@@ -472,6 +472,16 @@ namespace Pedantic.Chess
             get => sideToMove;
         }
 
+        public void SetSideToMove(Color stm, bool initial = false)
+        {
+            if (!initial)
+            {
+                hash = ZobristHash.HashActiveColor(hash, sideToMove);
+            }
+            sideToMove = stm;
+            hash = ZobristHash.HashActiveColor(hash, sideToMove);
+        }
+
         public Color Opponent
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -484,6 +494,16 @@ namespace Pedantic.Chess
             get => castling;
         }
 
+        public void SetCastling(CastlingRights castling, bool initial = false)
+        {
+            if (!initial)
+            {
+                hash = ZobristHash.HashCastling(hash, this.castling);
+            }
+            this.castling = castling;
+            hash = ZobristHash.HashCastling(hash, this.castling);
+        }
+
         public SquareIndex EnPassant 
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -494,6 +514,25 @@ namespace Pedantic.Chess
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => enPassantValidated;
+        }
+
+        public void SetEnPassant(File epFile, bool initial = false)
+        {
+            if (!initial && enPassantValidated != SquareIndex.None)
+            {
+                hash = ZobristHash.HashEnPassant(hash, enPassantValidated);
+            }
+            enPassantValidated = SquareIndex.None;
+            enPassant = SquareIndex.None;
+            if (epFile != File.None)
+            {
+                enPassant = ChessMath.ToSquareIndex(epFile, sideToMove == Color.White ? Rank.Rank6 : Rank.Rank3);
+            }
+            if (IsEnPassantValid(sideToMove))
+            {
+                enPassantValidated = enPassant;
+                hash = ZobristHash.HashEnPassant(hash, enPassantValidated);
+            }
         }
 
         public ulong Hash
@@ -512,6 +551,18 @@ namespace Pedantic.Chess
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => halfMoveClock;
+        }
+
+        public ushort FullMoveCounter
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => fullMoveCounter;
+        }
+
+        public void SetMoveCounters(byte halfMoveClock, ushort fullMoveCounter)
+        {
+            this.halfMoveClock = halfMoveClock;
+            this.fullMoveCounter = fullMoveCounter;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -722,6 +773,59 @@ namespace Pedantic.Chess
             }
 
             updatable.RemovePiece(color, piece, sq);
+        }
+
+        public void StartPos()
+        {
+            Clear();
+
+            for (SquareIndex sq = SquareIndex.A1; sq <= SquareIndex.H2; sq++)
+            {
+                AddPiece(Color.White, startPieces[0][(int)sq], sq);
+            }
+
+            for (SquareIndex sq = SquareIndex.A7; sq <= SquareIndex.H8; sq++)
+            {
+                AddPiece(Color.Black, startPieces[1][sq - SquareIndex.A7], sq);
+            }
+
+            SetSideToMove(Color.White, true);
+            SetCastling(CastlingRights.All, true);
+            SetEnPassant(File.None, true);
+            SetMoveCounters(0, 1);
+        }
+
+        public void RandomStart(ushort ply)
+        {
+            bool mateFound = true;
+
+            while (mateFound)
+            {
+                mateFound = false;
+                StartPos();
+
+                for (int n = 0; !mateFound && n < ply; n++)
+                {
+                    moveList.Clear();
+                    GenerateMoves(moveList);
+                    bool moveMade = false;
+
+                    while (!moveMade && moveList.Count > 0)
+                    {
+                        int moveIndex = Random.Shared.Next(0, moveList.Count);
+                        if (MakeMove(moveList[moveIndex]))
+                        {
+                            moveMade = true;
+                        }
+                        else
+                        {
+                            moveList.Remove(moveList[moveIndex]);
+                        }
+                    }
+
+                    mateFound = !moveMade;
+                }
+            }
         }
 
         #endregion
@@ -1469,6 +1573,43 @@ namespace Pedantic.Chess
 
         #region Attacks & Checks
 
+        public bool IsGameOver(out Wdl result)
+        {
+            result = Wdl.Incomplete;
+
+            if (HalfMoveClock == 100 || IsThreepeatDraw())
+            {
+                result = Wdl.Draw;
+                return true;
+            }
+
+            /* this state should probably never occur since checkmate would have already
+             * been detected on previous move, but is here because of the potential of 
+             * labeling data generated from other sources storing checkmated positions.
+             */
+            if (IsChecked(SideToMove))
+            {
+                result = SideToMove == Color.White ? Wdl.Win : Wdl.Loss;
+                return true;
+            }
+
+            bool isStmChecked = IsChecked();
+            moveList.Clear();
+            GenerateMoves(moveList);
+
+            for (int n = 0; n < moveList.Count; n++)
+            {
+                if (MakeMove(moveList[n]))
+                {
+                    UnmakeMove();
+                    return false;
+                }
+            }
+
+            result = isStmChecked ? (SideToMove == Color.White ? Wdl.Loss : Wdl.Win) : Wdl.Draw;
+            return true;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsChecked()
         {
@@ -2033,6 +2174,26 @@ namespace Pedantic.Chess
         public void DetachEfficientlyUpdatable()
         {
             updatable = new EfficientlyUpdatable();
+        }
+
+        public bool IsThreepeatDraw()
+        {
+            var stackSpan = gameStack.AsSpan();
+            int maxLookback = Math.Max(stackSpan.Length - halfMoveClock, 0);
+            int matches = 0;
+
+            for (int n = stackSpan.Length - 2; n >= maxLookback; n -= 2)
+            {
+                if (hash == stackSpan[n].Hash)
+                {
+                    if (++matches >= 3)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         #endregion
@@ -3622,6 +3783,21 @@ namespace Pedantic.Chess
             #endregion
         };
 
+        private static readonly Piece[][] startPieces =
+        [
+            #region startPieces data
+
+            [
+                Piece.Rook, Piece.Knight,   Piece.Bishop,   Piece.Queen,    Piece.King, Piece.Bishop,   Piece.Knight,   Piece.Rook,
+                Piece.Pawn, Piece.Pawn,     Piece.Pawn,     Piece.Pawn,     Piece.Pawn, Piece.Pawn,     Piece.Pawn,     Piece.Pawn
+            ],
+            [
+                Piece.Pawn, Piece.Pawn,     Piece.Pawn,     Piece.Pawn,     Piece.Pawn, Piece.Pawn,     Piece.Pawn,     Piece.Pawn,
+                Piece.Rook, Piece.Knight,   Piece.Bishop,   Piece.Queen,    Piece.King, Piece.Bishop,   Piece.Knight,   Piece.Rook
+            ]
+
+            #endregion
+        ];
 
         #endregion
     }

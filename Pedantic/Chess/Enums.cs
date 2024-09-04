@@ -78,4 +78,6 @@ namespace Pedantic.Chess
     public enum AttackBy : byte { Pawn, Knight, Bishop, Rook, Queen, King, PawnLeft, PawnRight, PawnPush, All }
 
     public enum MoveGenType : byte { Normal, QSearch, Evasion };
+
+    public enum Wdl : sbyte { Incomplete = -1, Loss, Draw, Win }; // white relative game result
 }

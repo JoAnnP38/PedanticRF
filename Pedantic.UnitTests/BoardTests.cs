@@ -283,5 +283,17 @@
                 Assert.IsTrue(seeEval > 0);
             }
         }
+
+        [TestMethod]
+        public void StartPosTest()
+        {
+            Board board = new Board(Constants.FEN_START_POS);
+            Board board1 = new Board();
+            board1.StartPos();
+
+            Assert.AreEqual(board.Hash, board1.Hash);
+            Assert.AreEqual(board.SideToMove, board1.SideToMove);
+            Assert.AreEqual(board.FullMoveCounter, board1.FullMoveCounter);
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace Pedantic.Chess
     using System.Text;
     using Pedantic.Utilities;
 
-    public readonly struct Bitboard : IEquatable<Bitboard>, IEnumerable<SquareIndex>
+    public readonly struct Bitboard : IComparable<Bitboard>, IEquatable<Bitboard>, IEnumerable<SquareIndex>
     {
         #region Nested Types
 
@@ -211,6 +211,11 @@ namespace Pedantic.Chess
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public int CompareTo(Bitboard other)
+        {
+            return bb.CompareTo(other.bb);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

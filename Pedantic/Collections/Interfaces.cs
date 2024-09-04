@@ -19,4 +19,29 @@ namespace Pedantic.Collections
 
         public bool TryPop(out T item);
     }
+
+    public interface IValueList<T> : IEnumerable<T>
+    {
+        public ref T this[int index] { get; }
+
+        public int Count { get; }
+
+        public void Add(ref T item);
+
+        public void Clear();
+
+        public bool Contains(T item);
+
+        public void CopyTo(T[] array, int arrayIndex);
+
+        public int IndexOf(T item);
+
+        public void Insert(int index, ref T item);
+
+        public bool Remove(T item);
+
+        public void RemoveAt(int index);
+
+        public void Sort();
+    }
 }
