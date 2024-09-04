@@ -33,6 +33,15 @@ namespace Pedantic.Chess
             ttCache = TtCache.Default;
         }
 
+        public BasicSearch(SearchStack searchStack, NnueEval eval, History history, ObjectPool<MoveList> listPool, TtCache tt)
+        {
+            ss = searchStack;
+            this.eval = eval;
+            this.history = history;
+            this.listPool = listPool;
+            ttCache = tt;
+        }
+
         #endregion
 
         #region Accessors

@@ -8,9 +8,11 @@
 namespace Pedantic
 {
     using System.CommandLine;
+    using System.Diagnostics;
     using System.Globalization;
     using System.Text;
     using Pedantic.Chess;
+    using Pedantic.Chess.DataGen;
     using Pedantic.Chess.HCE;
     using Pedantic.Chess.NNUE;
     using Pedantic.Tablebase;
@@ -96,6 +98,15 @@ namespace Pedantic
                 getDefaultValue: () => false
             );
 
+            var outputPDatOption = new Option<string?>("--output", () => null, "Specifies the name of the Pedantic binary file.");
+            outputPDatOption.AddAlias("-o");
+
+            var concurrencyOption = new Option<int>("--concurrency", () => 2, "Number of threads to use for data generation.");
+            concurrencyOption.AddAlias("-c");
+
+            var positionCountOption = new Option<int>("--pos_count", () => 1000, "The number of evaluated/filtered positions to generate.");
+            positionCountOption.AddAlias("-n");
+
             var uciCmd = new Command("uci", "Start the pedantic application in UCI mode (default).")
             {
                 uciSpsaOption,
@@ -115,17 +126,26 @@ namespace Pedantic
 
             var wfCmd = new Command("wf", "Create configuration files for weather-factory");
 
+            var dataGenCmd = new Command("generate", "Generate training data.")
+            {
+                outputPDatOption,
+                concurrencyOption,
+                positionCountOption
+            };
+
             var rootCmd = new RootCommand("The pedantic chess engine.")
             {
                 uciCmd,
                 learnCmd,
-                wfCmd
+                wfCmd,
+                dataGenCmd
             };
 
             uciCmd.SetHandler(RunUci, uciSpsaOption, doDataGen);
             learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
                 learnSaveOption, learnResetOption, learnEvalPctOption);
             wfCmd.SetHandler(RunWf);
+            dataGenCmd.SetHandler(RunGenerate, outputPDatOption, positionCountOption, concurrencyOption);
             rootCmd.SetHandler(() => RunUci(false, false));
             await rootCmd.InvokeAsync(args);
         }
@@ -755,6 +775,53 @@ namespace Pedantic
         private static void RunWf()
         {
             UciOptions.WriteOptions();
+        }
+
+        private static void RunGenerate(string? outputFile, int positionCount, int concurrency)
+        {
+            if (string.IsNullOrWhiteSpace(outputFile))
+            {
+                Console.Error.WriteLine("Output file must be specified");
+            }
+
+            using DataGenerator dataGen = new(outputFile!, concurrency);
+
+            Console.CancelKeyPress += delegate
+            {
+                Console.WriteLine("\n*** Shutting down data generation.");
+                dataGen.Stop();
+            };
+
+            UciOptions.HashTableSize = 16;
+            Engine.ResizeHashTable();
+            UciOptions.IsDataGen = true;
+            UciOptions.RandomSearch = true;
+
+            try
+            {
+                dataGen.Start();
+                DateTime startTime = DateTime.UtcNow;
+
+                int positionsWritten = 0;
+                double pps = 0;
+
+                while (positionsWritten < positionCount)
+                {
+                    Thread.Sleep(2000);
+                    positionsWritten = dataGen.PositionCount;
+                    pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
+                    Console.Write($"Generating {positionsWritten} positions at {pps:F1} pps...\r");
+                }
+
+                dataGen.Stop();
+                positionsWritten = dataGen.PositionCount;
+                pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
+                Console.WriteLine($"Generating {positionsWritten} positions at {pps:F1} pps...");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+            }
         }
 
         private static int indentLevel = 0;

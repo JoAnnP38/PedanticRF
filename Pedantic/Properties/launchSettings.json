@@ -21,6 +21,10 @@
     "Bench": {
       "commandName": "Project",
       "commandLineArgs": "< \"d:\\repos.2\\Pedantic\\uci_bench.txt\""
+    },
+    "Generate": {
+      "commandName": "Project",
+      "commandLineArgs": "generate -n 10000 -o c:/temp/temp.pdat -c 12"
     }
   }
 }

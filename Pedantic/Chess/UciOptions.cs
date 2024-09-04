@@ -203,6 +203,12 @@ namespace Pedantic.Chess
             {
                 return randomSearch.CurrentValue;
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                randomSearch.CurrentValue = value;
+            }
         }
 
         public static string SyzygyPath
