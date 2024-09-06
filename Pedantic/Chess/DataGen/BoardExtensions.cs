@@ -5,8 +5,9 @@
 
     public static class BoardExtensions
     {
-        public static PedanticFormat ToBinary(this Board board, ushort ply, ushort maxPly, short eval, Result result)
+        public static PedanticFormat ToBinary(this Board board, ushort maxPly, short eval, Result result)
         {
+            ushort ply = (ushort)((board.FullMoveCounter - 1) * 2 + (board.SideToMove == Color.White ? 1 : 2));
             PedanticFormat pdata = default;
             pdata.Hash = board.Hash;
             pdata.Occupancy = board.All;
@@ -45,6 +46,28 @@
             board.SetEnPassant(pdata.EpFile, true);
             board.SetMoveCounters(pdata.HalfMoveClock, pdata.MoveCounter);
             return board;
+        }
+
+        public static ulong CalculateHash(this Board board)
+        {
+            ulong hash = 0;
+
+            foreach (SquareIndex sq in board.All)
+            {
+                Square square = board.PieceBoard(sq);
+                hash = ZobristHash.HashPiece(hash, square.Color, square.Piece, sq);
+            }
+
+            hash = ZobristHash.HashCastling(hash, board.Castling);
+
+            if (board.EnPassantValidated != SquareIndex.None)
+            {
+                hash = ZobristHash.HashEnPassant(hash, board.EnPassantValidated);
+            }
+
+            hash = ZobristHash.HashActiveColor(hash, board.SideToMove);
+
+            return hash;
         }
     }
 }

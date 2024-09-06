@@ -116,10 +116,10 @@ namespace Pedantic.Chess.DataGen
         {
             get
             {
-                Span<byte> pieceSpan;
+                Span<byte> pieceSpan; ;
                 fixed (byte* p = pieces)
                 {
-                    pieceSpan = MemoryMarshal.CreateSpan(ref p[0], 16);
+                    pieceSpan = new Span<byte>(p, 16);
 
                 }
                 return pieceSpan;
@@ -139,7 +139,8 @@ namespace Pedantic.Chess.DataGen
             get
             {
                 Span<byte> recSpan;
-                fixed (void* p = rec)
+
+                fixed (byte* p = rec)
                 {
                     recSpan = new Span<byte>(p, 42);
                 }

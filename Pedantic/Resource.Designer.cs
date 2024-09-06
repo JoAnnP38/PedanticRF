@@ -69,5 +69,15 @@ namespace Pedantic {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        public static byte[] NN128HL_20240905 {
+            get {
+                object obj = ResourceManager.GetObject("NN128HL_20240905", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

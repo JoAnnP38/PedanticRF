@@ -2150,6 +2150,16 @@ namespace Pedantic.Chess
             return (false, false);
         }
 
+        public IEnumerable<Move> MoveHistory()
+        {
+            BoardState[] stack = gameStack.ToArray();
+
+            for (int n = 0; n < stack.Length; n++)
+            {
+                yield return stack[n].Move;
+            }
+        }
+
         #endregion
 
         #region Miscellaneous / Interfaces

@@ -2,6 +2,7 @@
 {
     using System.Collections.Concurrent;
     using System.Runtime.CompilerServices;
+    using System.Text;
     using System.Threading;
 
     using Pedantic.Chess.NNUE;
@@ -86,6 +87,9 @@
                 {
                     stack.Initialize(board, history);
 
+                    ulong hash = board.Hash;
+                    string fen = board.ToFenString();
+
                     if (firstPlySearch)
                     {
                         // do a reasonably sufficient search to insure that the opening 
@@ -99,6 +103,15 @@
                         
                     search.Search();
                     eval = (short)search.Score;
+
+                    if (hash != board.Hash)
+                    {
+                        Console.Error.WriteLine($"Board was not restored on search completion: Old Hash {hash} != New Hash {board.Hash}.");
+                        Console.Error.WriteLine($"Old FEN: {fen}");
+                        Console.Error.WriteLine($"New FEN: {board.ToFenString()}");
+                        Console.Error.WriteLine($"Best move: {search.PV[0]}");
+                        throw new Exception("Board not restored after search");
+                    }
 
                     if (board.SideToMove == Color.Black)
                     {
@@ -163,7 +176,9 @@
 
                     if (bestMove.IsQuiet && !board.IsChecked() && ply > MIN_OPENING_PLY && Math.Abs(eval) < MAX_EVAL_FILTER && board.All.PopCount > 4)
                     {
-                        pdata = board.ToBinary(ply, 512, eval, Result.Draw);
+                        // use dummy values for max ply and result. they will be replaced with correct 
+                        // values at the conclusion of the game
+                        pdata = board.ToBinary(512, eval, Result.Draw);
                         pdataList.Add(ref pdata);
                     }
 
@@ -171,6 +186,7 @@
                     ply++;
                 }
 
+                // only save position from completed games
                 if (wdl != Wdl.Incomplete)
                 {
                     Result result = wdl switch
@@ -188,9 +204,6 @@
                     }
 
                     int newPositions = Write(pdataList.Where(pd => !pd.Filter));
-
-                    // all the datagen threads are writing to the same file so they need to share
-                    // a BinaryWriter open on the file
                     Interlocked.Add(ref positionCount, newPositions);
                 }
 
@@ -224,8 +237,8 @@
 
         private static bool FilterPositionByEval(short eval, Result result)
         {
-            return (eval < -MAX_DRAW_FILTER && result == Result.Win) ||
-                   (eval > MAX_DRAW_FILTER && result == Result.Loss) ||
+            return (eval < MAX_DRAW_FILTER && result == Result.Win) ||
+                   (eval > -MAX_DRAW_FILTER && result == Result.Loss) ||
                    (Math.Abs(eval) > MAX_DRAW_FILTER && result == Result.Draw);
         }
 

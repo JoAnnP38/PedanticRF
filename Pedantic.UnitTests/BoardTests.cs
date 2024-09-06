@@ -1,5 +1,7 @@
 ﻿namespace Pedantic.UnitTests
 {
+    using Pedantic.Chess.DataGen;
+
     [TestClass]
     [TestCategory("UnitTests")]
     public class BoardTests
@@ -294,6 +296,50 @@
             Assert.AreEqual(board.Hash, board1.Hash);
             Assert.AreEqual(board.SideToMove, board1.SideToMove);
             Assert.AreEqual(board.FullMoveCounter, board1.FullMoveCounter);
+        }
+
+        [TestMethod]
+        [DataRow(0xC2123BCE03ED1E94ul, "r3kb1r/1p1n1ppp/2q5/p1pNp1B1/1nPpP3/3P1NP1/PP3P1P/R2QK1R1 b Qkq - 0 12")]
+        [DataRow(0xE6EF29A4704F0D46ul, "2r1k2r/p1p2p2/1p2q3/1P1ppn2/6Pp/B1P2P1R/P1P5/1K1RQ3 b k - 0 21")]
+        public void ZobristHashTest(ulong hash, string fen)
+        {
+            Board board = new(fen);
+            Assert.AreEqual(hash, board.Hash);
+
+            PedanticFormat pdata = board.ToBinary(512, 10, Result.Draw);
+            board.LoadBinary(ref pdata);
+
+            Assert.AreEqual(hash, board.Hash);
+        }
+
+        [TestMethod]
+        public void ZobristBugTest()
+        {
+            Board bd1 = new("r3kb1r/1p1q1ppp/nn6/3pP3/pP1N4/P2Q1P2/4N1PP/R3K2R w KQkq - 0 20");
+            Assert.AreEqual(0xBF85F4AF5967FCC2ul, bd1.Hash); // << incorrect which means that board isn't being restored by search
+            
+            string moves = "f2f3, a7a5, d2d4, g8f6, a2a3, b8a6, c1e3, f6g8, b1d2, g8f6, e3f2, c7c5, e2e4, c5d4, f2d4, d7d5, f1b5, c8d7, b5d7, d8d7, e4e5, f6g8, c2c4, g8h6, g1e2, h6f5, d4b6, e7e6, c4d5, e6d5, d2b3, a5a4, b3d4, f5e3, d1d3, e3c4, b2b4, c4b6";
+            string[] moveList = moves.Split(',', StringSplitOptions.TrimEntries);
+            Board bd2 = new();
+            bd2.StartPos();
+            foreach (string move in moveList)
+            {
+                if (Move.TryParse(bd2, move, out Move mv))
+                {
+                    bd2.MakeMove(mv);
+                }
+                else
+                {
+                    Assert.Fail($"Could not make move {move}");
+                    break;
+                }
+            }
+            Assert.AreEqual(bd1.Hash, bd2.Hash);
+
+            PedanticFormat pdata = bd2.ToBinary(512, 0, Result.Draw);
+            bd1.LoadBinary(ref pdata);
+
+            Assert.AreEqual(bd2.Hash, bd1.Hash);
         }
     }
 }
