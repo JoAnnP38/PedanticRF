@@ -121,4 +121,7 @@
   <data name="NN128HL_20240906" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>NN128HL-20240906.nnue;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="NN160HL_20240907" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>NN160HL-20240907.nnue;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

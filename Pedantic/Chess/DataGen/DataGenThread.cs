@@ -83,6 +83,11 @@
                 int winPlies = 0, lossPlies = 0, drawPlies = 0;
                 Wdl wdl;
 
+                if (board.Hash != board.CalculateHash())
+                {
+                    throw new Exception("Zobrist key corruption.");
+                }
+
                 while (!board.IsGameOver(out wdl))
                 {
                     stack.Initialize(board, history);
@@ -110,7 +115,9 @@
                         Console.Error.WriteLine($"Old FEN: {fen}");
                         Console.Error.WriteLine($"New FEN: {board.ToFenString()}");
                         Console.Error.WriteLine($"Best move: {search.PV[0]}");
-                        throw new Exception("Board not restored after search");
+
+                        wdl = Wdl.Incomplete;
+                        break;
                     }
 
                     if (board.SideToMove == Color.Black)
