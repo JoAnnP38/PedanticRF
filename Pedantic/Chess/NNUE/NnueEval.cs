@@ -196,7 +196,7 @@ namespace Pedantic.Chess.NNUE
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Prefetch(Board board)
         {
-            cache.PrefetchEvalCache(board.Hash, board.PawnHash);
+            cache.PrefetchEvalCache(board.Hash);
         }
 
         private static void AddAccums(Span<short> accumulators, ReadOnlySpan<short> hiddenWeights, int index)
