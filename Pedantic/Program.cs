@@ -13,11 +13,8 @@ namespace Pedantic
     using System.Text;
     using Pedantic.Chess;
     using Pedantic.Chess.DataGen;
-    using Pedantic.Chess.HCE;
     using Pedantic.Chess.NNUE;
     using Pedantic.Tablebase;
-    using Pedantic.Tuning;
-    using static Pedantic.Chess.HCE.Weights;
 
     public class Program
     {
@@ -48,48 +45,6 @@ namespace Pedantic
                 description: "SPSA optimization currently being run.",
                 getDefaultValue: () => false
             );
-            var learnDataOption = new Option<string?>
-            (
-                name: "--data",
-                description: "The file name/path of the labeled training data file.",
-                getDefaultValue: () => null
-            );
-            var learnSampleOption = new Option<int>
-            (
-                name: "--sample",
-                description: "Specify the sample size to extract from training data.",
-                getDefaultValue: () => -1
-            );
-            var learnMaxEpochOption = new Option<int>
-            (
-                name: "--epochs",
-                description: "The maximum number of training iterations before a solution is declared.",
-                getDefaultValue: () => 1000
-            );
-            var learnMaxTimeOption = new Option<TimeSpan?>
-            (
-                name: "--time",
-                description: "The maximum duration of training session before a solution is declared.",
-                getDefaultValue: () => new TimeSpan(0, 30, 0)
-            );
-            var learnSaveOption = new Option<bool>
-            (
-                name: "--save",
-                description: "If specified the extracted sample will be saved in file so it can be reused.",
-                getDefaultValue: () => false
-            );
-            var learnResetOption = new Option<bool>
-            (
-                name: "--reset",
-                description: "Reset all evaluation weights (excluding piece weights) to zero before training begins.",
-                getDefaultValue: () => false
-            );
-            var learnEvalPctOption = new Option<int>
-            (
-                name: "--eval",
-                description: "The proportion of eval score to use in linear interpolation between eval and WDL.",
-                getDefaultValue: () => 25
-            );
 
             var doDataGen = new Option<bool>
             (
@@ -113,17 +68,6 @@ namespace Pedantic
                 doDataGen
             };
 
-            var learnCmd = new Command("learn", "Optimize evaluation function using training data.")
-            {
-               learnDataOption,
-                learnSampleOption,
-                learnMaxEpochOption,
-                learnMaxTimeOption,
-                learnSaveOption,
-                learnResetOption,
-                learnEvalPctOption
-            };
-
             var wfCmd = new Command("wf", "Create configuration files for weather-factory");
 
             var dataGenCmd = new Command("generate", "Generate training data.")
@@ -136,14 +80,11 @@ namespace Pedantic
             var rootCmd = new RootCommand("The pedantic chess engine.")
             {
                 uciCmd,
-                learnCmd,
                 wfCmd,
                 dataGenCmd
             };
 
             uciCmd.SetHandler(RunUci, uciSpsaOption, doDataGen);
-            learnCmd.SetHandler(RunLearn, learnDataOption, learnSampleOption, learnMaxEpochOption, learnMaxTimeOption,
-                learnSaveOption, learnResetOption, learnEvalPctOption);
             wfCmd.SetHandler(RunWf);
             dataGenCmd.SetHandler(RunGenerate, outputPDatOption, positionCountOption, concurrencyOption);
             rootCmd.SetHandler(() => RunUci(false, false));
@@ -154,8 +95,6 @@ namespace Pedantic
         {
             Board.Initialize();
             Network.Initialize();
-            Weights.Initialize();
-            HceEval.Initialize();
             Engine.Initialize();
             BasicSearch.Initialize();
             Engine.SetupPosition(FEN_START_POS);
@@ -496,282 +435,6 @@ namespace Pedantic
             }
         }
 
-        static void RunLearn(string? dataFile, int samples, int maxEpoch, TimeSpan? maxTime, bool save, bool reset, int evalPct)
-        {
-            try
-            {
-                PosRecord.EvalPct = Math.Clamp(evalPct, 0, 100);
-                if (dataFile == null)
-                {
-                    throw new ArgumentNullException(nameof(dataFile));
-                }
-
-                using var data = new TrainingDataFile(dataFile, Encoding.UTF8);
-                List<PosRecord> positions = samples <= 0 ? data.LoadFile() : data.LoadSample(samples, save);
-
-                var tuner = reset ? new GdTuner(positions) : new GdTuner(Engine.Weights, positions);
-                var (Error, Accuracy, Weights, K) = tuner.Train(maxEpoch, maxTime);
-                PrintSolution(positions.Count, Error, Accuracy, Weights, K);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex.ToString());
-            }
-        }
-
-        private static void PrintSolution(int sampleSize, double error, double accuracy, Chess.HCE.Weights weights, double K)
-        {
-            indentLevel = 2;
-            WriteLine($"// Solution sample size: {sampleSize}, generated on {DateTime.Now:R}");
-            WriteLine($"// Solution K: {K:F6}, error: {error:F6}, accuracy: {accuracy:F4}");
-            WriteLine("private static readonly Score[] defaultWeights =");
-            WriteLine("[");
-            indentLevel++;
-            PrintSolutionSection(weights);
-            indentLevel--;            
-            WriteLine("];");
-        }
-
-        private static void PrintSolutionSection(Chess.HCE.Weights wts)
-        {
-            void WriteWt(Score s)
-            {
-                string score = $"S({s.MgScore,3}, {s.EgScore,3}), ";
-                Console.Write($"{score,-15}");
-            }
-
-            void WriteWtLine(Score s)
-            {
-                WriteIndent();
-                WriteWt(s);
-                Console.WriteLine();
-            }
-
-            void WriteWtsLine(Chess.HCE.Weights wts, int start, int length)
-            {
-                WriteIndent();
-                for (int n = start; n < start + length; n++)
-                {
-                    WriteWt(wts[n]);
-                }
-                Console.WriteLine();
-            }
-
-            void WriteWts2D(Chess.HCE.Weights wts, int start, int width, int length)
-            {
-                for (int n = 0; n < length; n++)
-                {
-                    if (n % width == 0)
-                    {
-                        if (n != 0)
-                        {
-                            Console.WriteLine();
-                        }
-                        WriteIndent();
-                    }
-                    WriteWt(wts[start + n]);
-                }
-                Console.WriteLine();
-            }
-
-            string[] pieceNames = { "pawns", "knights", "bishops", "rooks", "queens", "kings" };
-            string[] upperNames = { "Pawn", "Knight", "Bishop", "Rook", "Queen", "King" };
-            WriteLine("/* piece values */");
-            WriteWtsLine(wts, PIECE_VALUES, MAX_PIECES);
-            WriteLine();
-            WriteLine("/* friendly king relative piece square values */");
-            WriteLine("#region friendly king relative piece square values");
-            WriteLine();
-            for (int pc = 0; pc < MAX_PIECES; pc++)
-            {
-                for (int kp = 0; kp < MAX_KING_BUCKETS; kp++)
-                {
-                    int index = (pc * MAX_KING_BUCKETS + kp) * MAX_SQUARES;
-                    WriteLine($"/* {pieceNames[pc]}: bucket {kp} */");
-                    WriteWts2D(wts, FRIENDLY_KB_PST + index, 8, MAX_SQUARES);
-                    WriteLine();
-                }
-            }
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* enemy king relative piece square values */");
-            WriteLine("#region enemy king relative piece square values");
-            WriteLine();
-            for (int pc = 0; pc < MAX_PIECES; pc++)
-            {
-                for (int kp = 0; kp < MAX_KING_BUCKETS; kp++)
-                {
-                    int index = (pc * MAX_KING_BUCKETS + kp) * MAX_SQUARES;
-                    WriteLine($"/* {pieceNames[pc]}: bucket {kp} */");
-                    WriteWts2D(wts, ENEMY_KB_PST + index, 8, MAX_SQUARES);
-                    WriteLine();
-                }
-            }
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* piece mobility */");
-            WriteLine("#region piece mobility");
-            WriteLine();
-            WriteLine("/* knight mobility */");
-            WriteWts2D(wts, KNIGHT_MOBILITY, 8, 9);
-            WriteLine();
-            WriteLine("/* bishop mobility */");
-            WriteWts2D(wts, BISHOP_MOBILITY, 8, 14);
-            WriteLine();
-            WriteLine("/* rook mobility */");
-            WriteWts2D(wts, ROOK_MOBILITY, 8, 15);
-            WriteLine();
-            WriteLine("/* queen mobility */");
-            WriteWts2D(wts, QUEEN_MOBILITY, 8, 28);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* pawn structure */");
-            WriteLine("#region pawn structure");
-            WriteLine();
-            WriteLine("/* passed pawn */");
-            WriteWts2D(wts, PASSED_PAWN, 8, MAX_SQUARES);
-            WriteLine();
-            WriteLine("/* adjacent/phalanx pawn */");
-            WriteWts2D(wts, PHALANX_PAWN, 8, MAX_SQUARES);
-            WriteLine();
-            WriteLine("/* chained pawn */");
-            WriteWts2D(wts, CHAINED_PAWN, 8, MAX_SQUARES);
-            WriteLine();
-            WriteLine("/* pawn ram */");
-            WriteWts2D(wts, PAWN_RAM, 8, MAX_SQUARES);
-            WriteLine();
-            WriteLine("/* isolated pawn */");
-            WriteWts2D(wts, ISOLATED_PAWN, 8, MAX_SQUARES);
-            WriteLine();
-            WriteLine("/* backward pawn */");
-            WriteWtLine(wts.BackwardPawn);
-            WriteLine();
-            WriteLine("/* doubled pawn */");
-            WriteWtLine(wts.DoubledPawn);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* king safety */");
-            WriteLine("#region king safety");
-            WriteLine();
-            WriteLine("/* squares attacked near enemy king */");
-            WriteIndent(); WriteWt(wts.KingAttack1(0));
-            Console.WriteLine("\t// attacks to squares 1 from king");
-            WriteWts2D(wts, KING_ATTACK_1 + 1, 8, 8);
-            WriteLine();
-            WriteIndent(); WriteWt(wts.KingAttack2(0));
-            Console.WriteLine("\t// attacks to squares 2 from king");
-            WriteWts2D(wts, KING_ATTACK_2 + 1, 8, 8);
-            WriteLine();
-            WriteLine("/* castling available */");
-            WriteIndent(); WriteWt(wts.CanCastleKS);
-            Console.WriteLine("\t// king-side castling available");
-            WriteIndent(); WriteWt(wts.CanCastleQS);
-            Console.WriteLine("\t// queen-side castling available");
-            WriteLine();
-            WriteLine("/* king mobility penalties (open line attacks) */");
-            WriteLine("/* diagonal lines */");
-            WriteWts2D(wts, KS_DIAG_MOBILITY, 8, 13);
-            WriteLine();
-            WriteLine("/* orthogonal lines */");
-            WriteWts2D(wts, KS_ORTH_MOBILITY, 8, 14);
-            WriteLine();
-            WriteLine("/* pawnless flank */");
-            WriteWtLine(wts.PawnlessFlank);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* passed pawns */");
-            WriteLine("#region passed pawns");
-            WriteLine();
-            WriteLine("/* enemy king outside passed pawn square */");
-            WriteWtLine(wts.KingOutsidePasserSquare);
-            WriteLine();
-            WriteLine("/* passed pawn can advance */");
-            WriteWts2D(wts, PP_CAN_ADVANCE, 8, 4);
-            WriteLine();
-            WriteLine("/* blocked passed pawn */");
-            for (Piece pc = Piece.Knight; pc <= Piece.King; pc++)
-            {
-                int index = BLOCKED_PASSED_PAWN + ((int)pc - 1) * MAX_COORDS;
-                WriteIndent();
-                for (int rank = 0; rank < MAX_COORDS; rank++)
-                {
-                    WriteWt(wts[index + rank]);
-                }
-                Console.WriteLine($"\t// blocked by {pc}");
-            }
-            WriteLine();
-            WriteLine("/* rook behind passed pawn */");
-            WriteWtLine(wts.RookBehindPassedPawn);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* piece evaluations */");
-            WriteLine("#region piece evaluations");
-            WriteLine();
-            WriteLine("/* bishop pair */");
-            WriteWtLine(wts.BishopPair);
-            WriteLine();
-            WriteLine("/* bad bishop pawn */");
-            WriteWtLine(wts.BadBishopPawn);
-            WriteLine();
-            WriteLine("/* rook on open file */");
-            WriteWtLine(wts.RookOnOpenFile);
-            WriteLine();
-            WriteLine("/* rook on half-open file */");
-            WriteWtLine(wts.RookOnHalfOpenFile);
-            WriteLine();
-            WriteLine("/* pawn shields minor piece */");
-            WriteWtLine(wts.PawnShieldsMinor);
-            WriteLine();
-            WriteLine("/* bishop on long diagonal */");
-            WriteWtLine(wts.BishopLongDiagonal);
-            WriteLine();
-            WriteLine("/* minor outpost */");
-            WriteWts2D(wts, MINOR_OUTPOST, 8, 2);
-            WriteLine();
-            WriteLine("/* rook on blocked file */");
-            WriteWtLine(wts.RookOnBlockedFile);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* threats */");
-            WriteLine("#region threats");
-            WriteLine();
-            WriteLine("/* pushed pawn threats */");
-            WriteWts2D(wts, PAWN_PUSH_THREAT, 8, MAX_PIECES);
-            WriteLine();
-            WriteLine("/* pawn threats */");
-            WriteWts2D(wts, PAWN_THREAT, 8, MAX_PIECES);
-            WriteLine();
-            WriteLine("/* minor piece threats */");
-            WriteWts2D(wts, MINOR_THREAT, 8, MAX_PIECES);
-            WriteLine();
-            WriteLine("/* rook threats */");
-            WriteWts2D(wts, ROOK_THREAT, 8, MAX_PIECES);
-            WriteLine();
-            WriteLine("/* check threats */");
-            WriteWts2D(wts, CHECK_THREAT, 8, MAX_PIECES);
-            WriteLine();
-            WriteLine("#endregion");
-            WriteLine();
-            WriteLine("/* tempo bonus for side to move */");
-            WriteWtLine(wts[TEMPO]);
-        }
-
-        private static void WriteIndent()
-        {
-            string indent = new(' ', indentLevel * 4);
-            Console.Write(indent);
-        }
-        private static void WriteLine(string text = "")
-        {
-            WriteIndent();
-            Console.WriteLine(text);
-        }
-
         private static void RunWf()
         {
             UciOptions.WriteOptions();
@@ -823,7 +486,5 @@ namespace Pedantic
                 Console.Error.WriteLine(ex.ToString());
             }
         }
-
-        private static int indentLevel = 0;
     }
 }

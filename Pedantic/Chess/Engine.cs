@@ -7,7 +7,6 @@
 
 namespace Pedantic.Chess
 {
-    using Pedantic.Chess.HCE;
     using Pedantic.Chess.NNUE;
     using Pedantic.Tablebase;
     using Pedantic.Utilities;
@@ -21,19 +20,6 @@ namespace Pedantic.Chess
         public static bool Infinite { get; set; } = false;
         public static int MovesOutOfBook { get; set; } = 0;
         public static Color Color { get; set; } = Color.White;
-
-        public static Weights Weights
-        {
-            get
-            {
-                if (weights == null)
-                {
-                    weights = LoadWeights();
-                }
-
-                return weights ?? Weights.Default;
-            }
-        }
 
         public static int SearchThreads
         {
@@ -245,41 +231,6 @@ namespace Pedantic.Chess
             perft.Execute();
         }
 
-
-        private static Weights? LoadWeights()
-        {
-            try
-            {
-                return null;
-                //string? exeFullName = Environment.ProcessPath;
-                //string? dirFullName = Path.GetDirectoryName(exeFullName);
-                //string? weightsPath = (exeFullName != null && dirFullName != null) ?
-                //    Path.Combine(dirFullName, UciOptions.EvalFile) : null;
-
-                //Weights? wts = null;
-                //if (weightsPath != null && System.IO.File.Exists(weightsPath))
-                //{
-                //    wts = Weights.Load(weightsPath);
-                //    HceEval.Weights = wts;
-                //}
-                //else
-                //{
-                //    wts = Weights.Default;
-                //    if (weightsPath != null)
-                //    {
-                //        wts.Save(weightsPath);
-                //    }
-                //}
-
-                //return wts;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-            return null;
-        }
-
         private static bool ProbeRootTb(Board board, out Move move, out TbGameResult gameResult)
         {
             move = Move.NullMove;
@@ -393,7 +344,6 @@ namespace Pedantic.Chess
         public static void Initialize() {}
         private static readonly MoveList moveList = new();
         private static readonly GameClock time = new();
-        private static Weights? weights;
         private static readonly SearchThreads threads = new();
         private static readonly string[] benchFens =
         {
