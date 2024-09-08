@@ -32,6 +32,7 @@
             this.dataQ = dataQ;
             cancelToken = cancelSource.Token;
             board = new();
+            bd = new();
             clock = new();
             cache = new(UciOptions.HashTableSize);
             eval = new(cache);
@@ -186,6 +187,26 @@
                         // use dummy values for max ply and result. they will be replaced with correct 
                         // values at the conclusion of the game
                         pdata = board.ToBinary(512, eval, Result.Draw);
+                        bd.LoadBinary(ref pdata);
+                        if (bd.Hash != board.Hash)
+                        {
+                            Console.Error.WriteLine($"Corrupted zobrist hash detected in output: {board.ToFenString()}");
+                            hash = board.CalculateHash();
+                            if (board.Hash != hash)
+                            {
+                                Console.Error.WriteLine("Corruption found in source board.");
+                            }
+
+                            if (bd.Hash != hash)
+                            {
+                                Console.Error.WriteLine("Corruption found in output board.");
+                            }
+
+                            Console.Error.WriteLine($"Last moves: {board.PrevLastMove}, {board.LastMove}");
+                            Console.Error.WriteLine("Abandoning game.");
+                            wdl = Wdl.Incomplete;
+                            break;
+                        }
                         pdataList.Add(ref pdata);
                     }
 
@@ -250,6 +271,7 @@
         }
 
         private readonly Board board;
+        private readonly Board bd;
         private readonly BasicSearch search;
         private readonly GameClock clock;
         private readonly EvalCache cache;
