@@ -6,7 +6,7 @@ namespace Pedantic.Chess.NNUE
     {
         // smol-net™ (768 -> 160) x 2 -> 1
         public const int INPUT_SIZE = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
-        public const int HIDDEN_SIZE = 160; 
+        public const int HIDDEN_SIZE = 192; 
 
         private short[] hiddenWeights = new short[INPUT_SIZE * HIDDEN_SIZE];
         private short[] hiddenBiases = new short[HIDDEN_SIZE];
@@ -18,7 +18,7 @@ namespace Pedantic.Chess.NNUE
         static Network()
         {
             // default network embedded as a resource
-            defaultNetwork = new Network(Resource.NN160HL_20240907);
+            defaultNetwork = new Network(Resource.NN192HL_20240910);
         }
 
         public Network(byte[] networkBytes)

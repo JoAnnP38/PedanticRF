@@ -84,11 +84,6 @@
                 int winPlies = 0, lossPlies = 0, drawPlies = 0;
                 Wdl wdl;
 
-                if (board.Hash != board.CalculateHash())
-                {
-                    throw new Exception("Zobrist key corruption.");
-                }
-
                 while (!board.IsGameOver(out wdl))
                 {
                     stack.Initialize(board, history);
