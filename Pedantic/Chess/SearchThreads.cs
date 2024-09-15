@@ -10,7 +10,7 @@ namespace Pedantic.Chess
     using System.Runtime.CompilerServices;
     using Pedantic.Utilities;
 
-    public sealed class SearchThreads
+    public sealed class SearchThreads : IDisposable
     {
         static SearchThreads()
         {
@@ -129,6 +129,30 @@ namespace Pedantic.Chess
 
         private readonly CountdownEvent done;
         private SearchThread[] threads;
-        private static readonly int maxWorkerThreads;    
+        private bool disposedValue;
+        private static readonly int maxWorkerThreads;
+
+        private void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    for (int n = 0; n < threads.Length; n++)
+                    {
+                        threads[n].Dispose();
+                    }
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

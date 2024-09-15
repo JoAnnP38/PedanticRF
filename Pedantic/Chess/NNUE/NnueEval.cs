@@ -13,14 +13,17 @@ namespace Pedantic.Chess.NNUE
 
     using Pedantic.Collections;
 
-    public class NnueEval : EfficientlyUpdatable
+    public unsafe class NnueEval : EfficientlyUpdatable, IDisposable
     {
         public const short SCALE = 400;
         public const short QA = 255;
         public const short QB = 64;
         public const short QAB = QA * QB;
 
-        public unsafe struct AccumState
+        public static readonly Vector<short> CReLU_Max = new Vector<short>(QA);
+        public static readonly Vector<short> CReLU_Min = Vector<short>.Zero;
+
+        public struct AccumState
         {
             private fixed short whiteAccum[Network.HIDDEN_SIZE];
             private fixed short blackAccum[Network.HIDDEN_SIZE];
@@ -30,13 +33,13 @@ namespace Pedantic.Chess.NNUE
                 fixed (short* wp = &whiteAccum[0])
                 {
                     Span<short> ws = new(wp, Network.HIDDEN_SIZE);
-                    nnue.whiteAccum.CopyTo(ws);
+                    nnue.WhiteAccum.CopyTo(ws);
                 }
 
                 fixed (short* bp = &blackAccum[0])
                 {
                     Span<short> bs = new(bp, Network.HIDDEN_SIZE);
-                    nnue.blackAccum.CopyTo(bs);
+                    nnue.BlackAccum.CopyTo(bs);
                 }
             }
 
@@ -45,32 +48,48 @@ namespace Pedantic.Chess.NNUE
                 fixed (short* wp = &whiteAccum[0])
                 {
                     ReadOnlySpan<short> ws = new(wp, Network.HIDDEN_SIZE);
-                    ws.CopyTo(nnue.whiteAccum);
+                    ws.CopyTo(nnue.WhiteAccum);
                 }
 
                 fixed (short* bp = &blackAccum[0])
                 {
                     ReadOnlySpan<short> bs = new(bp, Network.HIDDEN_SIZE);
-                    bs.CopyTo(nnue.blackAccum);
+                    bs.CopyTo(nnue.BlackAccum);
                 }
             }
         }
 
-        private readonly short[] whiteAccum = new short[Network.HIDDEN_SIZE];
-        private readonly short[] blackAccum = new short[Network.HIDDEN_SIZE];
+        private short* whiteAccum;  // = new short[Network.HIDDEN_SIZE];
+        private short* blackAccum;  // = new short[Network.HIDDEN_SIZE];
         private readonly ValueStack<AccumState> accumStack = new(MAX_GAME_LENGTH);
         private short score;
+        private bool disposedValue;
         private readonly EvalCache cache;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NnueEval()
         {
+            whiteAccum = Network.AlignedAlloc<short>(Network.HIDDEN_SIZE);
+            blackAccum = Network.AlignedAlloc<short>(Network.HIDDEN_SIZE);
             cache = new EvalCache();
         }
 
         public NnueEval(EvalCache cache)
         {
+            whiteAccum = Network.AlignedAlloc<short>(Network.HIDDEN_SIZE);
+            blackAccum = Network.AlignedAlloc<short>(Network.HIDDEN_SIZE);
             this.cache = cache;
+        }
+
+        public Span<short> WhiteAccum
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Span<short>(whiteAccum, Network.HIDDEN_SIZE);
+        }
+
+        public Span<short> BlackAccum
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => new Span<short>(blackAccum, Network.HIDDEN_SIZE);
         }
 
         public int StateCount
@@ -88,16 +107,16 @@ namespace Pedantic.Chess.NNUE
         public override void Clear()
         {
             // reset accumulators back to their initial bias
-            Network.Default.HiddenBiases.CopyTo(whiteAccum);
-            Network.Default.HiddenBiases.CopyTo(blackAccum);
+            Network.Default.FeatureBiases.CopyTo(WhiteAccum);
+            Network.Default.FeatureBiases.CopyTo(BlackAccum);
             accumStack.Clear();
         }
 
         public override void Copy(IEfficientlyUpdatable other)
         {
             NnueEval nnue = (NnueEval)other;
-            Array.Copy(nnue.whiteAccum, whiteAccum, Network.HIDDEN_SIZE);
-            Array.Copy(nnue.blackAccum, blackAccum, Network.HIDDEN_SIZE);
+            nnue.WhiteAccum.CopyTo(WhiteAccum);
+            nnue.BlackAccum.CopyTo(BlackAccum);
         }
 
         public override void AddPiece(Color color, Piece piece, SquareIndex sq)
@@ -105,8 +124,8 @@ namespace Pedantic.Chess.NNUE
             int white = InputIndex(color, piece, sq);
             int black = InputIndex(color.Flip(), piece, sq.Flip());
 
-            AddAccums(whiteAccum, Network.Default.HiddenWeights, white * Network.HIDDEN_SIZE);
-            AddAccums(blackAccum, Network.Default.HiddenWeights, black * Network.HIDDEN_SIZE);
+            AddAccums(WhiteAccum, Network.Default.FeatureWeights, white * Network.HIDDEN_SIZE);
+            AddAccums(BlackAccum, Network.Default.FeatureWeights, black * Network.HIDDEN_SIZE);
         }
 
         public override void RemovePiece(Color color, Piece piece, SquareIndex sq)
@@ -114,8 +133,8 @@ namespace Pedantic.Chess.NNUE
             int white = InputIndex(color, piece, sq);
             int black = InputIndex(color.Flip(), piece, sq.Flip());
 
-            SubAccums(whiteAccum, Network.Default.HiddenWeights, white * Network.HIDDEN_SIZE);
-            SubAccums(blackAccum, Network.Default.HiddenWeights, black * Network.HIDDEN_SIZE);
+            SubAccums(WhiteAccum, Network.Default.FeatureWeights, white * Network.HIDDEN_SIZE);
+            SubAccums(BlackAccum, Network.Default.FeatureWeights, black * Network.HIDDEN_SIZE);
         }
 
         public override void Update(Board board)
@@ -134,14 +153,14 @@ namespace Pedantic.Chess.NNUE
             int white = InputIndex(color, piece, from);
             int black = InputIndex(color.Flip(), piece, from.Flip());
 
-            SubAccums(whiteAccum, Network.Default.HiddenWeights, white * Network.HIDDEN_SIZE);
-            SubAccums(blackAccum, Network.Default.HiddenWeights, black * Network.HIDDEN_SIZE);
+            SubAccums(WhiteAccum, Network.Default.FeatureWeights, white * Network.HIDDEN_SIZE);
+            SubAccums(BlackAccum, Network.Default.FeatureWeights, black * Network.HIDDEN_SIZE);
 
             white = InputIndex(color, piece, to);
             black = InputIndex(color.Flip(), piece, to.Flip());
 
-            AddAccums(whiteAccum, Network.Default.HiddenWeights, white * Network.HIDDEN_SIZE);
-            AddAccums(blackAccum, Network.Default.HiddenWeights, black * Network.HIDDEN_SIZE);
+            AddAccums(WhiteAccum, Network.Default.FeatureWeights, white * Network.HIDDEN_SIZE);
+            AddAccums(BlackAccum, Network.Default.FeatureWeights, black * Network.HIDDEN_SIZE);
         }
 
         public override void PushState()
@@ -164,8 +183,8 @@ namespace Pedantic.Chess.NNUE
             Update(board);
 
             int eval = board.SideToMove == Color.White ?
-                Activation(whiteAccum, blackAccum, Network.Default.OutputWeights) :
-                Activation(blackAccum, whiteAccum, Network.Default.OutputWeights);
+                Activation(WhiteAccum, BlackAccum, Network.Default.OutputWeights) :
+                Activation(BlackAccum, WhiteAccum, Network.Default.OutputWeights);
 
             score = (short)((eval / QA + Network.Default.OutputBias) * SCALE / QAB);
             return score;
@@ -179,8 +198,8 @@ namespace Pedantic.Chess.NNUE
             }
 
             int eval = board.SideToMove == Color.White ?
-                Activation(whiteAccum, blackAccum, Network.Default.OutputWeights) :
-                Activation(blackAccum, whiteAccum, Network.Default.OutputWeights);
+                Activation(WhiteAccum, BlackAccum, Network.Default.OutputWeights) :
+                Activation(BlackAccum, WhiteAccum, Network.Default.OutputWeights);
 
             score = (short)((eval / QA + Network.Default.OutputBias) * SCALE / QAB);
 
@@ -236,37 +255,9 @@ namespace Pedantic.Chess.NNUE
                    ActivationSCReLU(them, weights.Slice(Network.HIDDEN_SIZE, Network.HIDDEN_SIZE));
         }
 
-        private static int ActivationCReLU(ReadOnlySpan<short> accum, ReadOnlySpan<short> weights)
-        {
-            Vector<short> CReLU_Max = new Vector<short>(QA);
-            Vector<short> CReLU_Min = Vector<short>.Zero; 
-            
-            Vector<int> sum = Vector<int>.Zero;
-
-            ReadOnlySpan<Vector<short>> acc = MemoryMarshal.Cast<short, Vector<short>>(accum);
-            ReadOnlySpan<Vector<short>> wts = MemoryMarshal.Cast<short, Vector<short>>(weights);
-
-            for (int n = 0; n < acc.Length; n++)
-            {
-                Vector<short> a = Vector.Max(Vector.Min(acc[n], CReLU_Max), CReLU_Min);
-                Vector<short> w = wts[n];
-
-                Vector.Widen(a, out Vector<int> aLow, out Vector<int> aHigh);
-                Vector.Widen(w, out Vector<int> wLow, out Vector<int> wHigh);
-
-                sum += aLow * wLow;
-                sum += aHigh * wHigh;
-            }
-
-            return Vector.Sum(sum);
-        }
-
-
         private static int ActivationSCReLU(ReadOnlySpan<short> accum, ReadOnlySpan<short> weights)
         {
             // SCReLU starts off like CReLU
-            Vector<short> CReLU_Max = new Vector<short>(QA);
-            Vector<short> CReLU_Min = Vector<short>.Zero;
 
             Vector<int> sum = Vector<int>.Zero;
 
@@ -275,12 +266,9 @@ namespace Pedantic.Chess.NNUE
 
             for (int n = 0; n < acc.Length; n++)
             {
-                Vector<short> a = Vector.Max(Vector.Min(acc[n], CReLU_Max), CReLU_Min);
-                Vector<short> w = wts[n];
-
                 // widen to int32 to prevent overflows which reduces ops by 1/2 :`(
-                Vector.Widen(a, out Vector<int> accLow, out Vector<int> accHigh);
-                Vector.Widen(w, out Vector<int> wtsLow, out Vector<int> wtsHigh);
+                Vector.Widen(CReLU(acc[n]), out Vector<int> accLow, out Vector<int> accHigh);
+                Vector.Widen(wts[n], out Vector<int> wtsLow, out Vector<int> wtsHigh);
 
                 // special sauce: perform the squared part of SCReLU
                 sum += accLow * accLow * wtsLow;
@@ -288,6 +276,43 @@ namespace Pedantic.Chess.NNUE
             }
 
             return Vector.Sum(sum);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector<short> CReLU(Vector<short> vec)
+        {
+            return Vector.Max(Vector.Min(vec, CReLU_Max), CReLU_Min);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                disposedValue = true;
+
+                if (disposing)
+                {
+                    cache.Dispose();
+                }
+
+                Network.AlignedFree(whiteAccum);
+                Network.AlignedFree(blackAccum);
+                whiteAccum = null;
+                blackAccum = null;
+            }
+        }
+
+        ~NnueEval()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: false);
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
