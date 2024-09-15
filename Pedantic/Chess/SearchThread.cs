@@ -11,7 +11,7 @@ namespace Pedantic.Chess
     using Pedantic.Chess.NNUE;
     using Pedantic.Utilities;
 
-    public sealed class SearchThread
+    public sealed class SearchThread : IDisposable
     {
         public SearchThread(bool isPrimary = false)
         {
@@ -67,10 +67,30 @@ namespace Pedantic.Chess
         private readonly bool isPrimary;
         private BasicSearch search;
         private GameClock? clock;
+        private bool disposedValue;
         private readonly EvalCache cache = new();
         private readonly NnueEval eval;
         private readonly SearchStack stack = new();
         private readonly History history;
         private readonly ObjectPool<MoveList> listPool;
+
+        private void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    eval.Dispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

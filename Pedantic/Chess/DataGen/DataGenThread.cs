@@ -9,7 +9,7 @@
     using Pedantic.Collections;
     using Pedantic.Utilities;
 
-    public class DataGenThread
+    public class DataGenThread : IDisposable
     {
 #if DEBUG
         const int VERIF_NODE_LIMIT = 10000;
@@ -280,5 +280,26 @@
         private readonly CancellationToken cancelToken;
         private Thread? thread = null;
         private volatile int positionCount;
+        private bool disposedValue;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    eval.Dispose();
+                    ttCache.Dispose();
+                }
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

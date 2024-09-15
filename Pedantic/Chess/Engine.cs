@@ -77,7 +77,7 @@ namespace Pedantic.Chess
 
         public static void Eval()
         {
-            NnueEval nnue = new();
+            using NnueEval nnue = new();
             short eval = nnue.ComputeUncached(Board);
             Uci.Default.Log($"{eval}");
         }

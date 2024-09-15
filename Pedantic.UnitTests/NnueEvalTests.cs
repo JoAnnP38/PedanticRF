@@ -10,7 +10,7 @@
         public void ComputeTest()
         {
             Board board = new Board(Constants.FEN_START_POS);
-            NnueEval eval = new();
+            using NnueEval eval = new();
 
             short score = eval.Compute(board);
         }
@@ -69,7 +69,7 @@
         public void ComputeTests(string fen)
         {
             Board bd = new Board();
-            NnueEval nnueEval = new();
+            using NnueEval nnueEval = new();
             bd.AttachEfficientlyUpdatable(nnueEval);
             bd.LoadFen(fen);
             short score1 = nnueEval.Compute(bd);
@@ -82,7 +82,7 @@
         public void AddPieceTest()
         {
             Board bd = new Board(Constants.FEN_START_POS);
-            NnueEval nnue = new();
+            using NnueEval nnue = new();
             bd.AttachEfficientlyUpdatable(nnue);
             short score = nnue.Compute(bd);
             Move mv = new(Color.White, Piece.Pawn, SquareIndex.E2, SquareIndex.E4, MoveType.DblPawnMove);
@@ -99,7 +99,7 @@
         public void AddRemPieceTest()
         {
             Board bd = new();
-            NnueEval nnue = new();
+            using NnueEval nnue = new();
             bd.AttachEfficientlyUpdatable(nnue);
             bd.LoadFen(Constants.FEN_START_POS);
             short[] score = new short[8];
