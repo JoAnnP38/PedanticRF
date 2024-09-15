@@ -1055,13 +1055,9 @@ namespace Pedantic.Chess
 
         public int ScaleCpScore(int score)
         {
-            //if (Math.Abs(score) < MIN_TABLEBASE_WIN)
-            //{
-            //    return score * 100 / HCE.HceEval.Weights.PieceValue(Piece.Pawn).NormalizeScore(board!.Phase);
-            //}
             if (!UciOptions.IsDataGen && Math.Abs(score) < MIN_TABLEBASE_WIN)
             {
-                return score * 2 / 3;
+                return score / 2;
             }
             return score;
         }
