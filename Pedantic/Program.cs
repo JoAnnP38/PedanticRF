@@ -455,6 +455,12 @@ namespace Pedantic
                 dataGen.Stop();
             };
 
+            AppDomain.CurrentDomain.ProcessExit += delegate
+            {
+                Console.WriteLine("\n*** Shutting down data generation.");
+                dataGen.Stop();
+            };
+
             UciOptions.HashTableSize = 16;
             Engine.ResizeHashTable();
             UciOptions.IsDataGen = true;
@@ -473,13 +479,13 @@ namespace Pedantic
                     Thread.Sleep(2000);
                     positionsWritten = dataGen.PositionCount;
                     pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
-                    Console.Write($"Generating {positionsWritten} positions at {pps:F1} pps...\r");
+                    Console.Write($"Generating {positionsWritten:N} positions at {pps:N1} pps...\r");
                 }
 
                 dataGen.Stop();
                 positionsWritten = dataGen.PositionCount;
                 pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
-                Console.WriteLine($"Generating {positionsWritten} positions at {pps:F1} pps...");
+                Console.WriteLine($"Generating {positionsWritten:N} positions at {pps:N1} pps...");
             }
             catch (Exception ex)
             {

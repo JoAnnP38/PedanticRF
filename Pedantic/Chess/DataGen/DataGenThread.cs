@@ -185,19 +185,19 @@
                         bd.LoadBinary(ref pdata);
                         if (bd.Hash != board.Hash)
                         {
-                            Console.Error.WriteLine($"Corrupted zobrist hash detected in output: {board.ToFenString()}");
                             hash = board.CalculateHash();
+                            Console.Error.WriteLine($"Corrupted zobrist hash detected in output: {board.ToFenString()} : {hash:X16}");
                             if (board.Hash != hash)
                             {
-                                Console.Error.WriteLine("Corruption found in source board.");
+                                Console.Error.WriteLine($"Corruption found in source board: {board.Hash:X16}");
                             }
 
                             if (bd.Hash != hash)
                             {
-                                Console.Error.WriteLine("Corruption found in output board.");
+                                Console.Error.WriteLine($"Corruption found in output board: {bd.Hash:X16}");
                             }
 
-                            Console.Error.WriteLine($"Last moves: {board.PrevLastMove}, {board.LastMove}");
+                            Console.Error.WriteLine($"Last moves: {MoveToPseudoSan(board.PrevLastMove)}, {MoveToPseudoSan(board.LastMove)}");
                             Console.Error.WriteLine("Abandoning game.");
                             wdl = Wdl.Incomplete;
                             break;
@@ -233,6 +233,24 @@
                 pdataList.Clear();
                 gameCount++;
             }
+        }
+
+        private static string MoveToPseudoSan(Move move)
+        {
+            ValueStringBuilder sb = new(stackalloc char[16]);
+            sb.Append(move.Piece.ToChar());
+            sb.Append(move.From.ToAlgebraicString());
+            sb.Append(move.IsCapture ? 'x' : '-');
+            sb.Append(move.To.ToAlgebraicString());
+            if (move.IsCapture)
+            {
+                sb.Append(move.Capture.ToChar());
+            }
+            if (move.IsPromote)
+            {
+                sb.Append($"={move.Promote.ToChar()}");
+            }
+            return sb.ToString();
         }
 
         private int Write(IEnumerable<PedanticFormat> pdata)

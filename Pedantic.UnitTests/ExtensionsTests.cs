@@ -137,10 +137,10 @@
         public void SquareIndexToStringTest()
         {
             SquareIndex sq = SquareIndex.B7;
-            Assert.AreEqual("b7", SquareIndexExtensions.ToString(sq));
+            Assert.AreEqual("b7", SquareIndexExtensions.ToAlgebraicString(sq));
 
             sq = SquareIndex.None;
-            Assert.AreEqual(string.Empty, SquareIndexExtensions.ToString(sq));
+            Assert.AreEqual(string.Empty, SquareIndexExtensions.ToAlgebraicString(sq));
         }
 
         [TestMethod]

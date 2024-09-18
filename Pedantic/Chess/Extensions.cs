@@ -178,14 +178,14 @@ namespace Pedantic.Chess
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToString(this SquareIndex sq)
+        public static string ToAlgebraicString(this SquareIndex sq)
         {
             return algebraicIndices[(int)sq + 1];
         }
 
         public static string ToFenString(this SquareIndex sq)
         {
-            return sq == SquareIndex.None ? "-" : ToString(sq);
+            return sq == SquareIndex.None ? "-" : ToAlgebraicString(sq);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
