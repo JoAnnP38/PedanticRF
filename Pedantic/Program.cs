@@ -449,13 +449,7 @@ namespace Pedantic
 
             using DataGenerator dataGen = new(outputFile!, concurrency);
 
-            Console.CancelKeyPress += delegate
-            {
-                Console.WriteLine("\n*** Shutting down data generation.");
-                dataGen.Stop();
-            };
-
-            AppDomain.CurrentDomain.ProcessExit += delegate
+            Console.CancelKeyPress += (sender, e) =>
             {
                 Console.WriteLine("\n*** Shutting down data generation.");
                 dataGen.Stop();
@@ -479,13 +473,13 @@ namespace Pedantic
                     Thread.Sleep(2000);
                     positionsWritten = dataGen.PositionCount;
                     pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
-                    Console.Write($"Generating {positionsWritten:N} positions at {pps:N1} pps...\r");
+                    Console.Write($"Generating {positionsWritten:N0} positions at {pps:N1} pps...\r");
                 }
 
                 dataGen.Stop();
                 positionsWritten = dataGen.PositionCount;
                 pps = positionsWritten / (DateTime.UtcNow - startTime).TotalSeconds;
-                Console.WriteLine($"Generating {positionsWritten:N} positions at {pps:N1} pps...");
+                Console.WriteLine($"Generating {positionsWritten:N0} positions at {pps:N1} pps...");
             }
             catch (Exception ex)
             {

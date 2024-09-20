@@ -1,6 +1,7 @@
 ﻿namespace Pedantic.Chess.DataGen
 {
     using System.Collections.Concurrent;
+    using System.Runtime.CompilerServices;
 
     using Pedantic.Utilities;
 
@@ -12,8 +13,9 @@
             Util.Assert(concurrency > 0 && concurrency < Environment.ProcessorCount);
 
             ConcurrentQueue<PedanticFormat> queue = new ConcurrentQueue<PedanticFormat>();
+            fs = System.IO.File.Open(dataFilePath, FileMode.CreateNew, FileAccess.Write);
+            writer = new BinaryWriter(fs);
             dataQ = new(queue, concurrency * 512);
-            writer = new BinaryWriter(System.IO.File.Open(dataFilePath, FileMode.CreateNew, FileAccess.Write));
 
             dataWriter = new(writer, dataQ);
 
@@ -70,6 +72,7 @@
                 {
                     writer.Flush();
                     writer.Dispose();
+                    fs.Dispose();
                     cancelSource.Dispose();
                 }
                 disposedValue = true;
@@ -84,6 +87,7 @@
         }
 
         private readonly CancellationTokenSource cancelSource = new();
+        private readonly FileStream fs;
         private readonly BinaryWriter writer;
         private readonly DataGenWriter dataWriter;
         private readonly List<DataGenThread> threads = new();
