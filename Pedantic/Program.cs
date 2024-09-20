@@ -449,11 +449,13 @@ namespace Pedantic
 
             using DataGenerator dataGen = new(outputFile!, concurrency);
 
-            Console.CancelKeyPress += (sender, e) =>
+            ConsoleCancelEventHandler ctrlCHandler = (sender, e) =>
             {
                 Console.WriteLine("\n*** Shutting down data generation.");
                 dataGen.Stop();
             };
+
+            Console.CancelKeyPress += ctrlCHandler;
 
             UciOptions.HashTableSize = 16;
             Engine.ResizeHashTable();
@@ -484,6 +486,10 @@ namespace Pedantic
             catch (Exception ex)
             {
                 Console.Error.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                Console.CancelKeyPress -= ctrlCHandler;
             }
         }
     }
