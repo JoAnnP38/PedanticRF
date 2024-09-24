@@ -66,6 +66,18 @@ namespace Pedantic.Chess.NNUE
         private bool disposedValue;
         private readonly EvalCache cache;
 
+        private static readonly sbyte[] inputBuckets =
+        [
+            0, 0, 0, 1, 1, 2, 2, 2,
+            0, 0, 0, 1, 1, 2, 2, 2,
+            3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 3, 3, 4, 4, 4, 4,
+            3, 3, 3, 3, 4, 4, 4, 4
+        ];
+
         public NnueEval()
         {
             whiteAccum = Network.AlignedAlloc<short>(Network.HIDDEN_SIZE);
