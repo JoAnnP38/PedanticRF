@@ -5,9 +5,9 @@ namespace Pedantic.Chess.NNUE
 {
     public unsafe class Network : IInitialize, IDisposable
     {
-        // smol-net™ (768 -> 256) x 2 -> 1
+        // smol-net™ (768 -> 384) x 2 -> 1
         public const int INPUT_SIZE = MAX_COLORS * MAX_PIECES * MAX_SQUARES;
-        public const int HIDDEN_SIZE = 256;
+        public const int HIDDEN_SIZE = 384;
 
         private short* featureWeights;  // = new short[INPUT_SIZE * HIDDEN_SIZE];
         private short* featureBiases;   // = new short[HIDDEN_SIZE];
@@ -20,7 +20,7 @@ namespace Pedantic.Chess.NNUE
         static Network()
         {
             // default network embedded as a resource
-            defaultNetwork = new Network(Resource.NN256HL_20240924);
+            defaultNetwork = new Network(Resource.NN384HL_20240925);
         }
 
         protected Network()
