@@ -12,6 +12,7 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <Configurations>Debug;Release;Profiling</Configurations>
     <PublishTrimmed>True</PublishTrimmed>
+    <CETCompat>false</CETCompat>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
